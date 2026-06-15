@@ -3,12 +3,26 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  ShoppingCart,
+  Receipt,
+  Wallet,
+  Shield,
+  LogOut,
+} from "lucide-react";
+
+import {
+  hasPermission,
+} from "@/lib/permissions";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
   const [role, setRole] =
     useState("");
 
@@ -16,11 +30,8 @@ export default function DashboardLayout({
     useState("");
 
   useEffect(() => {
-
     const loadUser = async () => {
-
       try {
-
         const response =
           await api.get(
             "/accounts/me/"
@@ -40,9 +51,7 @@ export default function DashboardLayout({
             response.data
           )
         );
-
-      } catch (error: any) {
-
+      } catch (error) {
         console.error(
           "Failed to load user:",
           error
@@ -51,11 +60,9 @@ export default function DashboardLayout({
     };
 
     loadUser();
-
   }, []);
 
   const logout = () => {
-
     localStorage.removeItem(
       "access"
     );
@@ -73,138 +80,132 @@ export default function DashboardLayout({
   };
 
   return (
-
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-100">
 
       {/* Sidebar */}
 
-      <aside className="w-64 bg-slate-900 text-white p-6">
+      <aside className="w-72 bg-slate-900 text-white flex flex-col">
 
-        <h1 className="text-2xl font-bold mb-2">
-          TOCHAMS ARP
-        </h1>
+        <div className="p-6 border-b border-slate-800">
 
-        <p className="text-sm text-gray-300 mb-8">
+          <h1 className="text-2xl font-bold">
+            TOCHAMS ARP
+          </h1>
 
-          {username}
+          <p className="text-sm text-gray-400 mt-2">
+            {username}
+          </p>
 
-          {role && (
-            <span>
-              {" "}
-              (
-              {role
-                .replace(
-                  "_",
-                  " "
-                )
-                .toUpperCase()}
+          <p className="text-xs text-blue-400">
+
+            {role
+              ?.replace(
+                "_",
+                " "
               )
-            </span>
-          )}
+              ?.toUpperCase()}
 
-        </p>
+          </p>
 
-        <nav className="space-y-4">
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
 
           <a
             href="/dashboard"
-            className="block hover:text-blue-400"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
           >
+            <LayoutDashboard size={20} />
             Dashboard
           </a>
 
           <a
             href="/customers"
-            className="block hover:text-blue-400"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
           >
+            <Users size={20} />
             Customers
           </a>
 
-          {(role === "admin" ||
-            role === "manager") && (
-
+          {hasPermission(
+            role,
+            "inventory"
+          ) && (
             <a
               href="/inventory"
-              className="block hover:text-blue-400"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
             >
+              <Package size={20} />
               Inventory
             </a>
-
           )}
 
           <a
             href="/sales-orders"
-            className="block hover:text-blue-400"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
           >
+            <ShoppingCart size={20} />
             Sales Orders
           </a>
 
-          {(role === "admin" ||
-            role === "manager" ||
-            role === "sales_head") && (
-
+          {hasPermission(
+            role,
+            "invoices"
+          ) && (
             <a
               href="/invoices"
-              className="block hover:text-blue-400"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
             >
+              <Receipt size={20} />
               Invoices
             </a>
-
           )}
 
-          {(role === "admin" ||
-            role === "manager" ||
-            role === "sales_head" || 
-            role === "accountant") && (
-
+          {hasPermission(
+            role,
+            "payments"
+          ) && (
             <a
               href="/payments"
-              className="block hover:text-blue-400"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
             >
+              <Wallet size={20} />
               Payments
             </a>
-
           )}
 
-          {(role === "admin" ||
-            role === "manager" ||
-            role === "accountant") && (
-
-            <a
-              href="/audit-logs"
-              className="block hover:text-blue-400"
-            >
-              Audit Logs
-            </a>
-
-          )}
-
-          {role === "admin" && (
-
+          {hasPermission(
+            role,
+            "users"
+          ) && (
             <a
               href="/users"
-              className="block hover:text-blue-400"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
             >
+              <Shield size={20} />
               Users
             </a>
-
           )}
 
+        </nav>
+
+        <div className="p-4 border-t border-slate-800">
+
           <button
-            type="button"
             onClick={logout}
-            className="block w-full text-left text-red-400 hover:text-red-600 mt-8"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-red-400 hover:bg-slate-800 transition"
           >
+            <LogOut size={20} />
             Logout
           </button>
 
-        </nav>
+        </div>
 
       </aside>
 
       {/* Main Content */}
 
-      <main className="flex-1 bg-gray-100 p-6">
+      <main className="flex-1 p-8 overflow-auto">
 
         {children}
 

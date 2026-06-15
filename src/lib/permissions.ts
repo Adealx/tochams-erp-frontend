@@ -1,43 +1,47 @@
-// src/lib/permissions.ts
-
 export const permissions = {
   admin: ["*"],
 
   manager: [
     "dashboard",
     "customers",
-    "products",
+    "inventory",
     "orders",
     "invoices",
     "payments",
-    "inventory",
     "users",
   ],
 
   sales_head: [
     "dashboard",
     "customers",
-    "products",
     "orders",
     "invoices",
   ],
 
-  sales_rep: [
+  sales: [
     "dashboard",
     "customers",
     "orders",
   ],
 
-  accounts_officer: [
+  accountant: [
     "dashboard",
     "invoices",
     "payments",
   ],
+};
 
-  finance_manager: [
-    "dashboard",
-    "invoices",
-    "payments",
-    "reports",
-  ],
+export const hasPermission = (
+  role: string,
+  permission: string
+) => {
+  const rolePermissions =
+    permissions[
+      role as keyof typeof permissions
+    ] || [];
+
+  return (
+    rolePermissions.includes("*") ||
+    rolePermissions.includes(permission)
+  );
 };
