@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/services/api";
 import { useRouter } from "next/navigation";
+import {
+  downloadInvoicePDF
+} from "@/services/invoiceService";
 
 interface InvoiceItem {
   id: number;
@@ -272,31 +275,28 @@ export default function InvoiceDetailPage() {
 
           }}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
+        > 
           Print Invoice
         </button>
 
         <button
           onClick={() =>
-            router.push( 
+            router.push(
               `/payments/add?invoice=${invoice.id}`
-            )  
+            )
           }
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Record Payment
         </button>
-        
+
         <button
-          onClick={() => {
-
-            document.title =
-              invoice.invoice_number;
-
-            window.print();
-
-          }}
-          className="bg-purple-600 text-white px-4 py-2 rounded"
+          onClick={() =>
+            downloadInvoicePDF(
+              invoice.id
+            )
+          }
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
         >
           Download PDF
         </button>
