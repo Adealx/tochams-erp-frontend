@@ -61,7 +61,7 @@ export default function InventoryPage() {
 
       setProducts(response.data);
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(error);
 
@@ -85,7 +85,7 @@ export default function InventoryPage() {
 
     setMovements(response.data);
 
-  } catch (error) {
+  } catch (error: any) {
 
     console.error(error);
 
@@ -192,7 +192,7 @@ export default function InventoryPage() {
 
     loadProducts();
 
-  } catch (error) {
+  } catch (error: any) {
 
     console.error(error);
 
@@ -292,7 +292,7 @@ const restockProduct = async (
 
       loadProducts();
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(error);
 

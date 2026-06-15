@@ -182,7 +182,7 @@ export default function Dashboard() {
 
       });
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(
         "Dashboard Error:",

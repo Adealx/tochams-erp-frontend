@@ -16,7 +16,7 @@ export default function Invoices() {
     try {
       const data = await getInvoices();
       setInvoices(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading invoices:", error);
     } finally {
       setLoading(false);

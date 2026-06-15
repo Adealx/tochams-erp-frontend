@@ -36,7 +36,7 @@ export default function AddCustomer() {
 
       router.push("/customers");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       alert("Failed to create customer");
     }

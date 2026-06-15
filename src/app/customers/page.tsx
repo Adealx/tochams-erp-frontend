@@ -16,7 +16,7 @@ export default function Customers() {
     try {
       const data = await getCustomers();
       setCustomers(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching customers:", error);
     } finally {
       setLoading(false);

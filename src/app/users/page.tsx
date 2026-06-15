@@ -27,7 +27,7 @@ export default function UsersPage() {
     try {
       const response = await api.get("/accounts/me/");
       setRole(response.data.role);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -36,7 +36,7 @@ export default function UsersPage() {
     try {
       const response = await api.get("/accounts/users/");
       setUsers(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     } finally {
       setLoading(false);

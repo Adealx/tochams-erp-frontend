@@ -53,7 +53,7 @@ export default function AddPaymentPage() {
         unpaidInvoices
       );
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(
         "Failed to load invoices",

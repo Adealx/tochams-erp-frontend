@@ -51,7 +51,7 @@ export default function AddInvoice() {
 
       router.push("/invoices");
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.log("API ERROR:", error.response?.data);
 

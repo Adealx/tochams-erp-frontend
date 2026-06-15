@@ -25,7 +25,7 @@ export default function AddPayment() {
     try {
       const data = await getInvoices();
       setInvoices(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };

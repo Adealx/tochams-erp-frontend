@@ -129,7 +129,7 @@ export default function SalesOrdersPage() {
         await api.get("/orders/");
 
       setOrders(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ export default function SalesOrdersPage() {
         await api.get("/customers/");
 
       setCustomers(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -158,7 +158,7 @@ export default function SalesOrdersPage() {
       );
 
       setProducts(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -266,7 +266,7 @@ export default function SalesOrdersPage() {
       alert(
         "Order deleted successfully"
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
       alert(

@@ -26,7 +26,7 @@ export default function CustomerDetail() {
 
       setCustomer(data);
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(error);
 

@@ -67,7 +67,7 @@ export default function InvoiceDetailPage() {
         response.data
       );
 
-    } catch (error) {
+    } catch (error: any) {
 
       console.error(
         "Invoice Detail Error:",
