@@ -18,7 +18,6 @@ import {
 import { getCustomers } from "@/services/customerService";
 import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
-import { getLowStockAlerts } from "@/services/productService";
 
 const COLORS = [
   "#22c55e",
@@ -28,25 +27,26 @@ const COLORS = [
 ];
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    customers: 0,
-    products: 0,
-    orders: 0,
-    invoices: 0,
-    payments: 0,
-    outstanding: 0,
-    pendingOrders: 0,
-    lowStock: 0,
-  });
+  const [loading, setLoading] =
+    useState(true);
+
+  const [stats, setStats] =
+    useState({
+      customers: 0,
+      products: 0,
+      orders: 0,
+      invoices: 0,
+      payments: 0,
+      outstanding: 0,
+      pendingOrders: 0,
+      lowStock: 0,
+    });
 
   const [invoiceChart, setInvoiceChart] =
     useState<any[]>([]);
 
-  const [lowStock, setLowStock] =
+  const [lowStockProducts, setLowStockProducts] =
     useState<any[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
 
   useEffect(() => {
     loadDashboard();
@@ -69,46 +69,25 @@ export default function Dashboard() {
       const ordersResponse =
         await api.get("/orders/");
 
-      const alerts =
-        await getLowStockAlerts();
-
       const products =
-        productsResponse.data;
+        Array.isArray(productsResponse.data)
+          ? productsResponse.data
+          : [];
 
       const orders =
-        ordersResponse.data;
+        Array.isArray(ordersResponse.data)
+          ? ordersResponse.data
+          : [];
 
-      console.log(
-        "Customers:",
-        customers
+      const lowStock =
+        products.filter(
+          (product: any) =>
+            product.stock_quantity <= 10
+        );
+
+      setLowStockProducts(
+        lowStock
       );
-
-      console.log(
-        "Invoices:",
-        invoices
-      );
-
-      console.log(
-        "Payments:",
-        payments
-      );
-
-      console.log(
-        "Products:",
-        products
-      );
-
-      console.log(
-        "Orders:",
-        orders
-      );
-
-      console.log(
-        "Low Stock:",
-        alerts
-      );
-
-      setLowStock(alerts);
 
       const totalPayments =
         payments.reduce(
@@ -118,7 +97,7 @@ export default function Dashboard() {
           ) =>
             sum +
             Number(
-              payment.amount_paid
+              payment.amount_paid || 0
             ),
           0
         );
@@ -131,7 +110,7 @@ export default function Dashboard() {
           ) =>
             sum +
             Number(
-              invoice.amount
+              invoice.amount || 0
             ),
           0
         );
@@ -139,8 +118,7 @@ export default function Dashboard() {
       const pendingOrders =
         orders.filter(
           (order: any) =>
-            order.status ===
-            "Pending"
+            order.status === "Pending"
         ).length;
 
       const invoiceStatusData = [
@@ -208,16 +186,20 @@ export default function Dashboard() {
         pendingOrders,
 
         lowStock:
-          alerts.length,
+          lowStock.length,
       });
 
-    } catch (error: any) {
+    } catch (error) {
+
       console.error(
         "Dashboard Error:",
         error
       );
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
@@ -274,7 +256,7 @@ export default function Dashboard() {
         />
 
         <Card
-          title="Outstanding"
+          title="Outstanding Receivables"
           value={`₦${stats.outstanding.toLocaleString()}`}
         />
 
@@ -286,7 +268,7 @@ export default function Dashboard() {
           ⚠ Low Stock Alerts
         </h2>
 
-        {lowStock.length === 0 ? (
+        {lowStockProducts.length === 0 ? (
 
           <p className="text-green-600">
             All products are adequately stocked.
@@ -296,7 +278,7 @@ export default function Dashboard() {
 
           <div className="space-y-3">
 
-            {lowStock.map(
+            {lowStockProducts.map(
               (product: any) => (
 
                 <div
@@ -323,12 +305,12 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
 
         <div className="bg-white rounded-lg shadow p-6">
 
           <h2 className="text-xl font-bold mb-4">
-            Invoice Status
+            Invoice Status Breakdown
           </h2>
 
           <ResponsiveContainer
@@ -346,10 +328,7 @@ export default function Dashboard() {
               >
 
                 {invoiceChart.map(
-                  (
-                    entry,
-                    index
-                  ) => (
+                  (_, index) => (
 
                     <Cell
                       key={index}
