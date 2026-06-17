@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import api from "@/services/api";
 
 import {
   PieChart,
@@ -17,10 +18,7 @@ import {
 import { getCustomers } from "@/services/customerService";
 import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
-import api from "@/services/api";
-import {
-  getLowStockAlerts
-} from "@/services/productService";
+import { getLowStockAlerts } from "@/services/productService";
 
 const COLORS = [
   "#22c55e",
@@ -30,7 +28,6 @@ const COLORS = [
 ];
 
 export default function Dashboard() {
-
   const [stats, setStats] = useState({
     customers: 0,
     products: 0,
@@ -46,16 +43,17 @@ export default function Dashboard() {
     useState<any[]>([]);
 
   const [lowStock, setLowStock] =
-    useState<any[]>([]);  
+    useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
   const loadDashboard = async () => {
-
     try {
-
       const customers =
         await getCustomers();
 
@@ -71,17 +69,47 @@ export default function Dashboard() {
       const ordersResponse =
         await api.get("/orders/");
 
+      const alerts =
+        await getLowStockAlerts();
+
       const products =
         productsResponse.data;
 
       const orders =
         ordersResponse.data;
-      
-      const alerts =
-        await getLowStockAlerts();
+
+      console.log(
+        "Customers:",
+        customers
+      );
+
+      console.log(
+        "Invoices:",
+        invoices
+      );
+
+      console.log(
+        "Payments:",
+        payments
+      );
+
+      console.log(
+        "Products:",
+        products
+      );
+
+      console.log(
+        "Orders:",
+        orders
+      );
+
+      console.log(
+        "Low Stock:",
+        alerts
+      );
 
       setLowStock(alerts);
- 
+
       const totalPayments =
         payments.reduce(
           (
@@ -115,20 +143,12 @@ export default function Dashboard() {
             "Pending"
         ).length;
 
-      const lowStock =
-        products.filter(
-          (product: any) =>
-            product.stock_quantity <=
-            product.reorder_level
-        ).length;
-
       const invoiceStatusData = [
-
         {
           name: "Paid",
           value: invoices.filter(
             (invoice: any) =>
-              invoice.status ===
+              invoice.invoice_status ===
               "Paid"
           ).length,
         },
@@ -137,7 +157,7 @@ export default function Dashboard() {
           name: "Pending",
           value: invoices.filter(
             (invoice: any) =>
-              invoice.status ===
+              invoice.invoice_status ===
               "Pending"
           ).length,
         },
@@ -146,7 +166,7 @@ export default function Dashboard() {
           name: "Partially Paid",
           value: invoices.filter(
             (invoice: any) =>
-              invoice.status ===
+              invoice.invoice_status ===
               "Partially Paid"
           ).length,
         },
@@ -155,11 +175,10 @@ export default function Dashboard() {
           name: "Overdue",
           value: invoices.filter(
             (invoice: any) =>
-              invoice.status ===
+              invoice.invoice_status ===
               "Overdue"
           ).length,
         },
-
       ];
 
       setInvoiceChart(
@@ -167,7 +186,6 @@ export default function Dashboard() {
       );
 
       setStats({
-
         customers:
           customers.length,
 
@@ -189,23 +207,29 @@ export default function Dashboard() {
 
         pendingOrders,
 
-        lowStock,
-
+        lowStock:
+          alerts.length,
       });
 
     } catch (error: any) {
-
       console.error(
         "Dashboard Error:",
         error
       );
-
+    } finally {
+      setLoading(false);
     }
-
   };
 
-  return (
+  if (loading) {
+    return (
+      <div className="p-8">
+        Loading Dashboard...
+      </div>
+    );
+  }
 
+  return (
     <div className="p-8">
 
       <h1 className="text-4xl font-bold mb-8">
@@ -250,13 +274,13 @@ export default function Dashboard() {
         />
 
         <Card
-          title="Outstanding Receivables"
+          title="Outstanding"
           value={`₦${stats.outstanding.toLocaleString()}`}
         />
 
       </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow mt-8">
+
+      <div className="bg-white rounded-lg shadow p-6 mt-8">
 
         <h2 className="text-xl font-bold text-red-600 mb-4">
           ⚠ Low Stock Alerts
@@ -280,31 +304,31 @@ export default function Dashboard() {
                   className="flex justify-between border-b pb-2"
                 >
 
-                  <span className="font-medium">
+                  <span>
                     {product.name}
                   </span>
 
                   <span className="font-bold text-red-600">
-                    {product.stock_quantity} left
+                    {product.stock_quantity}
                   </span>
 
                 </div>
 
               )
             )}
- 
+
           </div>
 
         )}
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow p-6">
 
           <h2 className="text-xl font-bold mb-4">
-            Invoice Status Breakdown
+            Invoice Status
           </h2>
 
           <ResponsiveContainer
@@ -316,10 +340,8 @@ export default function Dashboard() {
 
               <Pie
                 data={invoiceChart}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
                 dataKey="value"
+                outerRadius={100}
                 label
               >
 
@@ -352,7 +374,7 @@ export default function Dashboard() {
 
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow p-6">
 
           <h2 className="text-xl font-bold mb-4">
             Orders Overview
@@ -367,11 +389,13 @@ export default function Dashboard() {
               data={[
                 {
                   name: "Orders",
-                  total: stats.orders,
+                  total:
+                    stats.orders,
                 },
                 {
                   name: "Pending",
-                  total: stats.pendingOrders,
+                  total:
+                    stats.pendingOrders,
                 },
               ]}
             >
@@ -397,9 +421,7 @@ export default function Dashboard() {
       </div>
 
     </div>
-
   );
-
 }
 
 function Card({
@@ -409,9 +431,7 @@ function Card({
   title: string;
   value: string | number;
 }) {
-
   return (
-
     <div className="bg-white p-6 rounded-lg shadow">
 
       <h3 className="text-gray-500 mb-2">
@@ -423,7 +443,5 @@ function Card({
       </p>
 
     </div>
-
   );
-
 }
