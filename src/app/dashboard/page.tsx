@@ -18,6 +18,9 @@ import { getCustomers } from "@/services/customerService";
 import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
 import api from "@/services/api";
+import {
+  getLowStockAlerts
+} from "@/services/productService";
 
 const COLORS = [
   "#22c55e",
@@ -41,6 +44,9 @@ export default function Dashboard() {
 
   const [invoiceChart, setInvoiceChart] =
     useState<any[]>([]);
+
+  const [lowStock, setLowStock] =
+    useState<any[]>([]);  
 
   useEffect(() => {
     loadDashboard();
@@ -70,7 +76,12 @@ export default function Dashboard() {
 
       const orders =
         ordersResponse.data;
+      
+      const alerts =
+        await getLowStockAlerts();
 
+      setLowStock(alerts);
+ 
       const totalPayments =
         payments.reduce(
           (
@@ -242,6 +253,49 @@ export default function Dashboard() {
           title="Outstanding Receivables"
           value={`₦${stats.outstanding.toLocaleString()}`}
         />
+
+      </div>
+      
+      <div className="bg-white p-6 rounded-lg shadow mt-8">
+
+        <h2 className="text-xl font-bold text-red-600 mb-4">
+          ⚠ Low Stock Alerts
+        </h2>
+
+        {lowStock.length === 0 ? (
+
+          <p className="text-green-600">
+            All products are adequately stocked.
+          </p>
+
+        ) : (
+
+          <div className="space-y-3">
+
+            {lowStock.map(
+              (product: any) => (
+
+                <div
+                  key={product.id}
+                  className="flex justify-between border-b pb-2"
+                >
+
+                  <span className="font-medium">
+                    {product.name}
+                  </span>
+
+                  <span className="font-bold text-red-600">
+                    {product.stock_quantity} left
+                  </span>
+
+                </div>
+
+              )
+            )}
+ 
+          </div>
+
+        )}
 
       </div>
 
