@@ -75,7 +75,7 @@ export default function LoginPage() {
 
             <div>
               <h1 className="text-3xl font-bold">
-                TOCHAMS ARP
+                TOCHARMS ARP
               </h1>
 
               <p className="text-blue-100">

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getCustomer } from "@/services/customerService";
+import {
+  downloadCustomerStatement
+} from "@/services/customerService";
 
 export default function CustomerDetail() {
 
@@ -117,6 +120,23 @@ export default function CustomerDetail() {
         </div>
 
         <hr className="my-6" />
+
+        {/* Actions */}
+
+        <div className="flex gap-3 mb-6">
+
+          <button
+            onClick={() =>
+              downloadCustomerStatement(
+                customer.id
+              )
+            }
+            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+          >
+            Download Statement
+          </button>
+
+        </div>
 
         {/* Customer Invoices */}
 
