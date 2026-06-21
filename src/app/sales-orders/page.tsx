@@ -883,7 +883,12 @@ export default function SalesOrdersPage() {
 
                     <button
                       onClick={() => editOrder(order)}
-                      className="bg-yellow-500 text-white px-3 py-1 rounded"      
+                      disabled={order.status !== "Pending"}
+                      className={`text-white px-3 py-1 rounded ${
+                        order.status === "Pending"
+                          ? "bg-yellow-500"
+                          : "bg-gray-400 cursor-not-allowed"
+                      }`}
                     >
                       Edit
                     </button>
