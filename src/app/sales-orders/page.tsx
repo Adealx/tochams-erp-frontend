@@ -64,6 +64,9 @@ export default function SalesOrdersPage() {
   const [search, setSearch] =
     useState("");
 
+  const [editingOrder, setEditingOrder] =
+  useState<any>(null);  
+
   const user =
   typeof window !== "undefined"
     ? JSON.parse(
@@ -274,6 +277,36 @@ export default function SalesOrdersPage() {
       );
     }
   };
+
+  const editOrder = (order: any) => {
+
+  console.log(
+    "Editing Order:",
+    order
+  );
+
+  setEditingOrder(order);
+
+  setFormData({
+    customer: String(order.customer),
+    status: order.status,
+  });
+
+  setItems(
+    order.items.map((item: any) => ({
+      product: item.product,
+      quantity: item.quantity,
+      retail_price: item.retail_price,
+      price_type: "Retail",
+    }))
+  );
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+};
 
   if (loading) {
     return (
@@ -732,8 +765,8 @@ export default function SalesOrdersPage() {
                     </button>
 
                     <button
-                      className="bg-yellow-500 text-white px-3 py-1 rounded"
-                      disabled
+                      onClick={() => editOrder(order)}
+                      className="bg-yellow-500 text-white px-3 py-1 rounded"      
                     >
                       Edit
                     </button>
