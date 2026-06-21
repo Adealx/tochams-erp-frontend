@@ -27,26 +27,25 @@ const COLORS = [
 ];
 
 export default function Dashboard() {
-  const [loading, setLoading] =
-    useState(true);
-
-  const [stats, setStats] =
-    useState({
-      customers: 0,
-      products: 0,
-      orders: 0,
-      invoices: 0,
-      payments: 0,
-      outstanding: 0,
-      pendingOrders: 0,
-      lowStock: 0,
-    });
+  const [stats, setStats] = useState({
+    customers: 0,
+    products: 0,
+    orders: 0,
+    invoices: 0,
+    payments: 0,
+    outstanding: 0,
+    pendingOrders: 0,
+    lowStock: 0,
+  });
 
   const [invoiceChart, setInvoiceChart] =
     useState<any[]>([]);
 
-  const [lowStockProducts, setLowStockProducts] =
+  const [lowStock, setLowStock] =
     useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     loadDashboard();
@@ -70,24 +69,49 @@ export default function Dashboard() {
         await api.get("/orders/");
 
       const products =
-        Array.isArray(productsResponse.data)
-          ? productsResponse.data
-          : [];
+        productsResponse.data;
+      
+      const alerts = products.filter(
+        (product: any) =>
+          product.stock_quantity <= 10
+      );
+
+      setLowStock(alerts);
 
       const orders =
-        Array.isArray(ordersResponse.data)
-          ? ordersResponse.data
-          : [];
+        ordersResponse.data;
 
-      const lowStock =
-        products.filter(
-          (product: any) =>
-            product.stock_quantity <= 10
-        );
-
-      setLowStockProducts(
-        lowStock
+      console.log(
+        "Customers:",
+        customers
       );
+
+      console.log(
+        "Invoices:",
+        invoices
+      );
+
+      console.log(
+        "Payments:",
+        payments
+      );
+
+      console.log(
+        "Products:",
+        products
+      );
+
+      console.log(
+        "Orders:",
+        orders
+      );
+
+      console.log(
+        "Low Stock:",
+        alerts
+      );
+
+      setLowStock(alerts);
 
       const totalPayments =
         payments.reduce(
@@ -97,7 +121,7 @@ export default function Dashboard() {
           ) =>
             sum +
             Number(
-              payment.amount_paid || 0
+              payment.amount_paid
             ),
           0
         );
@@ -110,7 +134,7 @@ export default function Dashboard() {
           ) =>
             sum +
             Number(
-              invoice.amount || 0
+              invoice.amount
             ),
           0
         );
@@ -118,7 +142,8 @@ export default function Dashboard() {
       const pendingOrders =
         orders.filter(
           (order: any) =>
-            order.status === "Pending"
+            order.status ===
+            "Pending"
         ).length;
 
       const invoiceStatusData = [
@@ -186,20 +211,16 @@ export default function Dashboard() {
         pendingOrders,
 
         lowStock:
-          lowStock.length,
+          alerts.length,
       });
 
-    } catch (error) {
-
+    } catch (error: any) {
       console.error(
         "Dashboard Error:",
         error
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -215,7 +236,7 @@ export default function Dashboard() {
     <div className="p-8">
 
       <h1 className="text-4xl font-bold mb-8">
-        ARP Dashboard
+        TOCHAMS ARP Dashboard
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -256,7 +277,7 @@ export default function Dashboard() {
         />
 
         <Card
-          title="Outstanding Receivables"
+          title="Outstanding"
           value={`₦${stats.outstanding.toLocaleString()}`}
         />
 
@@ -268,7 +289,7 @@ export default function Dashboard() {
           ⚠ Low Stock Alerts
         </h2>
 
-        {lowStockProducts.length === 0 ? (
+        {lowStock.length === 0 ? (
 
           <p className="text-green-600">
             All products are adequately stocked.
@@ -278,7 +299,7 @@ export default function Dashboard() {
 
           <div className="space-y-3">
 
-            {lowStockProducts.map(
+            {lowStock.map(
               (product: any) => (
 
                 <div
@@ -305,12 +326,12 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
 
         <div className="bg-white rounded-lg shadow p-6">
 
           <h2 className="text-xl font-bold mb-4">
-            Invoice Status Breakdown
+            Invoice Status
           </h2>
 
           <ResponsiveContainer
@@ -328,7 +349,10 @@ export default function Dashboard() {
               >
 
                 {invoiceChart.map(
-                  (_, index) => (
+                  (
+                    entry,
+                    index
+                  ) => (
 
                     <Cell
                       key={index}
