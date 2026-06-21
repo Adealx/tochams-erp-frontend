@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import { getInvoices } from "@/services/invoiceService";
 import { createPayment } from "@/services/paymentService";
@@ -53,7 +54,7 @@ export default function AddPayment() {
 
       await createPayment(formData);
 
-      alert("Payment recorded successfully");
+      toast.success("Payment recorded successfully");
 
       router.push("/payments");
 

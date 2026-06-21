@@ -233,13 +233,48 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8">
+  <div className="min-h-screen bg-gray-50 p-8">
 
-      <h1 className="text-4xl font-bold mb-8">
-        TOCHAMS ARP Dashboard
+    <div className="mb-8">
+
+      <h1 className="text-5xl font-bold text-slate-800">
+        TOCHAMS ERP
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <p className="text-slate-500 mt-2">
+        Enterprise Resource Planning &
+        Accounts Receivable Management
+      </p>
+
+    </div>
+
+    <div
+      className="
+      bg-gradient-to-r
+      from-blue-700
+      via-indigo-700
+      to-purple-700
+      text-white
+      p-8
+      rounded-3xl
+      shadow-xl
+      mb-8
+    "
+    >
+
+      <h2 className="text-3xl font-bold">
+        Executive Dashboard
+      </h2>
+
+      <p className="mt-3 opacity-90">
+        Monitor Sales, Inventory,
+        Customers, Invoices and
+        Payments in Real Time.
+      </p>
+
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
         <Card
           title="Customers"
@@ -283,17 +318,42 @@ export default function Dashboard() {
 
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mt-8">
+      <div
+        className="
+        bg-white
+        rounded-3xl
+        shadow-lg
+        border
+        border-red-100
+        p-6
+        mt-8
+      "
+      >
 
-        <h2 className="text-xl font-bold text-red-600 mb-4">
-          ⚠ Low Stock Alerts
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+
+          <span className="text-3xl">
+            ⚠️
+          </span>
+
+          <h2 className="text-2xl font-bold text-red-600">
+            Low Stock Alerts
+          </h2>
+
+        </div>
 
         {lowStock.length === 0 ? (
 
-          <p className="text-green-600">
+          <div
+            className="
+            bg-green-50
+            text-green-700
+            p-4
+            rounded-xl
+          "
+          >
             All products are adequately stocked.
-          </p>
+          </div>
 
         ) : (
 
@@ -304,7 +364,13 @@ export default function Dashboard() {
 
                 <div
                   key={product.id}
-                  className="flex justify-between border-b pb-2"
+                  className="
+                  flex
+                  justify-between
+                  bg-red-50
+                  p-4
+                  rounded-xl
+                  "
                 >
 
                   <span>
@@ -434,17 +500,56 @@ function Card({
   title: string;
   value: string | number;
 }) {
+
+  const icons: Record<string,string> = {
+    Customers: "👥",
+    Products: "📦",
+    "Sales Orders": "🛒",
+    Invoices: "📄",
+    "Pending Orders": "⏳",
+    "Low Stock": "⚠️",
+    "Payments Received": "💰",
+    Outstanding: "📊",
+  };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
 
-      <h3 className="text-gray-500 mb-2">
-        {title}
-      </h3>
+    <div
+      className="
+      bg-white
+      rounded-3xl
+      shadow-lg
+      hover:shadow-2xl
+      transition-all
+      duration-300
+      hover:-translate-y-1
+      p-6
+      border
+      border-slate-100
+      "
+    >
 
-      <p className="text-3xl font-bold">
-        {value}
-      </p>
+      <div className="flex justify-between">
+
+        <div>
+
+          <p className="text-slate-500">
+            {title}
+          </p>
+
+          <h2 className="text-4xl font-bold mt-2">
+            {value}
+          </h2>
+
+        </div>
+
+        <div className="text-5xl">
+          {icons[title]}
+        </div>
+
+      </div>
 
     </div>
+
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/services/api";
+import toast from "react-hot-toast";
 
 interface Product {
   id: number;
@@ -124,7 +125,7 @@ export default function InventoryPage() {
         "product created Successfully"
       );
 
-      alert(
+      toast.success(
         "Product Added Successfully"
       );
 

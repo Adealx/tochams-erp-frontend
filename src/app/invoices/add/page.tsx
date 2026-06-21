@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import { getCustomers } from "@/services/customerService";
 import { createInvoice } from "@/services/invoiceService";
@@ -47,7 +48,7 @@ export default function AddInvoice() {
 
       await createInvoice(formData);
 
-      alert("Invoice created successfully");
+      toast.success("Invoice created successfully");
 
       router.push("/invoices");
 

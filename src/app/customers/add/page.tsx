@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCustomer } from "@/services/customerService";
+import toast from "react-hot-toast";
 
 export default function AddCustomer() {
   const router = useRouter();
@@ -32,13 +33,13 @@ export default function AddCustomer() {
     try {
       await createCustomer(formData);
 
-      alert("Customer created successfully!");
+      toast.success("Customer created successfully!");
 
       router.push("/customers");
 
     } catch (error: any) {
       console.error(error);
-      alert("Failed to create customer");
+      toast.success("Failed to create customer");
     }
   };
 

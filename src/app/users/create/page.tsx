@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
+import toast from "react-hot-toast";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function CreateUserPage() {
 
       console.log("Success:", response.data);
 
-      alert("User created successfully");
+      toast.success("User created successfully");
 
       router.push("/users");
 
