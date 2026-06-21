@@ -316,6 +316,62 @@ export default function SalesOrdersPage() {
     );
   }
   
+  const updateOrder = async (
+  e: React.FormEvent
+) => {
+  e.preventDefault();
+
+  try {
+
+    await api.put(
+      `/orders/${editingOrder.id}/`,
+      {
+        customer: Number(
+          formData.customer
+        ),
+
+        items: items
+          .filter(
+            (item) =>
+              item.product &&
+              Number(item.product) > 0
+          )
+          .map((item) => ({
+            product: Number(
+              item.product
+            ),
+            quantity: Number(
+              item.quantity
+            ),
+            retail_price: Number(
+              item.retail_price
+            ),
+            price_type:
+              item.price_type,
+          })),
+      }
+    );
+
+    alert(
+      "Order Updated Successfully"
+    );
+
+    setEditingOrder(null);
+
+    loadOrders();
+
+  } catch (error: any) {
+
+    console.error(error);
+
+    alert(
+      JSON.stringify(
+        error.response?.data
+      )
+    );
+  }
+};
+
   const approveOrder = async (
   id: number
 ) => {
@@ -427,13 +483,19 @@ export default function SalesOrdersPage() {
 
       <div className="bg-white p-6 rounded shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">
-          Create Sales Order
+          {editingOrder
+            ? "Edit Sales Order"
+            : "Create Sales Order"}
         </h2>
 
         <form
-  onSubmit={createOrder}
-  className="space-y-4"
->
+          onSubmit={
+            editingOrder
+              ? updateOrder
+              : createOrder
+          }
+          className="space-y-4"
+        >
 
   <select
     name="customer"
@@ -600,6 +662,17 @@ export default function SalesOrdersPage() {
         </div>
 
       </div>
+     
+      {/* ADD THIS HERE */}
+      {items.length > 1 && (
+        <button
+          type="button"
+          onClick={() => removeItem(index)}
+          className="bg-red-600 text-white px-3 py-1 rounded mt-3"
+        >
+          Remove Product
+        </button>
+      )}
 
     </div>
 
@@ -620,10 +693,54 @@ export default function SalesOrdersPage() {
 
   <button
     type="submit"
-    className="bg-blue-600 text-white px-6 py-3 rounded w-full"
+    className={`text-white px-6 py-3 rounded w-full ${
+      editingOrder
+        ? "bg-yellow-600"
+        : "bg-blue-600"
+    }`}
   >
-    Create Order
+    {editingOrder
+      ? "Update Order"
+      : "Create Order"}
   </button>
+
+{editingOrder && (
+
+  <button
+    type="button"
+    onClick={() => {
+
+      setEditingOrder(null);
+
+      setFormData({
+        customer: "",
+        status: "Pending",
+      });
+
+      setItems([
+        {
+          product: "",
+          quantity: 1,
+          retail_price: 0,
+          price_type: "Retail",
+        },
+      ]);
+
+    }}
+    className="
+      bg-gray-600
+      text-white
+      px-6
+      py-3
+      rounded
+      w-full
+      mt-2
+    "
+  >
+    Cancel Edit
+  </button>
+
+)}
 
 </form>
       </div>
