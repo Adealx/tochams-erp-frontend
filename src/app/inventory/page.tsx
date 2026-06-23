@@ -62,6 +62,7 @@ export default function InventoryPage() {
     useState({
       sku: "",
       name: "",
+      cost_price: "",
       retail_price: "",
       wholesale_price: "",
       stock_quantity: 0,
@@ -129,7 +130,8 @@ export default function InventoryPage() {
     e.preventDefault();
 
     try {
-
+      
+      console.log(formData);
       await api.post(
         "/products/",
         {
@@ -151,6 +153,7 @@ export default function InventoryPage() {
       setFormData({
         sku: "",
         name: "",
+        cost_price: "",
         retail_price: "",
         wholesale_price: "",
         stock_quantity: 0,
@@ -205,6 +208,7 @@ export default function InventoryPage() {
     setFormData({
       sku: "",
       name: "",
+      cost_price: "",
       retail_price: "",
       wholesale_price: "",
       stock_quantity: 0,
@@ -233,6 +237,7 @@ export default function InventoryPage() {
   setFormData({
     sku: product.sku,
     name: product.name,
+    cost_price: product.cost_price,
     retail_price: product.retail_price,
     wholesale_price:
       product.wholesale_price || "",
@@ -428,6 +433,15 @@ const restockProduct = async (
 
           <input
             type="number"
+            name="cost_price"
+            placeholder="Cost Price"
+            value={formData.cost_price}
+            onChange={handleChange}
+            className="border p-3 rounded w-full"
+          />
+
+          <input
+            type="number"
             name="retail_price"
             placeholder="Retail Price"
             value={formData.retail_price}
@@ -477,6 +491,7 @@ const restockProduct = async (
               setFormData({
                 sku: "",
                 name: "",
+                cost_price: "",
                 retail_price: "",
                 wholesale_price: "",
                 stock_quantity: 0,

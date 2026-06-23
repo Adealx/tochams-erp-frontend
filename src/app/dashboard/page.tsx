@@ -36,6 +36,10 @@ export default function Dashboard() {
     outstanding: 0,
     pendingOrders: 0,
     lowStock: 0,
+
+    storeValue: 0,
+    potentialSalesValue: 0,
+    potentialProfit: 0,
   });
 
   const [invoiceChart, setInvoiceChart] =
@@ -70,6 +74,34 @@ export default function Dashboard() {
 
       const products =
         productsResponse.data;
+
+      const storeValue =
+        products.reduce(
+          (sum: number, product: any) =>
+            sum +
+            Number(product.stock_value || 0),
+          0
+        );
+
+      const potentialSalesValue =
+        products.reduce(
+          (sum: number, product: any) =>
+            sum +
+            Number(
+              product.potential_sales_value || 0
+            ),
+          0
+        );
+
+      const potentialProfit =
+        products.reduce(
+          (sum: number, product: any) =>
+            sum +
+            Number(
+              product.potential_profit || 0
+            ),
+          0
+        );  
       
       const alerts = products.filter(
         (product: any) =>
@@ -189,29 +221,19 @@ export default function Dashboard() {
       );
 
       setStats({
-        customers:
-          customers.length,
-
-        products:
-          products.length,
-
-        orders:
-          orders.length,
-
-        invoices:
-          invoices.length,
-
-        payments:
-          totalPayments,
-
+        customers: customers.length,
+        products: products.length,
+        orders: orders.length,
+        invoices: invoices.length,
+        payments: totalPayments,
         outstanding:
-          totalInvoices -
-          totalPayments,
-
+          totalInvoices - totalPayments,
         pendingOrders,
+        lowStock: alerts.length,
 
-        lowStock:
-          alerts.length,
+        storeValue,
+        potentialSalesValue,
+        potentialProfit,
       });
 
     } catch (error: any) {
@@ -314,6 +336,21 @@ export default function Dashboard() {
         <Card
           title="Outstanding"
           value={`₦${stats.outstanding.toLocaleString()}`}
+        />
+        
+        <Card
+          title="Store Value"
+          value={`₦${stats.storeValue.toLocaleString()}`}
+        />
+
+        <Card
+          title="Sales Value"
+          value={`₦${stats.potentialSalesValue.toLocaleString()}`}
+        />
+
+        <Card
+          title="Potential Profit"
+          value={`₦${stats.potentialProfit.toLocaleString()}`}
         />
 
       </div>
@@ -510,6 +547,10 @@ function Card({
     "Low Stock": "⚠️",
     "Payments Received": "💰",
     Outstanding: "📊",
+    
+    "Store Value": "🏬",
+    "Sales Value": "📈",
+    "Potential Profit": "💵",
   };
 
   return (
