@@ -90,6 +90,70 @@ export default function UsersPage() {
     }
   };
 
+  const disableUser = async (
+  userId: number
+) => {
+
+  const confirmed = confirm(
+    "Disable this user?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+    await api.put(
+      `/accounts/users/${userId}/disable/`
+    );
+
+    alert(
+      "User Disabled"
+    );
+
+    fetchUsers();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed To Disable User"
+    );
+  }
+};
+
+const deleteUser = async (
+  userId: number
+) => {
+
+  const confirmed = confirm(
+    "Delete this user?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+
+    await api.delete(
+      `/accounts/users/${userId}/delete/`
+    );
+
+    alert(
+      "User Deleted"
+    );
+
+    fetchUsers();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed To Delete User"
+    );
+  }
+};
+
   const updateRole = async (
     id: number,
     newRole: string
@@ -257,7 +321,7 @@ export default function UsersPage() {
 
                 </td>
 
-                <td className="p-4">
+                <td className="p-4 flex gap-2">
 
                   {user.role ===
                     "pending" && (
@@ -274,6 +338,29 @@ export default function UsersPage() {
                     </button>
 
                   )}
+
+                  <button
+                    onClick={() =>
+                      disableUser(
+                        user.id
+                      )
+                    }
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Disable
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteUser(
+                        user.id
+                      )
+
+                    }
+                    className="bg-red-800 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
 
                 </td>
 
