@@ -6,11 +6,30 @@ import toast from "react-hot-toast";
 
 interface Product {
   id: number;
+
   sku: string;
+
   name: string;
-  retail_price: string;
-  wholesale_price: string;
+
+  category: string;
+
+  supplier: string;
+
   stock_quantity: number;
+
+  reorder_level: number;
+
+  cost_price: string;
+
+  retail_price: string;
+
+  wholesale_price: string;
+
+  stock_value: number;
+
+  potential_sales_value: number;
+
+  potential_profit: number;
 }
 
 interface StockMovement {
@@ -492,6 +511,10 @@ const restockProduct = async (
               </th>
 
               <th className="p-4 text-left">
+                Cost Price
+              </th>
+
+              <th className="p-4 text-left">
                 Retail
               </th>
 
@@ -501,6 +524,10 @@ const restockProduct = async (
 
               <th className="p-4 text-left">
                 Stock
+              </th>
+
+              <th className="p-4 text-left">
+                Store Value
               </th>
 
               <th className="p-4 text-left">
@@ -521,66 +548,84 @@ const restockProduct = async (
                   className="border-b"
                 >
 
-                  <td className="p-4">
-                    {product.sku}
-                  </td>
+                <td className="p-4">
+                  {product.sku}
+                </td>
 
-                  <td className="p-4">
-                    {product.name}
-                  </td>
+                <td className="p-4">
+                  {product.name}
+                </td>
 
-                  <td className="p-4">
-                    ₦{product.retail_price}
-                  </td>
+                {/* NEW */}
+                <td className="p-4">
+                  ₦{Number(
+                    product.cost_price
+                  ).toLocaleString()}
+                </td>
 
-                  <td className="p-4">
-                    ₦{product.wholesale_price}
-                  </td>
+                <td className="p-4">
+                  ₦{Number(
+                    product.retail_price
+                  ).toLocaleString()}
+                </td>
 
-                  <td
-                    className={`p-4 font-bold ${
-                      product.stock_quantity < 10
-                        ? "text-red-600"
-                        : "text-green-600"
-                    }`}
+                <td className="p-4">
+                  ₦{Number(
+                    product.wholesale_price
+                  ).toLocaleString()}
+                </td>
+
+                <td
+                  className={`p-4 font-bold ${
+                    product.stock_quantity < 10
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {product.stock_quantity}
+                </td>
+
+                {/* NEW */}
+                <td className="p-4 font-semibold">
+                  ₦{Number(
+                    product.stock_value
+                  ).toLocaleString()}
+                </td>
+
+                <td className="p-4 flex gap-2">
+
+                  <button
+                    onClick={() =>
+                      restockProduct(product)
+                    }
+                    className="bg-green-600 text-white px-3 py-1 rounded"
                   >
-                    {product.stock_quantity}
-                  </td>
+                    Restock
+                  </button>
 
-                  <td className="p-4 flex gap-2">
+                  <button
+                    onClick={() =>
+                      editProduct(product)
+                    }
+                    className="bg-yellow-500 text-white px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
 
-                    <button
-                      onClick={() =>
-                        restockProduct(product)
-                      }
-                      className="bg-green-600 text-white px-3 py-1 rounded"
-                    >
-                      Restock
-                    </button>
-                  
-                    <button
-                      onClick={() =>
-                        editProduct(product)
-                      }
-                      className="bg-yellow-500 text-white px-3 py-1 rounded"
-                    >
-                      Edit  
-                    </button>
+                  <button
+                    onClick={() =>
+                      deleteProduct(
+                        product.id
+                      )
+                    }
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
 
-                    <button
-                      onClick={() =>
-                        deleteProduct(
-                          product.id
-                        )
-                      }
-                      className="bg-red-600 text-white px-3 py-1 rounded"
-                    >
-                      Delete
-                    </button>
+                </td>
 
-                  </td>
-
-                </tr>
+              </tr>
 
               )
             )}
