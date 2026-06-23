@@ -175,7 +175,7 @@ export default function InventoryPage() {
       }
     );
 
-    alert(
+    toast.success(
       "Product Updated Successfully"
     );
 
@@ -197,7 +197,7 @@ export default function InventoryPage() {
 
     console.error(error);
 
-    alert(
+    toast.error(
       "Failed to update product"
     );
   }
@@ -248,7 +248,7 @@ const restockProduct = async (
       }
     );
 
-    alert(
+    toast.success(
       `${quantity} units added successfully`
     );
 
@@ -287,7 +287,7 @@ const restockProduct = async (
         `/products/${id}/`
       );
       
-      alert(
+      toast.success(
         "Product deleted successfully"
       );
 
@@ -297,7 +297,7 @@ const restockProduct = async (
 
       console.error(error);
 
-      alert(
+      toast.error(
         "Failed to delete product"
       );
     }

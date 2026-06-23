@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
+import toast from "react-hot-toast";
 
 interface User {
   id: number;
@@ -74,7 +75,7 @@ export default function UsersPage() {
         }
       );
 
-      alert(
+      toast.success(
         "User Approved"
       );
 
@@ -84,7 +85,7 @@ export default function UsersPage() {
 
       console.error(error);
 
-      alert(
+      toast.error(
         "Approval Failed"
       );
     }
@@ -106,7 +107,7 @@ export default function UsersPage() {
       `/accounts/users/${userId}/disable/`
     );
 
-    alert(
+    toast.success(
       "User Disabled"
     );
 
@@ -116,7 +117,7 @@ export default function UsersPage() {
 
     console.error(error);
 
-    alert(
+    toast.error(
       "Failed To Disable User"
     );
   }
@@ -138,7 +139,7 @@ const deleteUser = async (
       `/accounts/users/${userId}/delete/`
     );
 
-    alert(
+    toast.success(
       "User Deleted"
     );
 
@@ -148,7 +149,7 @@ const deleteUser = async (
 
     console.error(error);
 
-    alert(
+    toast.error(
       "Failed To Delete User"
     );
   }
@@ -168,7 +169,7 @@ const deleteUser = async (
         }
       );
 
-      alert(
+      toast.success(
         "Role Updated"
       );
 
@@ -178,7 +179,7 @@ const deleteUser = async (
 
       console.error(error);
 
-      alert(
+      toast.error(
         "Failed To Update Role"
       );
     }

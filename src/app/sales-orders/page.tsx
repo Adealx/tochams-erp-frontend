@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import api from "@/services/api";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface SalesOrderItem {
   id?: number;
@@ -75,6 +77,8 @@ export default function SalesOrdersPage() {
     : {};
 
   const role = user.role; 
+
+  const router = useRouter();
 
   const [formData, setFormData] =
   useState({
@@ -220,7 +224,7 @@ export default function SalesOrdersPage() {
     }
   );
 
-      alert(
+      toast.success(
         "Sales Order Created Successfully"
       );
 
@@ -266,13 +270,13 @@ export default function SalesOrdersPage() {
 
       loadOrders();
 
-      alert(
+      toast.success(
         "Order deleted successfully"
       );
     } catch (error: any) {
       console.error(error);
 
-      alert(
+      toast.error(
         "Failed to delete order"
       );
     }
@@ -352,7 +356,7 @@ export default function SalesOrdersPage() {
       }
     );
 
-    alert(
+    toast.success(
       "Order Updated Successfully"
     );
 
@@ -388,7 +392,7 @@ export default function SalesOrdersPage() {
         `/orders/${id}/sales-head-approve/`
       );
 
-      alert(
+      toast.success(
         "Sales Head Approval Successful"
       );
 
@@ -401,13 +405,13 @@ export default function SalesOrdersPage() {
         `/orders/${id}/manager-approve/`
       );
 
-      alert(
+      toast.success(
         "Manager Approval Successful"
       );
 
     } else {
 
-      alert(
+      toast.success(
         "You do not have approval rights"
       );
 
@@ -438,7 +442,7 @@ export default function SalesOrdersPage() {
       `/orders/${id}/invoice/`
     );
 
-    alert(
+    toast.success(
       "Invoice Created"
     );
 

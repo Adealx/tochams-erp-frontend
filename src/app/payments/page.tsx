@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { createPayment } from "@/services/paymentService";
+import toast from "react-hot-toast";
 
 interface Invoice {
   id: number;
@@ -114,7 +115,7 @@ export default function AddPaymentPage() {
 
       });
 
-      alert(
+      toast.success(
         "Payment recorded successfully"
       );
 

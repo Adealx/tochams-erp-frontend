@@ -39,7 +39,7 @@ export default function AddCustomer() {
 
     } catch (error: any) {
       console.error(error);
-      toast.success("Failed to create customer");
+      toast.error("Failed to create customer");
     }
   };
 
