@@ -25,25 +25,105 @@ export default function UsersPage() {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await api.get("/accounts/me/");
-      setRole(response.data.role);
-    } catch (error: any) {
+      const response = await api.get(
+        "/accounts/me/"
+      );
+
+      setRole(
+        response.data.role
+      );
+
+    } catch (error) {
       console.error(error);
     }
   };
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get("/accounts/users/");
-      setUsers(response.data);
-    } catch (error: any) {
+
+      const response =
+        await api.get(
+          "/accounts/users/"
+        );
+
+      setUsers(
+        response.data
+      );
+
+    } catch (error) {
+
       console.error(error);
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
-  if (role && role !== "admin") {
+  const approveUser = async (
+    id: number
+  ) => {
+
+    try {
+
+      await api.put(
+        `/accounts/users/${id}/role/`,
+        {
+          role: "sales",
+        }
+      );
+
+      alert(
+        "User Approved"
+      );
+
+      fetchUsers();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Approval Failed"
+      );
+    }
+  };
+
+  const updateRole = async (
+    id: number,
+    newRole: string
+  ) => {
+
+    try {
+
+      await api.put(
+        `/accounts/users/${id}/role/`,
+        {
+          role: newRole,
+        }
+      );
+
+      alert(
+        "Role Updated"
+      );
+
+      fetchUsers();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Failed To Update Role"
+      );
+    }
+  };
+
+  if (
+    role &&
+    role !== "admin"
+  ) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-red-600">
@@ -67,11 +147,15 @@ export default function UsersPage() {
       <div className="flex justify-between items-center mb-6">
 
         <h1 className="text-3xl font-bold">
-          Users
+          User Management
         </h1>
 
         <button
-          onClick={() => router.push("/users/create")}
+          onClick={() =>
+            router.push(
+              "/users/create"
+            )
+          }
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Add User
@@ -86,6 +170,7 @@ export default function UsersPage() {
           <thead className="bg-gray-100">
 
             <tr>
+
               <th className="text-left p-4">
                 Username
               </th>
@@ -97,6 +182,15 @@ export default function UsersPage() {
               <th className="text-left p-4">
                 Role
               </th>
+
+              <th className="text-left p-4">
+                Change Role
+              </th>
+
+              <th className="text-left p-4">
+                Actions
+              </th>
+
             </tr>
 
           </thead>
@@ -120,6 +214,67 @@ export default function UsersPage() {
 
                 <td className="p-4 capitalize">
                   {user.role}
+                </td>
+
+                <td className="p-4">
+
+                  <select
+                    value={user.role}
+                    onChange={(e) =>
+                      updateRole(
+                        user.id,
+                        e.target.value
+                      )
+                    }
+                    className="border rounded px-3 py-2"
+                  >
+
+                    <option value="pending">
+                      Pending
+                    </option>
+
+                    <option value="sales">
+                      Sales
+                    </option>
+
+                    <option value="sales_head">
+                      Sales Head
+                    </option>
+
+                    <option value="accountant">
+                      Accountant
+                    </option>
+
+                    <option value="manager">
+                      Manager
+                    </option>
+
+                    <option value="admin">
+                      Admin
+                    </option>
+
+                  </select>
+
+                </td>
+
+                <td className="p-4">
+
+                  {user.role ===
+                    "pending" && (
+
+                    <button
+                      onClick={() =>
+                        approveUser(
+                          user.id
+                        )
+                      }
+                      className="bg-green-600 text-white px-3 py-1 rounded"
+                    >
+                      Approve
+                    </button>
+
+                  )}
+
                 </td>
 
               </tr>
