@@ -21,6 +21,23 @@ export const loginUser = async (
   return response.data;
 };
 
+export const registerUser = async (
+  username: string,
+  email: string,
+  password: string
+) => {
+  const response = await authApi.post(
+    "/accounts/register/",
+    {
+      username,
+      email,
+      password,
+    }
+  );
+
+  return response.data;
+};
+
 export const getCurrentUser = async () => {
   const token = localStorage.getItem("access");
 

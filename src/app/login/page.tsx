@@ -209,8 +209,19 @@ export default function LoginPage() {
             >
               Login
             </button>
-
+          
           </form>
+
+          <p className="text-center mt-4">
+            Don't have an account?
+
+            <a
+              href="/register"
+              className="text-blue-600 ml-1"
+            >
+              Sign Up
+            </a>
+          </p>
 
           <div className="mt-8 text-center text-sm text-gray-400">
             © 2026 TOCHAMS Group. All rights reserved.
