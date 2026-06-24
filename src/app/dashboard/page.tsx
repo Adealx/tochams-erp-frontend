@@ -296,64 +296,72 @@ export default function Dashboard() {
 
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
 
-        <Card
-          title="Customers"
-          value={stats.customers}
-        />
+      <FinancialCard
+        title="Store Value"
+        value={`₦${stats.storeValue.toLocaleString()}`}
+        color="blue"
+      />
 
-        <Card
-          title="Products"
-          value={stats.products}
-        />
+      <FinancialCard
+        title="Sales Value"
+        value={`₦${stats.potentialSalesValue.toLocaleString()}`}
+        color="green"
+      />
 
-        <Card
-          title="Sales Orders"
-          value={stats.orders}
-        />
+      <FinancialCard
+        title="Potential Profit"
+        value={`₦${stats.potentialProfit.toLocaleString()}`}
+        color="purple"
+      />
 
-        <Card
-          title="Invoices"
-          value={stats.invoices}
-        />
+      <FinancialCard
+        title="Outstanding"
+        value={`₦${stats.outstanding.toLocaleString()}`}
+        color="red"
+      />
 
-        <Card
-          title="Pending Orders"
-          value={stats.pendingOrders}
-        />
+    </div>
 
-        <Card
-          title="Low Stock"
-          value={stats.lowStock}
-        />
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
 
-        <Card
-          title="Payments Received"
-          value={`₦${stats.payments.toLocaleString()}`}
-        />
+      <SmallCard
+        title="Customers"
+        value={stats.customers}
+      />
 
-        <Card
-          title="Outstanding"
-          value={`₦${stats.outstanding.toLocaleString()}`}
-        />
-        
-        <Card
-          title="Store Value"
-          value={`₦${stats.storeValue.toLocaleString()}`}
-        />
+      <SmallCard
+        title="Products"
+        value={stats.products}
+      />
 
-        <Card
-          title="Sales Value"
-          value={`₦${stats.potentialSalesValue.toLocaleString()}`}
-        />
+      <SmallCard
+        title="Sales Orders"
+        value={stats.orders}
+      />
 
-        <Card
-          title="Potential Profit"
-          value={`₦${stats.potentialProfit.toLocaleString()}`}
-        />
+      <SmallCard
+        title="Invoices"
+        value={stats.invoices}
+      />
 
-      </div>
+      <SmallCard
+        title="Pending Orders"
+        value={stats.pendingOrders}
+      />
+
+      <SmallCard
+        title="Low Stock"
+        value={stats.lowStock}
+      />
+
+      <SmallCard
+        title="Payments"
+        value={`₦${stats.payments.toLocaleString()}`}
+      />
+
+    </div>
 
       <div
         className="
@@ -530,7 +538,46 @@ export default function Dashboard() {
   );
 }
 
-function Card({
+function FinancialCard({
+  title,
+  value,
+  color,
+}: {
+  title: string;
+  value: string;
+  color: string;
+}) {
+
+  const colors: Record<string, string> = {
+    blue: "from-blue-600 to-blue-800",
+    green: "from-green-600 to-green-800",
+    purple: "from-purple-600 to-purple-800",
+    red: "from-red-600 to-red-800",
+  };
+
+  return (
+    <div
+      className={`
+      bg-gradient-to-r
+      ${colors[color]}
+      text-white
+      rounded-3xl
+      p-6
+      shadow-xl
+      `}
+    >
+      <p className="text-white/80 text-sm">
+        {title}
+      </p>
+
+      <h2 className="text-2xl lg:text-3xl font-bold mt-3 break-words">
+        {value}
+      </h2>
+    </div>
+  );
+}
+
+function SmallCard({
   title,
   value,
 }: {
@@ -538,59 +585,28 @@ function Card({
   value: string | number;
 }) {
 
-  const icons: Record<string,string> = {
-    Customers: "👥",
-    Products: "📦",
-    "Sales Orders": "🛒",
-    Invoices: "📄",
-    "Pending Orders": "⏳",
-    "Low Stock": "⚠️",
-    "Payments Received": "💰",
-    Outstanding: "📊",
-    
-    "Store Value": "🏬",
-    "Sales Value": "📈",
-    "Potential Profit": "💵",
-  };
-
   return (
-
     <div
       className="
       bg-white
-      rounded-3xl
-      shadow-lg
-      hover:shadow-2xl
-      transition-all
-      duration-300
-      hover:-translate-y-1
-      p-6
+      rounded-2xl
       border
-      border-slate-100
+      border-gray-200
+      p-5
+      shadow-sm
+      hover:shadow-lg
+      transition
       "
     >
+      <p className="text-gray-500 text-sm">
+        {title}
+      </p>
 
-      <div className="flex justify-between">
-
-        <div>
-
-          <p className="text-slate-500">
-            {title}
-          </p>
-
-          <h2 className="text-4xl font-bold mt-2">
-            {value}
-          </h2>
-
-        </div>
-
-        <div className="text-5xl">
-          {icons[title]}
-        </div>
-
-      </div>
-
+      <h2 className="text-2xl font-bold mt-2">
+        {value}
+      </h2>
     </div>
-
   );
 }
+
+  
