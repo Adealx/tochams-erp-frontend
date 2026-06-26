@@ -11,6 +11,8 @@ import {
   Receipt,
   Wallet,
   Shield,
+  Truck,
+  ClipboardList,
   LogOut,
 } from "lucide-react";
 
@@ -127,6 +129,16 @@ export default function DashboardLayout({
             Customers
           </a>
 
+          {hasPermission(role, "vendors") && (
+            <a
+              href="/vendors"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
+            >
+              <Truck size={20} />
+              Vendors
+            </a>
+          )}
+
           {hasPermission(
             role,
             "inventory"
@@ -137,6 +149,16 @@ export default function DashboardLayout({
             >
               <Package size={20} />
               Inventory
+            </a>
+          )}
+           
+          {hasPermission(role, "procurement") && (
+            <a
+              href="/procurement"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition"
+            >
+              <ClipboardList size={20} />
+              Procurement
             </a>
           )}
 

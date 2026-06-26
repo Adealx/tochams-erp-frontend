@@ -4,7 +4,9 @@ export const permissions = {
   manager: [
     "dashboard",
     "customers",
+    "vendors",
     "inventory",
+    "procurement",
     "orders",
     "invoices",
     "payments",
@@ -26,8 +28,17 @@ export const permissions = {
 
   accountant: [
     "dashboard",
+    "vendors",
+    "procurement",
     "invoices",
     "payments",
+  ],
+
+  procurement: [
+    "dashboard",
+    "vendors",
+    "inventory",
+    "procurement",
   ],
 };
 
