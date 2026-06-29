@@ -31,9 +31,10 @@ export default function ProcurementItems({
   removeItem,
   updateItem,
 }: ProcurementItemsProps) {
+  console.log("Products:", products);
+
   return (
     <div className="mt-10">
-
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">
           Procurement Items
@@ -54,9 +55,7 @@ export default function ProcurementItems({
           className="grid grid-cols-12 gap-4 mb-5 items-end"
         >
           {/* Product */}
-
           <div className="col-span-5">
-
             <label className="block mb-2 font-medium">
               Product
             </label>
@@ -65,47 +64,45 @@ export default function ProcurementItems({
               className="w-full border rounded-lg p-3"
               value={item.product}
               onChange={(e) => {
+                const productId = Number(e.target.value);
+
+                updateItem(index, "product", e.target.value);
 
                 const selected = products.find(
-                  (product) =>
-                    product.id === Number(e.target.value)
-                );
-
-                updateItem(
-                  index,
-                  "product",
-                  e.target.value
+                   (p) => p.id === Number(productId)
                 );
 
                 if (selected) {
-                  updateItem(
-                    index,
-                    "unit_price",
-                    selected.wholesale_price
-                  );
+                  setTimeout(() => {
+                    updateItem(
+                      index,
+                      "unit_price",
+                      Number(selected.wholesale_price)
+                    );
+                  }, 0);
                 }
               }}
             >
-              <option value="">
-                Select Product
-              </option>
+            
+              <option value="">Select Product</option>
 
-              {products.map((product) => (
-                <option
-                  key={product.id}
-                  value={product.id}
-                >
-                  {product.name}
-                </option>
-              ))}
+              {products.map((product) => {
+                console.log("Rendering Product:", product);
+
+                return (
+                  <option
+                    key={product.id}
+                    value={product.id}
+                  >
+                    {product.name}
+                  </option>
+                );
+              })}
             </select>
-
           </div>
 
           {/* Quantity */}
-
           <div className="col-span-2">
-
             <label className="block mb-2 font-medium">
               Qty
             </label>
@@ -123,13 +120,10 @@ export default function ProcurementItems({
                 )
               }
             />
-
           </div>
 
           {/* Unit Price */}
-
           <div className="col-span-2">
-
             <label className="block mb-2 font-medium">
               Unit Price
             </label>
@@ -146,13 +140,10 @@ export default function ProcurementItems({
                 )
               }
             />
-
           </div>
 
           {/* Subtotal */}
-
           <div className="col-span-2">
-
             <label className="block mb-2 font-medium">
               Subtotal
             </label>
@@ -164,13 +155,10 @@ export default function ProcurementItems({
                 Number(item.unit_price)
               ).toLocaleString()}
             </div>
-
           </div>
 
           {/* Remove */}
-
           <div className="col-span-1">
-
             <button
               type="button"
               onClick={() => removeItem(index)}
@@ -178,9 +166,7 @@ export default function ProcurementItems({
             >
               ✕
             </button>
-
           </div>
-
         </div>
       ))}
     </div>

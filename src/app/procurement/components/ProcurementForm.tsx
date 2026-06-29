@@ -105,36 +105,36 @@ export default function ProcurementForm() {
   };
 
   const addItem = () => {
-    setItems([
-      ...items,
-      {
-        product: "",
-        quantity: 1,
-        unit_price: 0,
-      },
-    ]);
-  };
+  setItems((prev) => [
+    ...prev,
+    {
+      product: "",
+      quantity: 1,
+      unit_price: 0,
+    },
+  ]);
+};
 
-  const removeItem = (index: number) => {
-    const updated = [...items];
-    updated.splice(index, 1);
-    setItems(updated);
-  };
+   const removeItem = (index: number) => {
+     setItems((prev) => prev.filter((_, i) => i !== index));
+   };
 
   const updateItem = (
-    index: number,
-    field: keyof ProcurementItem,
-    value: any
-  ) => {
-    const updated = [...items];
+  index: number,
+  field: keyof ProcurementItem,
+  value: any
+) => {
+  setItems((prevItems) => {
+    const updated = [...prevItems];
 
     updated[index] = {
       ...updated[index],
       [field]: value,
     };
 
-    setItems(updated);
-  };
+    return updated;
+  });
+};
 
   const grandTotal = items.reduce(
     (sum, item) =>
@@ -145,17 +145,32 @@ export default function ProcurementForm() {
   );
 
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await createProcurement({
-        vendor: Number(formData.vendor),
-        expected_delivery:
-          formData.expected_delivery,
-        status: formData.status,
-        notes: formData.notes,
-        items,
-      });
+    console.log("========== PROCUREMENT PAYLOAD ==========");
+
+    console.log({
+      vendor: Number(formData.vendor),
+      expected_delivery: formData.expected_delivery,
+      status: formData.status,
+      notes: formData.notes,
+      items,
+    });
+
+    console.log("========================================");
+
+    await createProcurement({
+      vendor: Number(formData.vendor),
+      expected_delivery: formData.expected_delivery,
+      status: formData.status,
+      notes: formData.notes,
+      items: items.map((item) => ({
+        ...item,
+        product: Number(item.product),
+    })),
+ });
+
 
       alert("Procurement Created Successfully");
 
@@ -175,13 +190,23 @@ export default function ProcurementForm() {
       ]);
 
       loadProcurements();
-    } catch (error) {
-      console.error(error);
-      alert("Unable to save procurement.");
+    } catch (err: any) {
+      console.error("Backend Error:", err);
+
+      if (err.response) {
+        console.log("Status:", err.response.status);
+        console.log("Response:", err.response.data);
+        alert(JSON.stringify(err.response.data, null, 2));
+      } else {
+        alert(err.message);
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+    console.log("Products passed to ProcurementItems:", products);
+    console.log("Current Items State:", items);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -289,7 +314,7 @@ export default function ProcurementForm() {
         </div>
 
       </div>
-
+        
       <ProcurementItems
         products={products}
         items={items}

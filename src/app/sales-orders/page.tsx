@@ -530,7 +530,7 @@ export default function SalesOrdersPage() {
     >
 
       <select
-        value={item.product}
+        value={item.product ?? ""}
         onChange={(e) => {
 
           const selected =
