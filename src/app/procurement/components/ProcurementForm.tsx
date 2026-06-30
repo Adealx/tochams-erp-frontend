@@ -10,6 +10,7 @@ import {
   getProcurement,
   createProcurement,
   updateProcurement,
+  deleteProcurement,
 } from "@/services/procurementService";
 
 import ProcurementItems from "./ProcurementItems";
@@ -19,6 +20,8 @@ import GrandTotal from "./GrandTotal";
 import ProcurementTable from "./ProcurementTable";
 
 import ProcurementViewModal from "./ProcurementViewModal";
+
+import DeleteProcurementModal from "./DeleteProcurementModal";
 
 /* ============================
    Interfaces
@@ -58,6 +61,8 @@ export default function ProcurementForm() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [procurements, setProcurements] = useState<Procurement[]>([]);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const [selectedProcurement, setSelectedProcurement] =
     useState<any>(null);
@@ -171,6 +176,47 @@ export default function ProcurementForm() {
     0
   );
  
+  const handleDeleteClick = (id: number) => {
+
+  const procurement = procurements.find(
+    (p) => p.id === id
+  );
+
+  if (!procurement) return;
+
+  setSelectedProcurement(procurement);
+
+  setDeleteOpen(true);
+}; 
+
+  const confirmDelete = async () => {
+
+  if (!selectedProcurement) return;
+
+  try {
+
+    await deleteProcurement(
+      selectedProcurement.id
+    );
+
+    alert("Procurement Deleted");
+
+    setDeleteOpen(false);
+
+    setSelectedProcurement(null);
+
+    loadProcurements();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Unable to delete procurement.");
+
+  }
+
+};
+
   const handleEdit = async (id: number) => {
   const procurement = await getProcurement(id);
 
@@ -413,12 +459,23 @@ export default function ProcurementForm() {
         procurements={procurements}
         onView={handleView}
         onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
 
       <ProcurementViewModal
         procurement={selectedProcurement}
         isOpen={viewOpen}
         onClose={() => setViewOpen(false)}
+      />
+
+      <DeleteProcurementModal
+        open={deleteOpen}
+        poNumber={selectedProcurement?.po_number || ""}
+        onClose={() => {
+          setDeleteOpen(false);
+          setSelectedProcurement(null);
+        }}
+        onConfirm={confirmDelete}
       />
 
     </div>
