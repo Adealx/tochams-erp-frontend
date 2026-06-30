@@ -11,9 +11,18 @@ interface Procurement {
 
 interface ProcurementTableProps {
   procurements: Procurement[];
+
   onView?: (id: number) => void;
+
   onEdit?: (id: number) => void;
+
   onDelete?: (id: number) => void;
+
+  onSubmit?: (id: number) => void;
+
+  onApprove?: (id: number) => void;
+
+  onReject?: (id: number) => void;
 }
 
 export default function ProcurementTable({
@@ -21,6 +30,9 @@ export default function ProcurementTable({
   onView,
   onEdit,
   onDelete,
+  onSubmit,
+  onApprove,
+  onReject,
 }: ProcurementTableProps) {
   return (
     <div className="mt-10 bg-white rounded-2xl shadow-lg p-6">
@@ -143,34 +155,69 @@ export default function ProcurementTable({
 
                   <td className="border px-4 py-3">
 
-                    <div className="flex justify-center gap-2">
+                    <div className="flex flex-wrap justify-center gap-2">
 
                       <button
-                        onClick={() =>
-                          onView?.(procurement.id)
-                        }
+                        onClick={() => onView?.(procurement.id)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
                       >
                         View
                       </button>
 
-                      <button
-                        onClick={() =>
-                          onEdit?.(procurement.id)
-                        }
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                      >
-                        Edit
-                      </button>
+                      {procurement.status === "Draft" && (
+                        <>
+                          <button
+                            onClick={() => onEdit?.(procurement.id)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                          >
+                            Edit
+                          </button>
 
-                      <button
-                        onClick={() =>
-                          onDelete?.(procurement.id)
-                        }
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
+                          <button
+                            onClick={() => onSubmit?.(procurement.id)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded"
+                          >
+                            Submit
+                          </button>
+
+                          <button
+                            onClick={() => onDelete?.(procurement.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+
+                      {procurement.status === "Pending Approval" && (
+                        <>
+                          <button
+                            onClick={() => onApprove?.(procurement.id)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded"
+                          >
+                            Approve
+                          </button>
+
+                          <button
+                            onClick={() => onReject?.(procurement.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+
+                      {procurement.status === "Approved" && (
+                        <span className="text-green-700 font-semibold">
+                          Awaiting PO Email
+                        </span>
+                      )}
+
+                      {procurement.status === "Rejected" && (
+                        <span className="text-red-600 font-semibold">
+                          Rejected
+                        </span>
+                      )}
 
                     </div>
 

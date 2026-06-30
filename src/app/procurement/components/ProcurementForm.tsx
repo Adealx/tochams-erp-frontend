@@ -11,6 +11,9 @@ import {
   createProcurement,
   updateProcurement,
   deleteProcurement,
+  submitProcurement,
+  approveProcurement,
+  rejectProcurement,
 } from "@/services/procurementService";
 
 import ProcurementItems from "./ProcurementItems";
@@ -188,6 +191,63 @@ export default function ProcurementForm() {
 
   setDeleteOpen(true);
 }; 
+
+  const handleSubmitApproval = async (
+  id: number
+) => {
+  try {
+    await submitProcurement(id);
+
+    alert("Submitted for approval.");
+
+    loadProcurements();
+  } catch (err: any) {
+    alert(
+      err.response?.data?.error ||
+      "Unable to submit procurement."
+    );
+  }
+};
+
+const handleApprove = async (
+  id: number
+) => {
+  try {
+    await approveProcurement(id);
+
+    alert("Procurement approved.");
+
+    loadProcurements();
+  } catch (err: any) {
+    alert(
+      err.response?.data?.error ||
+      "Unable to approve procurement."
+    );
+  }
+};
+
+const handleReject = async (
+  id: number
+) => {
+  const comment =
+    prompt("Reason for rejection?") || "";
+
+  try {
+    await rejectProcurement(
+      id,
+      comment
+    );
+
+    alert("Procurement rejected.");
+
+    loadProcurements();
+  } catch (err: any) {
+    alert(
+      err.response?.data?.error ||
+      "Unable to reject procurement."
+    );
+  }
+};
 
   const confirmDelete = async () => {
 
@@ -390,21 +450,16 @@ export default function ProcurementForm() {
             Status
           </label>
 
-          <select
-            className="w-full border rounded-lg p-3"
-            value={formData.status}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                status: e.target.value,
-              })
+          <input
+            type="text"
+            value={
+              editingId
+                ? formData.status
+                : "Draft"
             }
-          >
-            <option>Draft</option>
-            <option>Submitted</option>
-            <option>Approved</option>
-            <option>Ordered</option>
-          </select>
+            readOnly
+            className="w-full border rounded-lg p-3 bg-gray-100 text-gray-600"
+          />
         </div>
 
         <div>
@@ -456,10 +511,13 @@ export default function ProcurementForm() {
       </div>
 
       <ProcurementTable
-        procurements={procurements}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
+          procurements={procurements}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+          onSubmit={handleSubmitApproval}
+          onApprove={handleApprove}
+          onReject={handleReject}
       />
 
       <ProcurementViewModal

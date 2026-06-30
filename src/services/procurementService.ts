@@ -39,3 +39,37 @@ export const deleteProcurement = async (
     `/procurement/${id}/`
   );
 };
+
+export const submitProcurement = async (
+  id: number
+) => {
+  const res = await api.post(
+    `/procurement/${id}/submit/`
+  );
+
+  return res.data;
+};
+
+export const approveProcurement = async (
+  id: number
+) => {
+  const res = await api.post(
+    `/procurement/${id}/approve/`
+  );
+
+  return res.data;
+};
+
+export const rejectProcurement = async (
+  id: number,
+  comment = ""
+) => {
+  const res = await api.post(
+    `/procurement/${id}/reject/`,
+    {
+      comment,
+    }
+  );
+
+  return res.data;
+};
