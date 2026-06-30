@@ -125,7 +125,7 @@ export default function ProcurementItems({
           {/* Unit Price */}
           <div className="col-span-2">
             <label className="block mb-2 font-medium">
-              Unit Price
+              Cost Price
             </label>
 
             <input
