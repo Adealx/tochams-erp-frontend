@@ -9,6 +9,7 @@ import {
   getProcurements,
   getProcurement,
   createProcurement,
+  updateProcurement,
 } from "@/services/procurementService";
 
 import ProcurementItems from "./ProcurementItems";
@@ -63,6 +64,8 @@ export default function ProcurementForm() {
 
   const [viewOpen, setViewOpen] =
     useState(false);
+
+  const [editingId, setEditingId] = useState<number | null>(null);  
 
   const [loading, setLoading] = useState(false);
 
@@ -167,6 +170,32 @@ export default function ProcurementForm() {
         Number(item.unit_price || 0),
     0
   );
+ 
+  const handleEdit = async (id: number) => {
+  const procurement = await getProcurement(id);
+
+  setEditingId(procurement.id);
+
+  setFormData({
+    vendor: String(procurement.vendor),
+    expected_delivery: procurement.expected_delivery,
+    status: procurement.status,
+    notes: procurement.notes || "",
+  });
+
+  setItems(
+    procurement.items.map((item: any) => ({
+      product: String(item.product),
+      quantity: item.quantity,
+      unit_price: Number(item.unit_price),
+    }))
+  );
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}; 
 
   const handleSubmit = async () => {
   try {
@@ -184,19 +213,32 @@ export default function ProcurementForm() {
 
     console.log("========================================");
 
-    await createProcurement({
+    const payload = {
       vendor: Number(formData.vendor),
       expected_delivery: formData.expected_delivery,
       status: formData.status,
       notes: formData.notes,
       items: items.map((item) => ({
-        ...item,
         product: Number(item.product),
-    })),
- });
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
+      })),
+    };
+
+    if (editingId) {
+      await updateProcurement(editingId, payload);
+    } else {
+      await createProcurement(payload);
+    }
 
 
-      alert("Procurement Created Successfully");
+      alert(
+        editingId
+          ? "Procurement Updated Successfully"
+          : "Procurement Created Successfully"
+      );
+       
+      setEditingId(null);
 
       setFormData({
         vendor: "",
@@ -353,10 +395,16 @@ export default function ProcurementForm() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg"
+          className={`text-white px-8 py-3 rounded-lg ${
+            editingId
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
         >
           {loading
             ? "Saving..."
+            : editingId
+            ? "Update Procurement"
             : "Save Procurement"}
         </button>
       </div>
@@ -364,6 +412,7 @@ export default function ProcurementForm() {
       <ProcurementTable
         procurements={procurements}
         onView={handleView}
+        onEdit={handleEdit}
       />
 
       <ProcurementViewModal
