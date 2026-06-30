@@ -3,7 +3,7 @@
 interface Product {
   id: number;
   name: string;
-  wholesale_price: number;
+  cost_price: number;
 }
 
 interface ProcurementItem {
@@ -77,7 +77,7 @@ export default function ProcurementItems({
                     updateItem(
                       index,
                       "unit_price",
-                      Number(selected.wholesale_price)
+                      Number(selected.cost_price)
                     );
                   }, 0);
                 }

@@ -30,6 +30,7 @@ interface Product {
   id: number;
   sku: string;
   name: string;
+  cost_price: number;
   wholesale_price: number;
   retail_price: number;
 }
