@@ -7,6 +7,7 @@ import api from "@/services/api";
 import { getVendors } from "@/services/vendorService";
 import {
   getProcurements,
+  getProcurement,
   createProcurement,
 } from "@/services/procurementService";
 
@@ -15,6 +16,8 @@ import ProcurementItems from "./ProcurementItems";
 import GrandTotal from "./GrandTotal";
 
 import ProcurementTable from "./ProcurementTable";
+
+import ProcurementViewModal from "./ProcurementViewModal";
 
 /* ============================
    Interfaces
@@ -54,6 +57,12 @@ export default function ProcurementForm() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [procurements, setProcurements] = useState<Procurement[]>([]);
+
+  const [selectedProcurement, setSelectedProcurement] =
+    useState<any>(null);
+
+  const [viewOpen, setViewOpen] =
+    useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -104,6 +113,20 @@ export default function ProcurementForm() {
       console.error(error);
     }
   };
+
+  const handleView = async (id: number) => {
+  try {
+    const data = await getProcurement(id);
+
+    setSelectedProcurement(data);
+
+    setViewOpen(true);
+  } catch (error) {
+    console.error(error);
+
+    alert("Unable to load procurement.");
+  }
+};
 
   const addItem = () => {
   setItems((prev) => [
@@ -340,6 +363,13 @@ export default function ProcurementForm() {
 
       <ProcurementTable
         procurements={procurements}
+        onView={handleView}
+      />
+
+      <ProcurementViewModal
+        procurement={selectedProcurement}
+        isOpen={viewOpen}
+        onClose={() => setViewOpen(false)}
       />
 
     </div>

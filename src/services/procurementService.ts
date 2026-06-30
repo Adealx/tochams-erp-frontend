@@ -5,6 +5,16 @@ export const getProcurements = async () => {
   return res.data;
 };
 
+export const getProcurement = async (
+  id: number
+) => {
+  const res = await api.get(
+    `/procurement/${id}/`
+  );
+
+  return res.data;
+};
+
 export const createProcurement = async (data: any) => {
   const res = await api.post("/procurement/", data);
   return res.data;
