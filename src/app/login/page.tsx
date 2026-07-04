@@ -8,8 +8,6 @@ import {
   BarChart3,
   ShieldCheck,
   Users,
-  User,
-  Lock,
 } from "lucide-react";
 
 import { loginUser } from "@/services/authService";
@@ -17,26 +15,24 @@ import { loginUser } from "@/services/authService";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [username, setUsername] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
     e.preventDefault();
 
+    setLoading(true);
+    setError("");
+
     try {
-      const data =
-        await loginUser(
-          username,
-          password
-        );
+      const data = await loginUser(
+        username,
+        password
+      );
 
       localStorage.setItem(
         "access",
@@ -48,183 +44,348 @@ export default function LoginPage() {
         data.refresh
       );
 
-      router.push(
-        "/dashboard"
-      );
+      router.push("/dashboard");
+
     } catch {
+
       setError(
-        "Invalid username or password"
+        "Invalid username or password."
       );
+
+    } finally {
+
+      setLoading(false);
+
     }
   };
 
   return (
+
     <div className="min-h-screen flex bg-slate-100">
 
-      {/* Left Panel */}
+      {/* LEFT PANEL */}
 
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-950 via-blue-800 to-blue-600 text-white p-12 flex-col justify-between">
+      <div
+        className="
+          hidden
+          lg:flex
+          lg:w-1/2
+          flex-col
+          justify-around
+          bg-gradient-to-br
+          from-blue-950
+          via-blue-800
+          to-blue-600
+          text-white
+          p-16
+        "
+      >
 
         <div>
 
-          <div className="flex items-center gap-4 mb-10">
+          <div className="flex items-center gap-5 mb-16">
 
-            <div className="bg-white/20 p-4 rounded-2xl">
-              <Building2 size={40} />
+            <div className="rounded-2xl bg-white/20 p-4">
+
+              <Building2 size={42} />
+
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold">
-                TOCHAMS ARP
+
+              <h1 className="text-5xl font-bold">
+                TOCHAMS ERP
               </h1>
 
-              <p className="text-blue-100">
-                Accounts Receivable Platform
+              <p className="mt-2 text-blue-100 text-lg">
+                Enterprise Resource Planning
               </p>
+
             </div>
 
           </div>
 
-          <h2 className="text-5xl font-bold leading-tight mb-6">
-            Smarter Receivables.
+          <h2 className="text-7xl font-bold leading-tight">
+
+            Smarter Business.
             <br />
-            Stronger Business.
+            Better Decisions.
+
           </h2>
 
-          <p className="text-lg text-blue-100 max-w-lg">
-            Manage invoices,
-            payments, customers,
-            inventory and sales
-            operations from one
-            intelligent platform.
+          <p className="mt-10 max-w-xl text-xl leading-10 text-blue-100">
+
+            Manage inventory,
+            procurement,
+            customers,
+            invoices,
+            payments,
+            sales,
+            accounting and operations
+            from one intelligent enterprise platform.
+
           </p>
 
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8 text-xl pb-10">
 
           <div className="flex items-center gap-4">
-            <BarChart3 />
+
+            <BarChart3 size={28} />
+
             <span>
               Real-time business insights
             </span>
+
           </div>
 
           <div className="flex items-center gap-4">
-            <ShieldCheck />
+
+            <ShieldCheck size={28} />
+
             <span>
-              Secure role-based access
+              Enterprise-grade security
             </span>
+
           </div>
 
           <div className="flex items-center gap-4">
-            <Users />
+
+            <Users size={28} />
+
             <span>
               Multi-user collaboration
             </span>
+
           </div>
 
         </div>
 
       </div>
 
-      {/* Right Panel */}
+      {/* RIGHT PANEL */}
 
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex flex-1 items-center justify-center p-10">
 
-        <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md">
+        <div
+          className="
+            w-full
+            max-w-md
+            rounded-3xl
+            bg-white
+            shadow-2xl
+            p-12
+          "
+        >
 
-          <div className="text-center mb-8">
+          {/* Logo */}
 
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center pt-4 mb-10">
+
+            <div
+              className="
+                mx-auto
+                mb-6
+                flex
+                h-20
+                w-20
+                items-center
+                justify-center
+                rounded-full
+                bg-blue-100
+              "
+            >
+
               <Building2
                 size={40}
                 className="text-blue-600"
               />
+
             </div>
 
-            <h2 className="text-4xl font-bold">
+            <h2 className="text-5xl font-bold text-slate-900">
+
               Welcome Back
+
             </h2>
 
-            <p className="text-gray-500 mt-2">
+            <p className="mt-4 text-lg text-slate-500">
+
               Sign in to continue
+
             </p>
 
           </div>
 
           {error && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-5">
+
+            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+
               {error}
+
             </div>
+
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-7"
+          >
 
-            <div className="relative mb-4">
+            <div>
 
-              <User
-                size={18}
-                className="absolute left-3 top-4 text-gray-400"
-              />
+              <label className="mb-3 block text-sm font-semibold text-slate-700">
+
+                Username
+
+              </label>
 
               <input
                 type="text"
-                placeholder="Username"
+                autoComplete="username"
                 value={username}
                 onChange={(e) =>
-                  setUsername(
-                    e.target.value
-                  )
+                  setUsername(e.target.value)
                 }
-                className="w-full border rounded-xl p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="
+                  w-full
+                  h-14
+                  rounded-xl
+                  border
+                  border-slate-300
+                  px-5
+                  text-base
+                  transition
+                  focus:border-blue-600
+                  focus:ring-4
+                  focus:ring-blue-100
+                  outline-none
+                "
+                required
               />
 
             </div>
 
-            <div className="relative mb-6">
+            <div>
 
-              <Lock
-                size={18}
-                className="absolute left-3 top-4 text-gray-400"
-              />
+              <label className="mb-3 block text-sm font-semibold text-slate-700">
+
+                Password
+
+              </label>
 
               <input
                 type="password"
-                placeholder="Password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) =>
-                  setPassword(
-                    e.target.value
-                  )
+                  setPassword(e.target.value)
                 }
-                className="w-full border rounded-xl p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="
+                  w-full
+                  h-14
+                  rounded-xl
+                  border
+                  border-slate-300
+                  px-5
+                  text-base
+                  transition
+                  focus:border-blue-600
+                  focus:ring-4
+                  focus:ring-blue-100
+                  outline-none
+                "
+                required
               />
+
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+
+              <label className="flex items-center gap-2 text-slate-600">
+
+                <input
+                  type="checkbox"
+                  className="rounded"
+                />
+
+                Remember me
+
+              </label>
+
+              <a
+                href="#"
+                className="font-medium text-blue-600 hover:underline"
+              >
+
+                Forgot Password?
+
+              </a>
 
             </div>
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-3 rounded-xl font-semibold"
+              disabled={loading}
+              className="
+                w-full
+                h-14
+                rounded-2xl
+                bg-blue-600
+                text-lg
+                font-semibold
+                text-white
+                shadow-lg
+                transition-all
+                hover:bg-blue-700
+                hover:shadow-xl
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+              "
             >
-              Login
+
+              {loading
+                ? "Signing In..."
+                : "Login"}
+
             </button>
-          
+
           </form>
 
-          <p className="text-center mt-4">
-            Don't have an account?
+          <div className="mt-10 text-center">
+
+            <span className="text-slate-500">
+
+              Don't have an account?
+
+            </span>
 
             <a
               href="/register"
-              className="text-blue-600 ml-1"
+              className="ml-2 font-semibold text-blue-600 hover:underline"
             >
-              Sign Up
-            </a>
-          </p>
 
-          <div className="mt-8 text-center text-sm text-gray-400">
+              Sign Up
+
+            </a>
+
+          </div>
+
+          <div
+            className="
+              mt-10
+              border-t
+              border-slate-200
+              pt-8
+              text-center
+              text-sm
+              text-slate-400
+            "
+          >
+
             © 2026 TOCHAMS Group. All rights reserved.
+
           </div>
 
         </div>
@@ -232,5 +393,6 @@ export default function LoginPage() {
       </div>
 
     </div>
+
   );
 }
