@@ -189,6 +189,16 @@ export default function RegisterPage() {
 
           </div>
 
+          {/* Approval Notice */}
+  <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-3">
+    <p className="text-sm text-amber-800">
+      <strong>Administrator Approval Required</strong>
+      <br />
+      Your account will require administrator approval before you can sign in.
+      You'll receive an email once your account has been approved.
+    </p>
+  </div>
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-xl"

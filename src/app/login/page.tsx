@@ -1,38 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
   Building2,
   BarChart3,
   ShieldCheck,
+  Boxes,
   Users,
+  Eye,
+  EyeOff,
+  ArrowRight,
 } from "lucide-react";
 
 import { loginUser } from "@/services/authService";
 
 export default function LoginPage() {
+
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [username, setUsername] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
+
     e.preventDefault();
 
     setLoading(true);
+
     setError("");
 
     try {
-      const data = await loginUser(
-        username,
-        password
-      );
+
+      const data =
+        await loginUser(
+          username,
+          password
+        );
 
       localStorage.setItem(
         "access",
@@ -46,181 +66,590 @@ export default function LoginPage() {
 
       router.push("/dashboard");
 
-    } catch {
+    }
+
+    catch {
 
       setError(
         "Invalid username or password."
       );
 
-    } finally {
+    }
+
+    finally {
 
       setLoading(false);
 
     }
+
   };
 
   return (
 
-    <div className="min-h-screen flex bg-slate-100">
+    <main
+      className="
+      min-h-screen
+      lg:grid
+      lg:grid-cols-[52%_48%]
+      bg-white
+    "
+    >
 
+      {/* ====================================== */}
       {/* LEFT PANEL */}
+      {/* ====================================== */}
 
-      <div
+      <section
         className="
-          hidden
-          lg:flex
-          lg:w-1/2
-          flex-col
-          justify-around
-          bg-gradient-to-br
-          from-blue-950
-          via-blue-800
-          to-blue-600
-          text-white
-          p-16
-        "
+        relative
+        hidden
+        lg:flex
+        flex-col
+        justify-between
+        overflow-hidden
+        bg-gradient-to-br
+        from-[#0B2A83]
+        via-[#1546D8]
+        to-[#2563EB]
+        px-14
+        py-12
+        text-white
+      "
       >
 
-        <div>
+        {/* Background */}
 
-          <div className="flex items-center gap-5 mb-16">
+        <div className="absolute inset-0">
 
-            <div className="rounded-2xl bg-white/20 p-4">
+          <div
+            className="
+            absolute
+            -left-52
+            -top-52
+            h-[650px]
+            w-[650px]
+            rounded-full
+            bg-white/10
+            blur-3xl
+          "
+          />
 
-              <Building2 size={42} />
+          <div
+            className="
+            absolute
+            bottom-[-220px]
+            right-[-220px]
+            h-[600px]
+            w-[600px]
+            rounded-full
+            bg-cyan-300/10
+            blur-3xl
+          "
+          />
+
+        </div>
+
+        {/* Dots */}
+
+        <div
+          className="
+          absolute
+          right-16
+          top-14
+          grid
+          grid-cols-7
+          gap-3
+          opacity-20
+        "
+        >
+
+          {Array.from({
+            length: 49,
+          }).map((_, i) => (
+
+            <span
+              key={i}
+              className="
+              h-2
+              w-2
+              rounded-full
+              bg-white
+            "
+            />
+
+          ))}
+
+        </div>
+
+        {/* Content */}
+
+        <div className="relative z-10">
+
+          {/* Logo */}
+
+          <div className="flex items-center gap-5">
+
+            <div
+              className="
+              flex
+              h-24
+              w-24
+              items-center
+              justify-center
+              rounded-3xl
+              bg-white
+              shadow-xl
+            "
+            >
+
+              <Building2
+                size={42}
+                className="text-blue-700"
+              />
 
             </div>
 
             <div>
 
-              <h1 className="text-5xl font-bold">
+              <h1
+                className="
+                text-5xl
+                font-black
+              "
+              >
+
                 TOCHAMS ERP
+
               </h1>
 
-              <p className="mt-2 text-blue-100 text-lg">
+              <p
+                className="
+                mt-2
+                text-lg
+                text-blue-100
+              "
+              >
+
                 Enterprise Resource Planning
+
               </p>
 
             </div>
 
           </div>
 
-          <h2 className="text-7xl font-bold leading-tight">
+          {/* Badge */}
 
-            Smarter Business.
+          <div
+            className="
+            mt-12
+            inline-flex
+            items-center
+            gap-3
+            rounded-full
+            bg-white/10
+            px-5
+            py-3
+            backdrop-blur-md
+          "
+          >
+
+            <ShieldCheck size={18} />
+
+            <span>
+
+              Trusted by enterprise teams
+
+            </span>
+
+          </div>
+
+          {/* Heading */}
+
+          <h2
+            className="
+            mt-14
+            max-w-lg
+            text-6xl
+            font-black
+            leading-tight
+          "
+          >
+
+            Manage Business.
+
             <br />
-            Better Decisions.
+
+            <span className="text-cyan-300">
+
+              At Scale.
+
+            </span>
 
           </h2>
 
-          <p className="mt-10 max-w-xl text-xl leading-10 text-blue-100">
+          {/* Description */}
 
-            Manage inventory,
-            procurement,
-            customers,
-            invoices,
-            payments,
-            sales,
-            accounting and operations
-            from one intelligent enterprise platform.
+          <p
+            className="
+            mt-10
+            max-w-xl
+            text-xl
+            leading-10
+            text-blue-100
+          "
+          >
+
+            A unified platform for managing
+            inventory, procurement,
+            customers, invoices,
+            payments, accounting,
+            sales, logistics and
+            enterprise operations —
+            built for speed and clarity.
 
           </p>
 
         </div>
 
-        <div className="space-y-8 text-xl pb-10">
+                {/* ====================================== */}
+        {/* FEATURES */}
+        {/* ====================================== */}
 
-          <div className="flex items-center gap-4">
+        <div className="relative z-10 mt-16">
 
-            <BarChart3 size={28} />
+          <div className="space-y-7">
 
-            <span>
-              Real-time business insights
-            </span>
+            <div className="flex items-center gap-5">
 
-          </div>
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-white/10
+                  backdrop-blur-md
+                "
+              >
 
-          <div className="flex items-center gap-4">
+                <BarChart3 size={24} />
 
-            <ShieldCheck size={28} />
+              </div>
 
-            <span>
-              Enterprise-grade security
-            </span>
+              <div>
 
-          </div>
+                <h3 className="text-xl font-semibold">
 
-          <div className="flex items-center gap-4">
+                  Real-Time Analytics
 
-            <Users size={28} />
+                </h3>
 
-            <span>
-              Multi-user collaboration
-            </span>
+                <p className="mt-1 text-blue-200">
+
+                  Monitor business performance instantly.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-5">
+
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-white/10
+                  backdrop-blur-md
+                "
+              >
+
+                <Boxes size={24} />
+
+              </div>
+
+              <div>
+
+                <h3 className="text-xl font-semibold">
+
+                  Inventory Control
+
+                </h3>
+
+                <p className="mt-1 text-blue-200">
+
+                  Track products, warehouses and stock.
+
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex items-center gap-5">
+
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-white/10
+                  backdrop-blur-md
+                "
+              >
+
+                <Users size={24} />
+
+              </div>
+
+              <div>
+
+                <h3 className="text-xl font-semibold">
+
+                  Team Collaboration
+
+                </h3>
+
+                <p className="mt-1 text-blue-200">
+
+                  Connect every department together.
+
+                </p>
+
+              </div>
+
+            </div>
 
           </div>
 
         </div>
 
-      </div>
+        {/* ====================================== */}
+        {/* STATISTICS */}
+        {/* ====================================== */}
 
+        <div className="relative z-10 mt-20">
+
+          <div className="border-t border-white/20 pt-10">
+
+            <div className="grid grid-cols-3 gap-10">
+
+              <div>
+
+                <h2 className="text-5xl font-black">
+
+                  250+
+
+                </h2>
+
+                <p className="mt-3 text-blue-200">
+
+                  Companies
+
+                </p>
+
+              </div>
+
+              <div>
+
+                <h2 className="text-5xl font-black">
+
+                  25K+
+
+                </h2>
+
+                <p className="mt-3 text-blue-200">
+
+                  Transactions
+
+                </p>
+
+              </div>
+
+              <div>
+
+                <h2 className="text-5xl font-black">
+
+                  99.9%
+
+                </h2>
+
+                <p className="mt-3 text-blue-200">
+
+                  Uptime
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ====================================== */}
       {/* RIGHT PANEL */}
+      {/* ====================================== */}
 
-      <div className="flex flex-1 items-center justify-center p-10">
+      <section
+        className="
+          flex
+          items-center
+          justify-center
+          bg-white
+          px-20
+          py-16
+        "
+      >
 
         <div
           className="
             w-full
-            max-w-md
-            rounded-3xl
-            bg-white
-            shadow-2xl
-            p-12
+            max-w-xl
           "
         >
+        
+                  {/* ====================================== */}
+          {/* LOGO */}
+          {/* ====================================== */}
 
-          {/* Logo */}
-
-          <div className="text-center pt-4 mb-10">
+          <div className="text-center">
 
             <div
               className="
                 mx-auto
-                mb-6
                 flex
-                h-20
-                w-20
+                h-24
+                w-24
                 items-center
                 justify-center
-                rounded-full
-                bg-blue-100
+                rounded-3xl
+                bg-blue-50
+                shadow-lg
               "
             >
 
               <Building2
-                size={40}
-                className="text-blue-600"
+                size={38}
+                className="text-blue-700"
               />
 
             </div>
 
-            <h2 className="text-5xl font-bold text-slate-900">
+            <h1
+              className="
+                mt-8
+                text-4xl
+                font-bold
+                tracking-tight
+                text-slate-900
+              "
+            >
 
-              Welcome Back
+              Welcome to TOCHAMS ERP
 
-            </h2>
+            </h1>
 
-            <p className="mt-4 text-lg text-slate-500">
+            <p
+              className="
+                mt-3
+                text-slate-500
+              "
+            >
 
-              Sign in to continue
+              Sign in to access your workspace
 
             </p>
 
           </div>
 
+          {/* ====================================== */}
+          {/* SIGN IN / REGISTER */}
+          {/* ====================================== */}
+
+          <div
+            className="
+              mt-10
+              rounded-2xl
+              bg-slate-100
+              p-1
+            "
+          >
+
+            <div className="grid grid-cols-2">
+
+              <button
+                className="
+                  rounded-xl
+                  bg-white
+                  py-3
+                  text-sm
+                  font-semibold
+                  shadow-sm
+                "
+              >
+
+                Sign In
+
+              </button>
+
+              <Link
+                href="/register"
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  rounded-xl
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-slate-500
+                  transition
+                  hover:text-blue-700
+                "
+              >
+
+                Register
+
+              </Link>
+
+            </div>
+
+          </div>
+
+          {/* ====================================== */}
+          {/* ERROR */}
+          {/* ====================================== */}
+
           {error && (
 
-            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600">
+            <div
+              className="
+                mt-8
+                rounded-2xl
+                border
+                border-red-200
+                bg-red-50
+                px-5
+                py-4
+                text-sm
+                text-red-700
+              "
+            >
 
               {error}
 
@@ -228,171 +657,333 @@ export default function LoginPage() {
 
           )}
 
+          {/* ====================================== */}
+          {/* FORM */}
+          {/* ====================================== */}
+
           <form
             onSubmit={handleSubmit}
-            className="space-y-7"
+            className="mt-10 space-y-7"
           >
+
+            {/* Username */}
 
             <div>
 
-              <label className="mb-3 block text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="username"
+                className="
+                  mb-3
+                  block
+                  text-xs
+                  font-bold
+                  uppercase
+                  tracking-wider
+                  text-slate-500
+                "
+              >
 
                 Username
 
               </label>
 
-              <input
-                type="text"
-                autoComplete="username"
-                value={username}
-                onChange={(e) =>
-                  setUsername(e.target.value)
-                }
-                className="
-                  w-full
-                  h-14
-                  rounded-xl
-                  border
-                  border-slate-300
-                  px-5
-                  text-base
-                  transition
-                  focus:border-blue-600
-                  focus:ring-4
-                  focus:ring-blue-100
-                  outline-none
-                "
-                required
-              />
+              <div className="relative">
+
+                <input
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) =>
+                    setUsername(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-300
+                    bg-white
+                    pl-5
+                    pr-12
+                    text-base
+                    outline-none
+                    transition
+                    focus:border-blue-600
+                    focus:ring-4
+                    focus:ring-blue-100
+                  "
+                  required
+                />
+
+              </div>
 
             </div>
 
+            {/* Password */}
+
             <div>
 
-              <label className="mb-3 block text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="password"
+                className="
+                  mb-3
+                  block
+                  text-xs
+                  font-bold
+                  uppercase
+                  tracking-wider
+                  text-slate-500
+                "
+              >
 
                 Password
 
               </label>
 
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
-                className="
-                  w-full
-                  h-14
-                  rounded-xl
-                  border
-                  border-slate-300
-                  px-5
-                  text-base
-                  transition
-                  focus:border-blue-600
-                  focus:ring-4
-                  focus:ring-blue-100
-                  outline-none
-                "
-                required
-              />
+              <div className="relative">
+
+                <input
+                  id="password"
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-300
+                    bg-white
+                    pl-5
+                    pr-14
+                    text-base
+                    outline-none
+                    transition
+                    focus:border-blue-600
+                    focus:ring-4
+                    focus:ring-blue-100
+                  "
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-slate-400
+                    transition
+                    hover:text-blue-700
+                  "
+                >
+
+                  {showPassword ? (
+
+                    <EyeOff size={20} />
+
+                  ) : (
+
+                    <Eye size={20} />
+
+                  )}
+
+                </button>
+
+              </div>
 
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+                        {/* Remember Me */}
 
-              <label className="flex items-center gap-2 text-slate-600">
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                pt-2
+              "
+            >
+
+              <label
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  text-sm
+                  text-slate-600
+                  cursor-pointer
+                  select-none
+                "
+              >
 
                 <input
                   type="checkbox"
-                  className="rounded"
+                  className="
+                    h-4
+                    w-4
+                    rounded
+                    border-slate-300
+                    text-blue-600
+                    focus:ring-blue-500
+                  "
                 />
 
                 Remember me
 
               </label>
 
-              <a
-                href="#"
-                className="font-medium text-blue-600 hover:underline"
+              <button
+                type="button"
+                className="
+                  text-sm
+                  font-semibold
+                  text-blue-700
+                  transition
+                  hover:text-blue-900
+                "
               >
 
                 Forgot Password?
 
-              </a>
+              </button>
 
             </div>
+
+            {/* Login Button */}
 
             <button
               type="submit"
               disabled={loading}
               className="
-                w-full
+                group
+                flex
                 h-14
+                w-full
+                items-center
+                justify-center
+                gap-3
                 rounded-2xl
-                bg-blue-600
-                text-lg
+                bg-gradient-to-r
+                from-[#0B2A83]
+                via-[#1546D8]
+                to-[#2563EB]
+                text-base
                 font-semibold
                 text-white
-                shadow-lg
+                shadow-xl
                 transition-all
-                hover:bg-blue-700
-                hover:shadow-xl
+                duration-300
+                hover:-translate-y-0.5
+                hover:shadow-2xl
                 disabled:cursor-not-allowed
                 disabled:opacity-60
               "
             >
 
-              {loading
-                ? "Signing In..."
-                : "Login"}
+              {loading ? (
+
+                <>
+
+                  <div
+                    className="
+                      h-5
+                      w-5
+                      animate-spin
+                      rounded-full
+                      border-2
+                      border-white/30
+                      border-t-white
+                    "
+                  />
+
+                  Signing In...
+
+                </>
+
+              ) : (
+
+                <>
+
+                  Sign In
+
+                  <ArrowRight
+                    size={18}
+                    className="
+                      transition-transform
+                      duration-300
+                      group-hover:translate-x-1
+                    "
+                  />
+
+                </>
+
+              )}
 
             </button>
 
+            {/* Register */}
+
           </form>
 
-          <div className="mt-10 text-center">
-
-            <span className="text-slate-500">
-
-              Don't have an account?
-
-            </span>
-
-            <a
-              href="/register"
-              className="ml-2 font-semibold text-blue-600 hover:underline"
-            >
-
-              Sign Up
-
-            </a>
-
-          </div>
+          {/* Footer */}
 
           <div
             className="
-              mt-10
+              mt-12
               border-t
               border-slate-200
               pt-8
               text-center
-              text-sm
-              text-slate-400
             "
           >
 
-            © 2026 TOCHAMS Group. All rights reserved.
+            <p className="text-sm font-semibold text-slate-700">
+
+              TOCHAMS ERP
+
+            </p>
+
+            <p className="mt-2 text-sm text-slate-400">
+
+              Enterprise Resource Planning Platform
+
+            </p>
+
+            <p className="mt-6 text-xs text-slate-400">
+
+              © 2026 TOCHAMS Group. All Rights Reserved.
+
+            </p>
 
           </div>
 
         </div>
 
-      </div>
+      </section>
 
-    </div>
+    </main>
 
   );
+
 }
