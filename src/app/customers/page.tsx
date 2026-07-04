@@ -1,111 +1,112 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
+import AppShell from "@/components/layout/AppShell";
+import TableToolbar from "@/components/table/TableToolbar";
+import TableLoading from "@/components/table/TableLoading";
+import DataTable, {
+  Column,
+} from "@/components/table/DataTable";
+
 import { getCustomers } from "@/services/customerService";
 
+interface Customer {
+  id: number;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+}
+
 export default function Customers() {
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCustomers();
+    loadCustomers();
   }, []);
 
-  const fetchCustomers = async () => {
+  const loadCustomers = async () => {
     try {
       const data = await getCustomers();
       setCustomers(data);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const columns: Column<Customer>[] = [
+    {
+      key: "name",
+      title: "Customer",
+      sortable: true,
+      render: (customer) => (
+        <Link
+          href={`/customers/${customer.id}`}
+          className="font-semibold text-blue-600 hover:underline"
+        >
+          {customer.name}
+        </Link>
+      ),
+    },
+    {
+      key: "company",
+      title: "Company",
+      sortable: true,
+    },
+    {
+      key: "email",
+      title: "Email",
+      sortable: true,
+    },
+    {
+      key: "phone",
+      title: "Phone",
+      sortable: true,
+    },
+  ];
+
   if (loading) {
     return (
-      <div className="p-8">
-        Loading customers...
-      </div>
+      <AppShell
+        title="Customers"
+        subtitle="Manage customer records"
+      >
+        <TableLoading />
+      </AppShell>
     );
   }
 
   return (
-    <div className="p-8">
+    <AppShell
+      title="Customers"
+      subtitle="Manage customer records"
+      breadcrumbs={[
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+        },
+        {
+          label: "Customers",
+        },
+      ]}
+      actions={[
+        {
+          label: "New Customer",
+          href: "/customers/add",
+        },
+      ]}
+    >
+      <TableToolbar />
 
-      <div className="flex justify-between items-center mb-6">
-
-        <h1 className="text-3xl font-bold">
-          Customers
-        </h1>
-
-        <Link
-          href="/customers/add"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Add Customer
-        </Link>
-
-      </div>
-
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-
-        <table className="w-full">
-
-          <thead className="bg-gray-100">
-
-            <tr>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Company</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-left">Phone</th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {customers.map((customer) => (
-
-              <tr
-                key={customer.id}
-                className="border-b hover:bg-gray-50"
-              >
-
-                <td className="p-3">
-
-                  <Link
-                    href={`/customers/${customer.id}`}
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    {customer.name}
-                  </Link>
-
-                </td>
-
-                <td className="p-3">
-                  {customer.company}
-                </td>
-
-                <td className="p-3">
-                  {customer.email}
-                </td>
-
-                <td className="p-3">
-                  {customer.phone}
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
+      <DataTable<Customer>
+        columns={columns}
+        data={customers}
+      />
+    </AppShell>
   );
 }

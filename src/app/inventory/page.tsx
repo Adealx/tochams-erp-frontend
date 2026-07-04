@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import toast from "react-hot-toast";
+import ProductTable from "@/components/inventory/ProductTable";
 
 interface Product {
   id: number;
@@ -509,147 +510,12 @@ const restockProduct = async (
 
       </div>
 
-      <div className="bg-white rounded shadow overflow-hidden">
-
-        <table className="w-full">
-
-          <thead className="bg-gray-100">
-
-            <tr>
-
-              <th className="p-4 text-left">
-                SKU
-              </th>
-
-              <th className="p-4 text-left">
-                Product
-              </th>
-
-              <th className="p-4 text-left">
-                Cost Price
-              </th>
-
-              <th className="p-4 text-left">
-                Retail
-              </th>
-
-              <th className="p-4 text-left">
-                Wholesale
-              </th>
-
-              <th className="p-4 text-left">
-                Stock
-              </th>
-
-              <th className="p-4 text-left">
-                Store Value
-              </th>
-
-              <th className="p-4 text-left">
-                Action
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {products.map(
-              (product) => (
-
-                <tr
-                  key={product.id}
-                  className="border-b"
-                >
-
-                <td className="p-4">
-                  {product.sku}
-                </td>
-
-                <td className="p-4">
-                  {product.name}
-                </td>
-
-                {/* NEW */}
-                <td className="p-4">
-                  ₦{Number(
-                    product.cost_price
-                  ).toLocaleString()}
-                </td>
-
-                <td className="p-4">
-                  ₦{Number(
-                    product.retail_price
-                  ).toLocaleString()}
-                </td>
-
-                <td className="p-4">
-                  ₦{Number(
-                    product.wholesale_price
-                  ).toLocaleString()}
-                </td>
-
-                <td
-                  className={`p-4 font-bold ${
-                    product.stock_quantity < 10
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {product.stock_quantity}
-                </td>
-
-                {/* NEW */}
-                <td className="p-4 font-semibold">
-                  ₦{Number(
-                    product.stock_value
-                  ).toLocaleString()}
-                </td>
-
-                <td className="p-4 flex gap-2">
-
-                  <button
-                    onClick={() =>
-                      restockProduct(product)
-                    }
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                  >
-                    Restock
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      editProduct(product)
-                    }
-                    className="bg-yellow-500 text-white px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      deleteProduct(
-                        product.id
-                      )
-                    }
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-
-                </td>
-
-              </tr>
-
-              )
-            )}
-      
-          </tbody>
-
-        </table>
-
-            </div>
+      <ProductTable
+        products={products}
+        onEdit={editProduct}
+        onDelete={deleteProduct}
+        onRestock={restockProduct}
+      />
 
       <div className="bg-white rounded shadow mt-8 overflow-hidden">
 

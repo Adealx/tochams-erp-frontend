@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
+/* =======================================================
+   TOCHAMS ERP DESIGN SYSTEM
+======================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+
+  /* Brand */
+
+  --primary: #1E3A8A;
+  --primary-light: #2563EB;
+
+  /* Status */
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Background */
+
+  --background: #F8FAFC;
+  --card: #FFFFFF;
+
+  /* Text */
+
+  --text: #111827;
+  --muted: #6B7280;
+
+  /* Borders */
+
+  --border: #E5E7EB;
+
+  /* Radius */
+
+  --radius: 14px;
+
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =======================================================
+   Base
+======================================================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html{
+
+    scroll-behavior:smooth;
+
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+body{
+
+    background:var(--background);
+
+    color:var(--text);
+
+    font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+}
+
+/* =======================================================
+   Scrollbar
+======================================================= */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#CBD5E1;
+
+    border-radius:999px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#94A3B8;
+
+}
+
+/* =======================================================
+   Cards
+======================================================= */
+
+.erp-card{
+
+    background:white;
+
+    border-radius:16px;
+
+    border:1px solid var(--border);
+
+    box-shadow:
+
+        0 2px 6px rgba(0,0,0,.04);
+
+}
+
+/* =======================================================
+   Buttons
+======================================================= */
+
+.erp-button{
+
+    transition:.25s;
+
+}
+
+.erp-button:hover{
+
+    transform:translateY(-1px);
+
+}
+
+/* =======================================================
+   Inputs
+======================================================= */
+
+input,
+select,
+textarea{
+
+    outline:none;
+
 }

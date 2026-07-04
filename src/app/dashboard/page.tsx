@@ -1,30 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/services/api";
+import { getDashboardData } from "@/services/dashboardService";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import { getCustomers } from "@/services/customerService";
-import { getInvoices } from "@/services/invoiceService";
-import { getPayments } from "@/services/paymentService";
-
-const COLORS = [
-  "#22c55e",
-  "#eab308",
-  "#3b82f6",
-  "#ef4444",
-];
+import FinancialOverview from "@/components/dashboard/FinancialOverview";
+import StatsGrid from "@/components/dashboard/StatsGrid";
+import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
+import OrdersOverviewChart from "@/components/dashboard/OrdersOverviewChart";
+import LowStockCard from "@/components/dashboard/LowStockCard";
+import RecentOrders from "@/components/dashboard/RecentOrders";
+import RecentCustomers from "@/components/dashboard/RecentCustomers";
+import AppShell from "@/components/layout/AppShell";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -63,194 +49,15 @@ export default function Dashboard() {
 
   const loadDashboard = async () => {
     try {
-      const customers =
-        await getCustomers();
+      const dashboard = await getDashboardData();
 
-      setCustomers(customers);
-
-      const invoices =
-        await getInvoices();
-
-      const payments =
-        await getPayments();
-
-      const productsResponse =
-        await api.get("/products/");
-
-      const ordersResponse =
-        await api.get("/orders/");
-
-      const products =
-        productsResponse.data;
-
-      const storeValue =
-        products.reduce(
-          (sum: number, product: any) =>
-            sum +
-            Number(product.stock_value || 0),
-          0
-        );
-
-      const potentialSalesValue =
-        products.reduce(
-          (sum: number, product: any) =>
-            sum +
-            Number(
-              product.potential_sales_value || 0
-            ),
-          0
-        );
-
-      const potentialProfit =
-        products.reduce(
-          (sum: number, product: any) =>
-            sum +
-            Number(
-              product.potential_profit || 0
-            ),
-          0
-        );  
-      
-      const alerts = products.filter(
-        (product: any) =>
-          product.stock_quantity <= 10
-      );
-
-      setLowStock(alerts);
-
-      const orders =
-        ordersResponse.data;
-
-      setOrders(orders);
-
-      console.log(
-        "Customers:",
-        customers
-      );
-
-      console.log(
-        "Invoices:",
-        invoices
-      );
-
-      console.log(
-        "Payments:",
-        payments
-      );
-
-      console.log(
-        "Products:",
-        products
-      );
-
-      console.log(
-        "Orders:",
-        orders
-      );
-
-      console.log(
-        "Low Stock:",
-        alerts
-      );
-
-      setLowStock(alerts);
-
-      const totalPayments =
-        payments.reduce(
-          (
-            sum: number,
-            payment: any
-          ) =>
-            sum +
-            Number(
-              payment.amount_paid
-            ),
-          0
-        );
-
-      const totalInvoices =
-        invoices.reduce(
-          (
-            sum: number,
-            invoice: any
-          ) =>
-            sum +
-            Number(
-              invoice.amount
-            ),
-          0
-        );
-
-      const pendingOrders =
-        orders.filter(
-          (order: any) =>
-            order.status ===
-            "Pending"
-        ).length;
-
-      const invoiceStatusData = [
-        {
-          name: "Paid",
-          value: invoices.filter(
-            (invoice: any) =>
-              invoice.invoice_status ===
-              "Paid"
-          ).length,
-        },
-
-        {
-          name: "Pending",
-          value: invoices.filter(
-            (invoice: any) =>
-              invoice.invoice_status ===
-              "Pending"
-          ).length,
-        },
-
-        {
-          name: "Partially Paid",
-          value: invoices.filter(
-            (invoice: any) =>
-              invoice.invoice_status ===
-              "Partially Paid"
-          ).length,
-        },
-
-        {
-          name: "Overdue",
-          value: invoices.filter(
-            (invoice: any) =>
-              invoice.invoice_status ===
-              "Overdue"
-          ).length,
-        },
-      ];
-
-      setInvoiceChart(
-        invoiceStatusData
-      );
-
-      setStats({
-        customers: customers.length,
-        products: products.length,
-        orders: orders.length,
-        invoices: invoices.length,
-        payments: totalPayments,
-        outstanding:
-          totalInvoices - totalPayments,
-        pendingOrders,
-        lowStock: alerts.length,
-
-        storeValue,
-        potentialSalesValue,
-        potentialProfit,
-      });
-
-    } catch (error: any) {
-      console.error(
-        "Dashboard Error:",
-        error
-      );
+      setStats(dashboard.stats);
+      setInvoiceChart(dashboard.invoiceChart);
+      setLowStock(dashboard.lowStock);
+      setOrders(dashboard.orders);
+      setCustomers(dashboard.customers);
+    } catch (error) {
+      console.error("Dashboard Error:", error);
     } finally {
       setLoading(false);
     }
@@ -265,464 +72,45 @@ export default function Dashboard() {
   }
 
   return (
-  <div className="min-h-screen bg-gray-50 p-8">
 
-    <div className="mb-8">
+  <AppShell
+      title="Dashboard"
+      subtitle="Enterprise Resource Planning Overview"
+  >
 
-      <h1 className="text-5xl font-bold text-slate-800">
-        TOCHAMS ERP
-      </h1>
+    <FinancialOverview stats={stats} />
 
-      <p className="text-slate-500 mt-2">
-        Enterprise Resource Planning &
-        Accounts Receivable Management
-      </p>
+    <StatsGrid stats={stats} />
 
-    </div>
-
-    <div
-      className="
-      bg-gradient-to-r
-      from-blue-700
-      via-indigo-700
-      to-purple-700
-      text-white
-      p-8
-      rounded-3xl
-      shadow-xl
-      mb-8
-    "
-    >
-
-      <h2 className="text-3xl font-bold">
-        Executive Dashboard
-      </h2>
-
-      <p className="mt-3 opacity-90">
-        Monitor Sales, Inventory,
-        Customers, Invoices and
-        Payments in Real Time.
-      </p>
-
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-
-      <FinancialCard
-        title="Store Value"
-        value={`₦${stats.storeValue.toLocaleString()}`}
-        color="blue"
-      />
-
-      <FinancialCard
-        title="Sales Value"
-        value={`₦${stats.potentialSalesValue.toLocaleString()}`}
-        color="green"
-      />
-
-      <FinancialCard
-        title="Potential Profit"
-        value={`₦${stats.potentialProfit.toLocaleString()}`}
-        color="purple"
-      />
-
-      <FinancialCard
-        title="Outstanding"
-        value={`₦${stats.outstanding.toLocaleString()}`}
-        color="red"
-      />
-
-    </div>
-
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-
-      <SmallCard
-        title="Customers"
-        value={stats.customers}
-      />
-
-      <SmallCard
-        title="Products"
-        value={stats.products}
-      />
-
-      <SmallCard
-        title="Sales Orders"
-        value={stats.orders}
-      />
-
-      <SmallCard
-        title="Invoices"
-        value={stats.invoices}
-      />
-
-      <SmallCard
-        title="Pending Orders"
-        value={stats.pendingOrders}
-      />
-
-      <SmallCard
-        title="Low Stock"
-        value={stats.lowStock}
-      />
-
-      <SmallCard
-        title="Payments"
-        value={`₦${stats.payments.toLocaleString()}`}
-      />
-
-    </div>
-
-      <div
-        className="
-        bg-white
-        rounded-3xl
-        shadow-lg
-        border
-        border-red-100
-        p-6
-        mt-8
-      "
-      >
-
-        <div className="flex items-center gap-3 mb-4">
-
-          <span className="text-3xl">
-            ⚠️
-          </span>
-
-          <h2 className="text-2xl font-bold text-red-600">
-            Low Stock Alerts
-          </h2>
-
-        </div>
-
-        {lowStock.length === 0 ? (
-
-          <div
-            className="
-            bg-green-50
-            text-green-700
-            p-4
-            rounded-xl
-          "
-          >
-            All products are adequately stocked.
-          </div>
-
-        ) : (
-
-          <div className="space-y-3">
-
-            {lowStock.map(
-              (product: any) => (
-
-                <div
-                  key={product.id}
-                  className="
-                  flex
-                  justify-between
-                  bg-red-50
-                  p-4
-                  rounded-xl
-                  "
-                >
-
-                  <span>
-                    {product.name}
-                  </span>
-
-                  <span className="font-bold text-red-600">
-                    {product.stock_quantity}
-                  </span>
-
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        )}
-
-      </div>
+    <LowStockCard
+        products={lowStock}
+    />
 
       <div className="grid md:grid-cols-2 gap-6 mt-8">
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <InvoiceStatusChart
+          data={invoiceChart}
+        />
 
-          <h2 className="text-xl font-bold mb-4">
-            Invoice Status
-          </h2>
+        <OrdersOverviewChart
+          totalOrders={stats.orders}
+          pendingOrders={stats.pendingOrders}
+        />
 
-          <ResponsiveContainer
-            width="100%"
-            height={300}
-          >
-
-            <PieChart>
-
-              <Pie
-                data={invoiceChart}
-                dataKey="value"
-                outerRadius={100}
-                label
-              >
-
-                {invoiceChart.map(
-                  (
-                    entry,
-                    index
-                  ) => (
-
-                    <Cell
-                      key={index}
-                      fill={
-                        COLORS[
-                          index %
-                          COLORS.length
-                        ]
-                      }
-                    />
-
-                  )
-                )}
-
-              </Pie>
-
-              <Tooltip />
-
-            </PieChart>
-
-          </ResponsiveContainer>
-
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-xl font-bold mb-4">
-            Orders Overview
-          </h2>
-
-          <ResponsiveContainer
-            width="100%"
-            height={300}
-          >
-
-            <BarChart
-              data={[
-                {
-                  name: "Orders",
-                  total:
-                    stats.orders,
-                },
-                {
-                  name: "Pending",
-                  total:
-                    stats.pendingOrders,
-                },
-              ]}
-            >
-
-              <XAxis
-                dataKey="name"
-              />
-
-              <YAxis />
-
-              <Tooltip />
-
-              <Bar
-                dataKey="total"
-              />
-
-            </BarChart>
-
-          </ResponsiveContainer>
-
-        </div>
-        
       </div>
-
+      
       <div className="grid lg:grid-cols-2 gap-6 mt-8">
 
-{/* Recent Orders */}
+    <RecentOrders
+        orders={orders}
+    />
 
-<div className="bg-white rounded-3xl shadow-lg p-6">
-
-<div className="flex justify-between items-center mb-4">
-
-  <h2 className="text-xl font-bold">
-    Recent Orders
-  </h2>
-
-  <button
-    onClick={() =>
-      window.location.href =
-        "/sales-orders"
-    }
-    className="text-blue-600 hover:text-blue-800"
-  >
-    View All
-  </button>
+    <RecentCustomers
+        customers={customers}
+    />
 
 </div>
 
-<div className="space-y-3">
-
-  {orders.slice(0, 5).map(
-    (order: any) => (
-
-      <div
-        key={order.id}
-        className="flex justify-between border-b pb-3"
-      >
-
-        <div>
-
-          <p className="font-semibold">
-            {order.customer_name}
-          </p>
-
-          <span
-            className={`text-xs px-2 py-1 rounded-full ${
-              order.status === "Approved"
-                ? "bg-green-100 text-green-700"
-                : order.status === "Pending"
-                ? "bg-yellow-100 text-yellow-700"
-                : order.status === "Rejected"
-                ? "bg-red-100 text-red-700"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {order.status}
-          </span>
-
-        </div>
-
-        <div className="font-bold">
-          ₦{Number(
-            order.total_amount || 0
-          ).toLocaleString()}
-        </div>
-
-      </div>
-
-    )
-  )}
-
-</div>
-</div>
-
-{/* Recent Customers */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6">
-
-<h2 className="text-xl font-bold mb-4">
-  Recent Customers
-</h2>
-
-<div className="space-y-3">
-
-  {customers.slice(0, 5).map(
-    (customer: any) => (
-
-      <div
-        key={customer.id}
-        className="border-b pb-3"
-      >
-
-        <p className="font-semibold">
-          {customer.name}
-        </p>
-
-        <p className="text-gray-500 text-sm">
-          {customer.email}
-        </p>
-
-      </div>
-
-    )
-  )}
-
-</div>
-</div>
-
-</div> 
-
-    </div>
+</AppShell>
   );
 }
-
-function FinancialCard({
-  title,
-  value,
-  color,
-}: {
-  title: string;
-  value: string;
-  color: string;
-}) {
-
-  const colors: Record<string, string> = {
-    blue: "from-blue-600 to-blue-800",
-    green: "from-green-600 to-green-800",
-    purple: "from-purple-600 to-purple-800",
-    red: "from-red-600 to-red-800",
-  };
-
-  return (
-    <div
-      className={`
-      bg-gradient-to-r
-      ${colors[color]}
-      text-white
-      rounded-3xl
-      p-6
-      shadow-xl
-      `}
-    >
-      <p className="text-white/80 text-sm">
-        {title}
-      </p>
-
-      <h2 className="text-2xl lg:text-3xl font-bold mt-3 break-words">
-        {value}
-      </h2>
-    </div>
-  );
-}
-
-function SmallCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string | number;
-}) {
-
-  return (
-    <div
-      className="
-      bg-white
-      rounded-2xl
-      border
-      border-gray-200
-      p-5
-      shadow-sm
-      hover:shadow-lg
-      transition
-      "
-    >
-      <p className="text-gray-500 text-sm">
-        {title}
-      </p>
-
-      <h2 className="text-2xl font-bold mt-2">
-        {value}
-      </h2>
-    </div>
-  );
-}
-
-  
