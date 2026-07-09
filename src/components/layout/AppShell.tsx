@@ -31,28 +31,49 @@ export default function AppShell({
   actions = [],
 }: AppShellProps) {
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
 
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Section */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col">
 
-        {/* Top Navigation */}
         <Topbar />
 
-        {/* Page Body */}
-        <main className="flex-1 overflow-y-auto bg-slate-100">
+        <main className="flex-1 overflow-y-auto">
 
-          {/* Centered Container */}
-          <div className="mx-auto w-full max-w-[1700px] p-8">
+          <div
+            className="
+              mx-auto
+              w-full
+              max-w-7xl
+              px-8
+              py-8
+            "
+          >
 
-            {/* Page Header */}
-            <div className="mb-8 space-y-5">
+            <section
+              className="
+                mb-10
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-8
+                py-6
+                shadow-sm
+              "
+            >
 
               {breadcrumbs.length > 0 && (
-                <Breadcrumbs items={breadcrumbs} />
+
+                <div className="mb-5">
+
+                  <Breadcrumbs
+                    items={breadcrumbs}
+                  />
+
+                </div>
+
               )}
 
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -60,31 +81,40 @@ export default function AppShell({
                 <div>
 
                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+
                     {title}
+
                   </h1>
 
                   {subtitle && (
+
                     <p className="mt-2 text-slate-500">
+
                       {subtitle}
+
                     </p>
+
                   )}
 
                 </div>
 
                 {actions.length > 0 && (
-                  <QuickActions actions={actions} />
+
+                  <QuickActions
+                    actions={actions}
+                  />
+
                 )}
 
               </div>
 
-            </div>
+            </section>
 
-            {/* Page Content */}
-            <div className="space-y-8">
+            <section className="space-y-12">
 
               {children}
 
-            </div>
+            </section>
 
           </div>
 

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { getDashboardData } from "@/services/dashboardService";
+
+import AppShell from "@/components/layout/AppShell";
 
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import StatsGrid from "@/components/dashboard/StatsGrid";
@@ -10,7 +13,6 @@ import OrdersOverviewChart from "@/components/dashboard/OrdersOverviewChart";
 import LowStockCard from "@/components/dashboard/LowStockCard";
 import RecentOrders from "@/components/dashboard/RecentOrders";
 import RecentCustomers from "@/components/dashboard/RecentCustomers";
-import AppShell from "@/components/layout/AppShell";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -47,70 +49,204 @@ export default function Dashboard() {
     loadDashboard();
   }, []);
 
-  const loadDashboard = async () => {
+  async function loadDashboard() {
     try {
-      const dashboard = await getDashboardData();
+      const dashboard =
+        await getDashboardData();
 
       setStats(dashboard.stats);
-      setInvoiceChart(dashboard.invoiceChart);
-      setLowStock(dashboard.lowStock);
-      setOrders(dashboard.orders);
-      setCustomers(dashboard.customers);
+
+      setInvoiceChart(
+        dashboard.invoiceChart
+      );
+
+      setLowStock(
+        dashboard.lowStock
+      );
+
+      setOrders(
+        dashboard.orders
+      );
+
+      setCustomers(
+        dashboard.customers
+      );
     } catch (error) {
-      console.error("Dashboard Error:", error);
+      console.error(
+        "Dashboard Error:",
+        error
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   if (loading) {
     return (
-      <div className="p-8">
-        Loading Dashboard...
-      </div>
+      <AppShell
+        title="Dashboard"
+        subtitle="Enterprise Resource Planning Overview"
+      >
+        <div
+          className="
+            flex
+            h-[500px]
+            items-center
+            justify-center
+            rounded-3xl
+            border
+            border-slate-200
+            bg-white
+          "
+        >
+          <p
+            className="
+              text-lg
+              font-medium
+              text-slate-500
+            "
+          >
+            Loading Dashboard...
+          </p>
+        </div>
+      </AppShell>
     );
   }
 
   return (
-
-  <AppShell
+    <AppShell
       title="Dashboard"
       subtitle="Enterprise Resource Planning Overview"
-  >
+    >
+      {/* Financial KPIs */}
 
-    <FinancialOverview stats={stats} />
+      <FinancialOverview
+        stats={stats}
+      />
 
-    <StatsGrid stats={stats} />
+      {/* Operational KPIs */}
 
-    <LowStockCard
-        products={lowStock}
-    />
+      <StatsGrid
+        stats={stats}
+      />
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      {/* Analytics */}
 
-        <InvoiceStatusChart
-          data={invoiceChart}
+      <section className="space-y-5">
+
+        <div>
+
+          <h2
+            className="
+              text-2xl
+              font-bold
+              text-slate-900
+            "
+          >
+            Business Analytics
+          </h2>
+
+          <p className="text-slate-500">
+            Sales and invoice insights
+          </p>
+
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            xl:grid-cols-2
+            gap-8
+            items-stretch
+          "
+        >
+          <InvoiceStatusChart
+            data={invoiceChart}
+          />
+
+          <OrdersOverviewChart
+            totalOrders={stats.orders}
+            pendingOrders={
+              stats.pendingOrders
+            }
+          />
+
+        </div>
+
+      </section>
+
+      {/* Inventory */}
+
+      <section className="space-y-5">
+
+        <div>
+
+          <h2
+            className="
+              text-2xl
+              font-bold
+              text-slate-900
+            "
+          >
+            Inventory Alerts
+          </h2>
+
+          <p className="text-slate-500">
+            Products requiring attention
+          </p>
+
+        </div>
+
+        <LowStockCard
+          products={lowStock}
         />
 
-        <OrdersOverviewChart
-          totalOrders={stats.orders}
-          pendingOrders={stats.pendingOrders}
-        />
+      </section>
 
-      </div>
-      
-      <div className="grid lg:grid-cols-2 gap-6 mt-8">
+      {/* Activity */}
 
-    <RecentOrders
-        orders={orders}
-    />
+      <section className="space-y-5">
 
-    <RecentCustomers
-        customers={customers}
-    />
+        <div>
 
-</div>
+          <h2
+            className="
+              text-2xl
+              font-bold
+              text-slate-900
+            "
+          >
+            Recent Activity
+          </h2>
 
-</AppShell>
+          <p className="text-slate-500">
+            Latest sales and customer updates
+          </p>
+
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            xl:grid-cols-2
+            gap-8
+            items-stretch
+          "
+        >
+          <RecentOrders
+            orders={orders}
+          />
+
+          <RecentCustomers
+            customers={customers}
+          />
+
+        </div>
+
+      </section>
+
+    </AppShell>
   );
 }

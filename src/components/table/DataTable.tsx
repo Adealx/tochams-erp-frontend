@@ -1,275 +1,193 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import clsx from "clsx";
+
+import DataTableHeader from "./DataTableHeader";
+import DataTableBody from "./DataTableBody";
+import DataTableToolbar from "./DataTableToolbar";
+import DataTableFooter from "./DataTableFooter";
+
+import useDataTable from "./hooks/useDataTable";
+
 import {
-  ArrowUp,
-  ArrowDown,
-  Search,
-} from "lucide-react";
+  DataTableProps,
+  Column,
+} from "./types";
 
-export interface Column<T> {
-  key: keyof T;
-  title: string;
-  sortable?: boolean;
-  render?: (row: T) => ReactNode;
-}
+import {
+  columnSizes,
+} from "./constants";
 
-interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
-}
+/* ===========================================
+   DEFAULT COLUMN SIZES
+=========================================== */
 
-export default function DataTable<T extends Record<string, any>>({
+export default function DataTable<
+  T extends Record<string, any>
+>({
   columns,
   data,
+  rowKey,
+
+  loading = false,
+
+  searchable = true,
+
+  selectable = true,
+
+  striped = true,
+
+  hover = true,
+
+  searchPlaceholder = "Search records...",
+
+  toolbar,
+
+  footer,
+
+  emptyMessage = "No records found.",
+
+  pageSize = 10,
+
+  className,
 }: DataTableProps<T>) {
-  const [search, setSearch] = useState("");
 
-  const [sortKey, setSortKey] =
-    useState<keyof T | null>(null);
+  const table = useDataTable(
+    data,
+    pageSize,
+    rowKey
+  );
 
-  const [ascending, setAscending] =
-    useState(true);
+  const allSelected =
+    table.paginatedData.length > 0 &&
+    table.selectedRows.length ===
+      table.rowIds.length;
 
-  const [selectedRows, setSelectedRows] =
-    useState<number[]>([]);
+  /* ===========================================
+     APPLY DEFAULT COLUMN WIDTHS
+  =========================================== */
 
-  const filteredData = useMemo(() => {
-    let rows = [...data];
+  const normalizedColumns = columns.map(
+    (column) => {
 
-    if (search.trim()) {
-      rows = rows.filter((row) =>
-        Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      );
+      if (column.width || column.minWidth) {
+        return column;
+      }
+
+      if (column.size) {
+        return {
+          ...column,
+          minWidth:
+            columnSizes[column.size],
+        };
+      }
+
+      return {
+        ...column,
+        minWidth:
+          columnSizes.md,
+      };
     }
-
-    if (sortKey) {
-      rows.sort((a, b) => {
-        const first = String(a[sortKey] ?? "");
-        const second = String(b[sortKey] ?? "");
-
-        return ascending
-          ? first.localeCompare(second)
-          : second.localeCompare(first);
-      });
-    }
-
-    return rows;
-  }, [data, search, sortKey, ascending]);
-
-  const toggleAll = () => {
-    if (selectedRows.length === filteredData.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(filteredData.map((_, i) => i));
-    }
-  };
-
-  const toggleRow = (index: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(index)
-        ? prev.filter((i) => i !== index)
-        : [...prev, index]
-    );
-  };
+  );
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-      {/* Toolbar */}
+    <div
+      className={clsx(
 
-      <div className="flex flex-col gap-4 border-b p-5 md:flex-row md:items-center md:justify-between">
+        "overflow-hidden",
 
-        <div className="relative">
+        "rounded-3xl",
 
-          <Search
-            size={18}
-            className="absolute left-3 top-3 text-slate-400"
-          />
+        "border",
 
-          <input
-            placeholder="Search records..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            className="
-              w-full
-              md:w-80
-              rounded-xl
-              border
-              border-slate-300
-              py-2.5
-              pl-10
-              pr-4
-              outline-none
-              focus:ring-2
-              focus:ring-blue-500
-            "
-          />
+        "border-slate-200",
 
-        </div>
+        "bg-white",
 
-        <div className="text-sm text-slate-500">
+        "shadow-sm",
 
-          {filteredData.length} Records
+        className
 
-        </div>
+      )}
+    >
 
-      </div>
+      {/* ================= Toolbar ================= */}
+
+      <DataTableToolbar
+        searchable={searchable}
+        search={table.search}
+        searchPlaceholder={searchPlaceholder}
+        onSearchChange={table.setSearch}
+        recordCount={
+          table.filteredData.length
+        }
+        toolbar={toolbar}
+      />
+
+      {/* ================= Table ================= */}
 
       <div className="overflow-x-auto">
 
-        <table className="min-w-full">
+        <table className="w-full">
 
-          <thead className="bg-slate-50">
+          <DataTableHeader
+            columns={normalizedColumns}
+            sortKey={table.sortKey}
+            ascending={table.ascending}
+            checked={allSelected}
+            selectable={selectable}
+            onToggleAll={table.toggleAll}
+            onSort={table.toggleSort}
+          />
 
-            <tr>
-
-              <th className="w-14 px-4">
-
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredData.length > 0 &&
-                    selectedRows.length ===
-                      filteredData.length
-                  }
-                  onChange={toggleAll}
-                />
-
-              </th>
-
-              {columns.map((column) => (
-                <th
-                  key={String(column.key)}
-                  onClick={() => {
-                    if (!column.sortable) return;
-
-                    if (sortKey === column.key) {
-                      setAscending(!ascending);
-                    } else {
-                      setSortKey(column.key);
-                      setAscending(true);
-                    }
-                  }}
-                  className={`
-                    px-6
-                    py-4
-                    text-left
-                    text-sm
-                    font-semibold
-                    text-slate-700
-                    ${
-                      column.sortable
-                        ? "cursor-pointer select-none"
-                        : ""
-                    }
-                  `}
-                >
-                  <div className="flex items-center gap-2">
-
-                    {column.title}
-
-                    {column.sortable &&
-                      sortKey === column.key &&
-                      (ascending ? (
-                        <ArrowUp size={15} />
-                      ) : (
-                        <ArrowDown size={15} />
-                      ))}
-
-                  </div>
-                </th>
-              ))}
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {filteredData.length === 0 ? (
-
-              <tr>
-
-                <td
-                  colSpan={
-                    columns.length + 1
-                  }
-                  className="py-20 text-center text-slate-500"
-                >
-
-                  No records found.
-
-                </td>
-
-              </tr>
-
-            ) : (
-
-              filteredData.map((row, index) => (
-
-                <tr
-                  key={index}
-                  className={`
-                    border-t
-                    transition
-                    hover:bg-blue-50
-                    ${
-                      index % 2 === 0
-                        ? "bg-white"
-                        : "bg-slate-50"
-                    }
-                  `}
-                >
-
-                  <td className="px-4">
-
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(
-                        index
-                      )}
-                      onChange={() =>
-                        toggleRow(index)
-                      }
-                    />
-
-                  </td>
-
-                  {columns.map((column) => (
-
-                    <td
-                      key={String(column.key)}
-                      className="px-6 py-4"
-                    >
-
-                      {column.render
-                        ? column.render(row)
-                        : String(
-                            row[column.key] ?? ""
-                          )}
-
-                    </td>
-
-                  ))}
-
-                </tr>
-
-              ))
-
-            )}
-
-          </tbody>
+          <DataTableBody
+            columns={normalizedColumns}
+            data={table.paginatedData}
+            rowKey={rowKey}
+            loading={loading}
+            selectable={selectable}
+            striped={striped}
+            hover={hover}
+            emptyMessage={emptyMessage}
+            selectedRows={
+              table.selectedRows
+            }
+            onToggleRow={
+              table.toggleRow
+            }
+          />
 
         </table>
 
       </div>
 
+      {/* ================= Footer ================= */}
+
+      <DataTableFooter
+        currentPage={
+          table.currentPage
+        }
+        totalPages={
+          table.totalPages
+        }
+        pageSize={pageSize}
+        totalRecords={
+          table.filteredData.length
+        }
+        currentRecords={
+          table.paginatedData.length
+        }
+        onPageChange={
+          table.setCurrentPage
+        }
+        footer={footer}
+      />
+
     </div>
+
   );
+
 }
+
+export type { Column };

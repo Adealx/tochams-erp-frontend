@@ -18,13 +18,15 @@ import {
 
 import ProcurementItems from "./ProcurementItems";
 
-import GrandTotal from "./GrandTotal";
+import GrandTotal from "../GrandTotal";
 
-import ProcurementTable from "./ProcurementTable";
+import ProcurementTable from "../tables/ProcurementTable";
 
-import ProcurementViewModal from "./ProcurementViewModal";
+import ProcurementViewModal from "../modals/ProcurementViewModal";
 
-import DeleteProcurementModal from "./DeleteProcurementModal";
+import DeleteProcurementModal from "../modals/DeleteProcurementModal";
+
+import ProcurementInformation from "../ProcurementInformation";
 
 /* ============================
    Interfaces
@@ -381,106 +383,19 @@ const handleReject = async (
     console.log("Current Items State:", items);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8">
-      <h1 className="text-3xl font-bold">
-        Procurement
-      </h1>
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
 
-      <p className="text-gray-500 mt-2 mb-8">
-        Create and manage procurement orders
-      </p>
-
-      <div className="grid md:grid-cols-2 gap-6">
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Vendor
-          </label>
-
-          <select
-            className="w-full border rounded-lg p-3"
-            value={formData.vendor}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                vendor: e.target.value,
-              })
-            }
-          >
-            <option value="">
-              Select Vendor
-            </option>
-
-            {vendors.map((vendor) => (
-              <option
-                key={vendor.id}
-                value={vendor.id}
-              >
-                {vendor.company_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Expected Delivery
-          </label>
-
-          <input
-            type="date"
-            className="w-full border rounded-lg p-3"
-            value={formData.expected_delivery}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                expected_delivery:
-                  e.target.value,
-              })
-            }
-          />
-        </div>
-
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 mt-6">
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Status
-          </label>
-
-          <input
-            type="text"
-            value={
-              editingId
-                ? formData.status
-                : "Draft"
-            }
-            readOnly
-            className="w-full border rounded-lg p-3 bg-gray-100 text-gray-600"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Notes
-          </label>
-
-          <textarea
-            rows={3}
-            className="w-full border rounded-lg p-3"
-            value={formData.notes}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                notes: e.target.value,
-              })
-            }
-          />
-        </div>
-
-      </div>
+        <ProcurementInformation
+          formData={formData}
+          vendors={vendors}
+          editing={editingId !== null}
+          onChange={(field, value) =>
+            setFormData((prev) => ({
+              ...prev,
+              [field]: value,
+            }))
+          }
+        />
         
       <ProcurementItems
         products={products}

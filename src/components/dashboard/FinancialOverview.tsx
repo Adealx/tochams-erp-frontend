@@ -1,3 +1,5 @@
+"use client";
+
 import StatCard from "@/components/cards/StatCard";
 
 import {
@@ -7,7 +9,7 @@ import {
   CircleDollarSign,
 } from "lucide-react";
 
-interface Props {
+interface FinancialOverviewProps {
   stats: {
     storeValue: number;
     potentialSalesValue: number;
@@ -18,38 +20,72 @@ interface Props {
 
 export default function FinancialOverview({
   stats,
-}: Props) {
+}: FinancialOverviewProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <section className="space-y-5">
 
-      <StatCard
-        title="Store Value"
-        value={`₦${stats.storeValue.toLocaleString()}`}
-        icon={<Wallet size={28} />}
-        variant="default"
-      />
+      <div>
 
-      <StatCard
-        title="Sales Value"
-        value={`₦${stats.potentialSalesValue.toLocaleString()}`}
-        icon={<TrendingUp size={28} />}
-        variant="success"
-      />
+        <h2 className="text-xl font-bold text-slate-900">
+          Financial Overview
+        </h2>
 
-      <StatCard
-        title="Potential Profit"
-        value={`₦${stats.potentialProfit.toLocaleString()}`}
-        icon={<BadgeDollarSign size={28} />}
-        variant="warning"
-      />
+        <p className="text-sm text-slate-500">
+          Financial performance and revenue metrics
+        </p>
 
-      <StatCard
-        title="Outstanding"
-        value={`₦${stats.outstanding.toLocaleString()}`}
-        icon={<CircleDollarSign size={28} />}
-        variant="danger"
-      />
+      </div>
 
-    </div>
+      <div
+        className="
+          grid
+          grid-cols-1
+          sm:grid-cols-2
+          xl:grid-cols-4
+          gap-7
+        "
+      >
+
+        <StatCard
+          title="Store Value"
+          value={`₦${stats.storeValue.toLocaleString()}`}
+          icon={<Wallet size={22} />}
+          color="blue"
+          description="Inventory value"
+        />
+
+        <StatCard
+          title="Potential Sales"
+          value={`₦${stats.potentialSalesValue.toLocaleString()}`}
+          icon={<TrendingUp size={22} />}
+          color="green"
+          trend="+12%"
+          trendDirection="up"
+          description="Projected revenue"
+        />
+
+        <StatCard
+          title="Potential Profit"
+          value={`₦${stats.potentialProfit.toLocaleString()}`}
+          icon={<BadgeDollarSign size={22} />}
+          color="amber"
+          trend="+8%"
+          trendDirection="up"
+          description="Estimated profit"
+        />
+
+        <StatCard
+          title="Outstanding"
+          value={`₦${stats.outstanding.toLocaleString()}`}
+          icon={<CircleDollarSign size={22} />}
+          color="red"
+          trend="-5%"
+          trendDirection="down"
+          description="Customer balances"
+        />
+
+      </div>
+
+    </section>
   );
 }
