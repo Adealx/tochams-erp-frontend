@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/context/AuthContext";
+
 import { getDashboardData } from "@/services/dashboardService";
 
 import AppShell from "@/components/layout/AppShell";
@@ -15,6 +17,9 @@ import RecentOrders from "@/components/dashboard/RecentOrders";
 import RecentCustomers from "@/components/dashboard/RecentCustomers";
 
 export default function Dashboard() {
+
+  const { user } = useAuth();
+
   const [stats, setStats] = useState({
     customers: 0,
     products: 0,
@@ -46,13 +51,28 @@ export default function Dashboard() {
     useState(true);
 
   useEffect(() => {
+    if (!user) return;
+    
+    console.log("================================");
+    console.log("Dashboard Mounted");
+    console.log("Authenticated User:", user);
+    console.log("================================");
+
     loadDashboard();
-  }, []);
+
+  }, [user]);
 
   async function loadDashboard() {
+
     try {
+
+      console.log("Loading dashboard...");
+      console.log("Current User:", user);
+
       const dashboard =
         await getDashboardData();
+
+      console.log("Dashboard API:", dashboard);
 
       setStats(dashboard.stats);
 
@@ -71,22 +91,30 @@ export default function Dashboard() {
       setCustomers(
         dashboard.customers
       );
+
     } catch (error) {
+
       console.error(
         "Dashboard Error:",
         error
       );
+
     } finally {
+
       setLoading(false);
+
     }
   }
 
   if (loading) {
+
     return (
+
       <AppShell
         title="Dashboard"
         subtitle="Enterprise Resource Planning Overview"
       >
+
         <div
           className="
             flex
@@ -99,6 +127,7 @@ export default function Dashboard() {
             bg-white
           "
         >
+
           <p
             className="
               text-lg
@@ -108,16 +137,21 @@ export default function Dashboard() {
           >
             Loading Dashboard...
           </p>
+
         </div>
+
       </AppShell>
+
     );
   }
 
   return (
+
     <AppShell
       title="Dashboard"
       subtitle="Enterprise Resource Planning Overview"
     >
+
       {/* Financial KPIs */}
 
       <FinancialOverview
@@ -161,6 +195,7 @@ export default function Dashboard() {
             items-stretch
           "
         >
+
           <InvoiceStatusChart
             data={invoiceChart}
           />
@@ -204,7 +239,7 @@ export default function Dashboard() {
 
       </section>
 
-      {/* Activity */}
+      {/* Recent Activity */}
 
       <section className="space-y-5">
 
@@ -235,6 +270,7 @@ export default function Dashboard() {
             items-stretch
           "
         >
+
           <RecentOrders
             orders={orders}
           />
@@ -248,5 +284,6 @@ export default function Dashboard() {
       </section>
 
     </AppShell>
+
   );
 }

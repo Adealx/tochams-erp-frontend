@@ -411,7 +411,7 @@ export default function SalesOrdersPage() {
 
     } else {
 
-      toast.success(
+      toast.error(
         "You do not have approval rights"
       );
 

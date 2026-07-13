@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 import {
   Building2,
@@ -33,6 +34,8 @@ export default function LoginPage() {
   const [loading, setLoading] =
     useState(false);
 
+  const { refreshUser } = useAuth();  
+
   const [error, setError] =
     useState("");
 
@@ -48,22 +51,25 @@ export default function LoginPage() {
 
     try {
 
-      const data =
-        await loginUser(
+      const data = await loginUser(
           username,
           password
-        );
-
-      localStorage.setItem(
-        "access",
-        data.access
       );
 
       localStorage.setItem(
-        "refresh",
-        data.refresh
+          "access",
+          data.access
       );
 
+      localStorage.setItem(
+          "refresh",
+          data.refresh
+      );
+
+      // Tell AuthContext to load the logged-in user
+      await refreshUser();
+      router.refresh();
+      console.log("Logged in successfully, refreshing user...");
       router.push("/dashboard");
 
     }

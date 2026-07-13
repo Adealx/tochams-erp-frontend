@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
+
 import "./globals.css";
+
 import { SidebarProvider } from "@/context/SidebarContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "TOCHAMS ERP",
@@ -19,29 +22,43 @@ export default function RootLayout({
       lang="en"
       data-scroll-behavior="smooth"
     >
-  <body
-    className="
-      min-h-screen
-      bg-gray-50
-      text-gray-900
-      antialiased
-    "
-  >
+      <body
+        className="
+          min-h-screen
+          bg-gray-50
+          text-gray-900
+          antialiased
+        "
+      >
+        <AuthProvider>
 
-    <SidebarProvider>
+          <SidebarProvider>
 
-      {children}
+            {children}
 
-    </SidebarProvider>
+          </SidebarProvider>
 
-    <Toaster
-      position="top-right"
-      toastOptions={{
-        duration:3000
-      }}
-    />
+        </AuthProvider>
 
-  </body>
-</html>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            success: {
+              style: {
+                background: "#16A34A",
+                color: "#fff",
+              },
+            },
+            error: {
+              style: {
+                background: "#DC2626",
+                color: "#fff",
+              },
+            },
+          }}
+        />
+      </body>
+    </html>
   );
 }
