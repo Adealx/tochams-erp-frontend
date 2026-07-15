@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface SalesOrderItem {
   id?: number;
@@ -69,14 +70,7 @@ export default function SalesOrdersPage() {
   const [editingOrder, setEditingOrder] =
   useState<any>(null);  
 
-  const user =
-  typeof window !== "undefined"
-    ? JSON.parse(
-        localStorage.getItem("user") || "{}"
-      )
-    : {};
-
-  const role = user.role; 
+  const { user } = useAuth();
 
   const router = useRouter();
 
@@ -377,16 +371,21 @@ export default function SalesOrdersPage() {
 };
 
   const approveOrder = async (
-  id: number
+  id: number,
+  status: string
 ) => {
 
   try {
 
-    const user = JSON.parse(
-      localStorage.getItem("user") || "{}"
-    );
+    if (!user) {
+      toast.error("User not loaded");
+      return;
+    }
 
-    if (user.role === "sales_head") {
+    if (
+      user.role === "sales_head" &&
+      status === "Pending"
+    ) {
 
       await api.post(
         `/orders/${id}/sales-head-approve/`
@@ -396,9 +395,15 @@ export default function SalesOrdersPage() {
         "Sales Head Approval Successful"
       );
 
-    } else if (
-      user.role === "manager" ||
-      user.role === "admin"
+    }
+
+    else if (
+
+      (user.role === "manager" ||
+       user.role === "admin") &&
+
+      status === "Sales Head Approved"
+
     ) {
 
       await api.post(
@@ -409,27 +414,36 @@ export default function SalesOrdersPage() {
         "Manager Approval Successful"
       );
 
-    } else {
+    }
+
+    else {
 
       toast.error(
         "You do not have approval rights"
       );
 
       return;
+
     }
 
     loadOrders();
 
-  } catch (error: any) {
+  }
+
+  catch (error: any) {
 
     console.error(error);
 
-    alert(
-      JSON.stringify(
-        error.response?.data
-      )
+    toast.error(
+
+      error.response?.data?.error ||
+
+      "Approval failed"
+
     );
+
   }
+
 };
    
   const convertToInvoice = async (
@@ -899,7 +913,10 @@ export default function SalesOrdersPage() {
 
                     <button
                       onClick={() =>
-                        approveOrder(order.id)
+                          approveOrder(
+                              order.id,
+                              order.status
+                          )
                       }
                       className="bg-green-600 text-white px-3 py-1 rounded"
                     >
@@ -907,8 +924,8 @@ export default function SalesOrdersPage() {
                     </button>
                     
                   {(
-                    role === "manager" ||
-                    role === "admin"
+                    user?.role === "manager" ||
+                    user?.role === "admin"
                   ) && (
                     <button
                       onClick={() =>

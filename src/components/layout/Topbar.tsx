@@ -4,13 +4,13 @@ import {
   Bell,
   Search,
   CalendarDays,
-  UserCircle2,
   Settings,
   ChevronDown,
   PanelLeft,
 } from "lucide-react";
 
 import { useSidebar } from "@/context/SidebarContext";
+import { useAuth } from "@/context/AuthContext";
 
 const today = new Date().toLocaleDateString("en-NG", {
   weekday: "long",
@@ -21,6 +21,8 @@ const today = new Date().toLocaleDateString("en-NG", {
 
 export default function Topbar() {
   const { toggleSidebar } = useSidebar();
+
+  const { user } = useAuth();
 
   return (
     <header
@@ -153,7 +155,6 @@ export default function Topbar() {
               bg-slate-50
               px-4
               py-2
-
               lg:flex
             "
           >
@@ -171,6 +172,7 @@ export default function Topbar() {
             >
               {today}
             </span>
+
           </div>
 
           {/* Notifications */}
@@ -227,7 +229,9 @@ export default function Topbar() {
             <Settings size={20} />
           </button>
 
+          {/* ================================= */}
           {/* Profile */}
+          {/* ================================= */}
 
           <button
             className="
@@ -245,10 +249,22 @@ export default function Topbar() {
               hover:shadow-sm
             "
           >
-            <UserCircle2
-              size={42}
-              className="text-slate-700"
-            />
+
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                items-center
+                justify-center
+                rounded-full
+                bg-blue-600
+                text-white
+                font-bold
+              "
+            >
+              {user?.username?.charAt(0).toUpperCase() || "U"}
+            </div>
 
             <div className="text-left">
 
@@ -259,16 +275,17 @@ export default function Topbar() {
                   text-slate-900
                 "
               >
-                Administrator
+                {user?.username || "Loading..."}
               </p>
 
               <p
                 className="
                   text-xs
                   text-slate-500
+                  capitalize
                 "
               >
-                Super Admin
+                {user?.role?.replace("_", " ") || ""}
               </p>
 
             </div>

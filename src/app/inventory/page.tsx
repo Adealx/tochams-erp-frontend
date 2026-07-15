@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import toast from "react-hot-toast";
 import ProductTable from "@/components/inventory/ProductTable";
+import RoleGuard from "@/components/RoleGuard";
 
 interface Product {
   id: number;
@@ -395,6 +396,14 @@ const restockProduct = async (
 
       </div>
 
+      <RoleGuard
+        roles={[
+          "admin",
+          "manager",
+          "warehouse",
+        ]}
+      >
+
       <div className="bg-white p-6 rounded shadow mb-8">
 
         <h2 className="text-xl font-semibold mb-4">
@@ -509,6 +518,7 @@ const restockProduct = async (
         </form>
 
       </div>
+      </RoleGuard>
 
       <ProductTable
         products={products}

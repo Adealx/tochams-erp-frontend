@@ -1,38 +1,35 @@
 "use client";
 
 import { ReactNode } from "react";
-
 import { useAuth } from "@/context/AuthContext";
 
 interface Props {
-
     roles: string[];
-
     children: ReactNode;
 }
 
 export default function RoleGuard({
-
     roles,
-
     children,
-
 }: Props) {
 
     const { user, loading } = useAuth();
 
-    if (loading) {
+    console.log("========== ROLE GUARD ==========");
+    console.log("User:", user);
+    console.log("Allowed Roles:", roles);
+    console.log("Loading:", loading);
+    console.log(
+        "Includes:",
+        user ? roles.includes(user.role) : false
+    );
+    console.log("===============================");
 
-        return null;
-    }
+    if (loading) return null;
 
-    if (!user) {
-
-        return null;
-    }
+    if (!user) return null;
 
     if (!roles.includes(user.role)) {
-
         return null;
     }
 

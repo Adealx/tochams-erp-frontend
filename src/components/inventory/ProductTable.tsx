@@ -6,6 +6,10 @@ import DataTable, {
 
 import RowActions from "@/components/table/RowActions";
 
+import RoleGuard from "@/components/RoleGuard";
+
+import { useAuth } from "@/context/AuthContext";
+
 interface Product {
   id: number;
   sku: string;
@@ -35,6 +39,13 @@ export default function ProductTable({
   onDelete,
   onRestock,
 }: ProductTableProps) {
+
+  const { user } = useAuth();
+
+  const canManageProducts =
+    ["admin", "manager", "warehouse"].includes(
+      user?.role || ""
+    );
 
   const columns: Column<Product>[] = [
 
@@ -110,33 +121,56 @@ export default function ProductTable({
       ),
     },
 
-    {
+  ];
+
+  if (canManageProducts) {
+
+    columns.push({
+
       key: "id",
+
       title: "Actions",
 
       render: (product) => (
 
-        <RowActions
+        <RoleGuard
+    roles={[
+        "admin",
+        "manager",
+        "warehouse",
+    ]}
+>
+    <div className="flex gap-2">
 
-          onRestock={() =>
-            onRestock(product)
-          }
+        <button
+            onClick={() => onEdit(product)}
+            className="rounded bg-blue-600 px-3 py-1 text-white text-sm"
+        >
+            Edit
+        </button>
 
-          onEdit={() =>
-            onEdit(product)
-          }
+        <button
+            onClick={() => onRestock(product)}
+            className="rounded bg-green-600 px-3 py-1 text-white text-sm"
+        >
+            Restock
+        </button>
 
-          onDelete={() =>
-            onDelete(product.id)
-          }
+        <button
+            onClick={() => onDelete(product.id)}
+            className="rounded bg-red-600 px-3 py-1 text-white text-sm"
+        >
+            Delete
+        </button>
 
-        />
+    </div>
+</RoleGuard>
 
       ),
 
-    },
+    });
 
-  ];
+  }
 
   return (
 

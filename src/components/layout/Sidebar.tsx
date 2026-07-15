@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 
 import {
   LayoutDashboard,
@@ -110,6 +111,8 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const { collapsed } = useSidebar();
+
+  const { user } = useAuth();
 
   return (
     <aside
@@ -327,7 +330,7 @@ export default function Sidebar() {
                 font-bold
               "
             >
-              A
+              {user?.username?.charAt(0).toUpperCase() || "U"}
             </div>
           </div>
         ) : (
@@ -352,28 +355,29 @@ export default function Sidebar() {
                   font-bold
                 "
               >
-                A
+                {user?.username?.charAt(0).toUpperCase() || "U"}
               </div>
 
               <div>
 
                 <p
-                  className="
-                    font-semibold
-                    text-white
-                  "
-                >
-                  Administrator
-                </p>
+  className="
+    font-semibold
+    text-white
+  "
+>
+  {user?.username || "Loading..."}
+</p>
 
-                <p
-                  className="
-                    text-sm
-                    text-slate-400
-                  "
-                >
-                  Super Admin
-                </p>
+<p
+  className="
+    text-sm
+    text-slate-400
+    capitalize
+  "
+>
+  {user?.role?.replace("_", " ") || ""}
+</p>
 
               </div>
 
