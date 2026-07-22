@@ -2,6 +2,7 @@
 
 import ReportSummaryCards from "./ReportSummaryCards";
 import SalesSummary from "./SalesSummary";
+import InventoryReport from "./inventory/InventoryReport";
 
 export type ReportType =
     | "executive"
@@ -47,9 +48,7 @@ export default function ReportContent({
             return <SalesSummary />;
 
         case "inventory":
-            return (
-                <Placeholder title="Inventory Report" />
-            );
+            return <InventoryReport />;
 
         case "procurement":
             return (

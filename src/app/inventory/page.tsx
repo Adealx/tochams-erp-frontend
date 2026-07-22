@@ -1,400 +1,454 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/services/api";
 import toast from "react-hot-toast";
-import ProductTable from "@/components/inventory/ProductTable";
+
+import CsvImport from "@/components/inventory/CsvImport";
+
+import {
+  downloadTemplate,
+} from "@/services/productService";
+
 import RoleGuard from "@/components/RoleGuard";
+import ProductForm from "@/components/inventory/ProductForm";
+import ProductTable from "@/components/inventory/ProductTable";
 
-interface Product {
-  id: number;
+import {
+  Product,
+} from "@/types/product";
 
-  sku: string;
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  restockProduct,
+} from "@/services/productService";
 
-  name: string;
-
-  category: string;
-
-  supplier: string;
-
-  stock_quantity: number;
-
-  reorder_level: number;
-
-  cost_price: string;
-
-  retail_price: string;
-
-  wholesale_price: string;
-
-  stock_value: number;
-
-  potential_sales_value: number;
-
-  potential_profit: number;
-}
+import api from "@/services/api";
 
 interface StockMovement {
+
   id: number;
+
   product_name: string;
+
   quantity: number;
+
   movement_type: string;
+
   user_name: string;
+
   created_at: string;
+
 }
 
 export default function InventoryPage() {
 
   const [products, setProducts] =
     useState<Product[]>([]);
-  
+
   const [movements, setMovements] =
-  useState<StockMovement[]>([]);  
+    useState<StockMovement[]>([]);
+
+  const [showImport, setShowImport] =
+    useState(false);
 
   const [loading, setLoading] =
-    useState(true);
+    useState(false);
 
-  const [editingId, setEditingId] =
-    useState<number | null>(null);
+  const [editingProduct, setEditingProduct] =
+    useState<Product | null>(null);
 
-  const [isEditing, setIsEditing] =
-    useState(false); 
+    useEffect(() => {
 
-  const [formData, setFormData] =
-    useState({
-      sku: "",
-      name: "",
-      cost_price: "",
-      retail_price: "",
-      wholesale_price: "",
-      stock_quantity: 0,
-    });
+      fetchProducts();
 
-  useEffect(() => {
-    loadProducts();
-    loadMovements();
-  }, []);
+      fetchMovements();
 
-  const loadProducts = async () => {
+    }, []);
+
+    const fetchProducts = async () => {
+
+    setLoading(true);
 
     try {
 
-      const response =
-        await api.get("/products/");
+      const data = await getProducts();
 
-      setProducts(response.data);
+      setProducts(data);
 
-    } catch (error: any) {
+    } catch (error) {
 
       console.error(error);
+
+      toast.error(
+        "Unable to load products."
+      );
 
     } finally {
 
       setLoading(false);
 
     }
-  };
-  
-  const loadMovements = async () => {
 
-  try {
-
-    const response =
-      await api.get(
-        "/stock-movements/"
-      );
-
-    console.log(response.data);
-
-    setMovements(response.data);
-
-  } catch (error: any) {
-
-    console.error(error);
-
-  }
-};
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
   };
 
-  const createProduct = async (
-    e: React.FormEvent
-  ) => {
-
-    e.preventDefault();
+  const fetchMovements = async () => {
 
     try {
-      
-      console.log(formData);
-      await api.post(
-        "/products/",
-        {
-          ...formData,
-          stock_quantity: Number(
-            formData.stock_quantity
-          ),
-        }
-      );
 
-      console.log(
-        "product created Successfully"
-      );
+      const response =
+        await api.get(
+          "/stock-movements/"
+        );
 
-      toast.success(
-        "Product Added Successfully"
-      );
+      setMovements(response.data);
 
-      setFormData({
-        sku: "",
-        name: "",
-        cost_price: "",
-        retail_price: "",
-        wholesale_price: "",
-        stock_quantity: 0,
-      });
-
-      await loadProducts();
-
-    } catch (error: any) {
+    } catch (error) {
 
       console.error(error);
 
-      console.log(
-        error.response?.data
-      );
-
-      alert(
-        JSON.stringify(
-          error.response?.data
-        )
-      );
     }
+
   };
 
-  const updateProduct = async (
-  e: React.FormEvent
-) => {
+    const totalStock =
 
-  e.preventDefault();
+    products.reduce(
 
-  if (editingId === null) return;
+      (sum, product) =>
 
-  try {
+        sum + product.stock_quantity,
 
-    await api.put(
-      `/products/${editingId}/`,
-      {
-        ...formData,
-        stock_quantity: Number(
-          formData.stock_quantity
-        ),
-      }
+      0
+
     );
 
-    toast.success(
-      "Product Updated Successfully"
-    );
-
-    setEditingId(null);
-
-    setIsEditing(false);
-
-    setFormData({
-      sku: "",
-      name: "",
-      cost_price: "",
-      retail_price: "",
-      wholesale_price: "",
-      stock_quantity: 0,
-    });
-
-    loadProducts();
-
-  } catch (error: any) {
-
-    console.error(error);
-
-    toast.error(
-      "Failed to update product"
-    );
-  }
-};
-  
-  const editProduct = (
-  product: Product
-) => {
-
-  setEditingId(product.id);
-
-  setIsEditing(true);
-
-  setFormData({
-    sku: product.sku,
-    name: product.name,
-    cost_price: product.cost_price,
-    retail_price: product.retail_price,
-    wholesale_price:
-      product.wholesale_price || "",
-    stock_quantity:
-      product.stock_quantity,
-  });
-};
-
-const restockProduct = async (
-  product: Product
-) => {
-
-  const quantity = Number(
-    prompt(
-      `How many units of ${product.name} do you want to add?`
-    )
-  );
-
-  if (
-    !quantity ||
-    quantity <= 0
-  ) {
-    return;
-  }
-
-  try {
-
-    await api.post(
-      `/products/${product.id}/restock/`,
-      {
-        quantity,
-      }
-    );
-
-    toast.success(
-      `${quantity} units added successfully`
-    );
-
-    loadProducts();
-    loadMovements();
-
-  }catch (error: any) {
-
-    console.error(error);
-
-    console.log(
-      error.response?.data
-    );
-
-    alert(
-      JSON.stringify(
-        error.response?.data
-      )
-    );
-  }
-};
-
-  const deleteProduct = async (
-    id: number
-  ) => {
-
-    const confirmed = confirm(
-      "Delete this product?"
-    );
-
-    if (!confirmed) return;
+  const handleSubmit = async (data: Partial<Product>) => {
 
     try {
 
-      await api.delete(
-        `/products/${id}/`
-      );
-      
-      toast.success(
-        "Product deleted successfully"
-      );
+      setLoading(true);
 
-      loadProducts();
+      if (editingProduct) {
 
-    } catch (error: any) {
+        await updateProduct(
+          editingProduct.id,
+          data
+        );
+
+        toast.success(
+          "Product updated successfully."
+        );
+
+      } else {
+
+        await createProduct(data);
+
+        toast.success(
+          "Product created successfully."
+        );
+
+      }
+
+      setEditingProduct(null);
+
+      await fetchProducts();
+
+    } catch (error) {
 
       console.error(error);
 
       toast.error(
-        "Failed to delete product"
+        "Unable to save product."
       );
+
+    } finally {
+
+      setLoading(false);
+
     }
+
   };
 
-  const totalStock = products.reduce(
-    (sum, product) =>
-      sum + product.stock_quantity,
-    0
-  );
+  const handleDownloadTemplate =
+  async () => {
 
-  if (loading) {
+    try {
+
+      const blob =
+        await downloadTemplate();
+
+      const url =
+        window.URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = url;
+
+      link.download =
+        "product_template.csv";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Unable to download template."
+      );
+
+    }
+
+}; 
+
+    const handleEdit = (
+    product: Product
+  ) => {
+
+    setEditingProduct(product);
+
+    window.scrollTo({
+
+      top: 0,
+
+      behavior: "smooth",
+
+    });
+
+  };
+
+    const handleDelete = async (
+    id: number
+  ) => {
+
+    if (
+      !confirm(
+        "Delete this product?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      await deleteProduct(id);
+
+      toast.success(
+        "Product deleted."
+      );
+
+      await fetchProducts();
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        "Unable to delete product."
+      );
+
+    }
+
+  };
+
+    const handleRestock = async (
+    product: Product
+  ) => {
+
+    const quantity = Number(
+
+      prompt(
+
+        `How many units of ${product.name} would you like to add?`
+
+      )
+
+    );
+
+    if (
+      Number.isNaN(quantity) ||
+      quantity <= 0
+    ) {
+      return;
+    }
+
+    try {
+
+      await restockProduct(
+        product.id,
+        quantity
+      );
+
+      toast.success(
+        "Stock updated."
+      );
+
+      await Promise.all([
+
+        fetchProducts(),
+
+        fetchMovements(),
+
+      ]);
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        "Unable to restock product."
+      );
+
+    }
+
+  };
+
+    const cancelEdit = () => {
+
+    setEditingProduct(null);
+
+  };
+
+  if (loading && products.length === 0) {
 
     return (
+
       <div className="p-6">
+
         Loading Inventory...
+
       </div>
+
     );
+
   }
 
   return (
 
-    <div className="p-6">
+    <div className="p-6 space-y-8">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Inventory
-      </h1>
+      {/* ==========================
+          PAGE HEADER
+      ========================== */}
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
-        <div className="bg-white p-4 rounded shadow">
+  <div>
+
+    <h1 className="text-3xl font-bold">
+
+      Product Management
+
+    </h1>
+
+    <p className="text-gray-500">
+
+      Manage inventory products,
+      pricing and stock.
+
+    </p>
+
+  </div>
+
+  <div className="flex flex-wrap gap-3">
+
+    <button
+      onClick={handleDownloadTemplate}
+      className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+    >
+      📥 Download Template
+    </button>
+
+    <button
+      onClick={() =>
+        setShowImport(true)
+      }
+      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+    >
+      📤 Upload CSV
+    </button>
+
+  </div>
+
+</div>
+
+      {/* ==========================
+          DASHBOARD
+      ========================== */}
+
+      <div className="grid gap-6 md:grid-cols-3">
+
+        <div className="bg-white rounded-xl shadow p-6">
 
           <p className="text-gray-500">
-            Products
+
+            Total Products
+
           </p>
 
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-3xl font-bold mt-2">
+
             {products.length}
+
           </h2>
 
         </div>
 
-        <div className="bg-white p-4 rounded shadow">
+        <div className="bg-white rounded-xl shadow p-6">
 
           <p className="text-gray-500">
+
             Total Stock
+
           </p>
 
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-3xl font-bold mt-2">
+
             {totalStock}
+
           </h2>
 
         </div>
 
-        <div className="bg-white p-4 rounded shadow">
+        <div className="bg-white rounded-xl shadow p-6">
 
           <p className="text-gray-500">
-            Low Stock Items
+
+            Low Stock
+
           </p>
 
-          <h2 className="text-3xl font-bold text-red-600">
+          <h2 className="text-3xl font-bold text-red-600 mt-2">
+
             {
+
               products.filter(
-                p => p.stock_quantity < 10
+
+                p => p.stock_quantity <= p.reorder_level
+
               ).length
+
             }
+
           </h2>
 
         </div>
 
       </div>
+
+      {/* ==========================
+          PRODUCT MASTER
+      ========================== */}
 
       <RoleGuard
         roles={[
@@ -404,224 +458,257 @@ const restockProduct = async (
         ]}
       >
 
-      <div className="bg-white p-6 rounded shadow mb-8">
+        <div className="bg-white rounded-xl shadow">
 
-        <h2 className="text-xl font-semibold mb-4">
-          {isEditing
-            ? "Edit Product"
-            : "Add Product"}
-        </h2>    
+          <div className="border-b p-6">
 
-        <form
-          onSubmit={
-            isEditing
-              ? updateProduct
-              : createProduct
-          }
-          className="grid gap-4 md:grid-cols-2"
-        >
+            <h2 className="text-xl font-semibold">
 
-          <input
-            type="text"
-            name="sku"
-            placeholder="SKU"
-            value={formData.sku}
-            onChange={handleChange}
-            className="border p-3 rounded"
-            required
-          />
+              {
 
-          <input
-            type="text"
-            name="name"
-            placeholder="Product Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="border p-3 rounded"
-            required
-          />
+                editingProduct
 
-          <input
-            type="number"
-            name="cost_price"
-            placeholder="Cost Price"
-            value={formData.cost_price}
-            onChange={handleChange}
-            className="border p-3 rounded w-full"
-          />
+                  ? "Edit Product"
 
-          <input
-            type="number"
-            name="retail_price"
-            placeholder="Retail Price"
-            value={formData.retail_price}
-            onChange={handleChange}
-            className="border p-3 rounded"
-            required
-          />
+                  : "New Product"
 
-          <input
-            type="number"
-            name="wholesale_price"
-            placeholder="Wholesale Price"
-            value={formData.wholesale_price}
-            onChange={handleChange}
-            className="border p-3 rounded"
-          />
+              }
 
-          <input
-            type="number"
-            name="stock_quantity"
-            placeholder="Stock Quantity"
-            value={formData.stock_quantity}
-            onChange={handleChange}
-            className="border p-3 rounded"
-            required
-          />
+            </h2>
 
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 py-3 rounded"
-          >
-            {isEditing
-              ? "Update Product"
-              : "Add Product"}
-          </button>
-          
-        {isEditing && (
+          </div>
 
-          <button
-            type="button"
-            onClick={() => {
+          <div className="p-6">
 
-              setIsEditing(false);
+            <ProductForm
 
-              setEditingId(null);
+              initialData={
 
-              setFormData({
-                sku: "",
-                name: "",
-                cost_price: "",
-                retail_price: "",
-                wholesale_price: "",
-                stock_quantity: 0,
-              });
+                editingProduct || {}
 
-            }}
-            className="bg-gray-500 text-white px-6 py-3 rounded"
-         >
-            Cancel
-         </button>
+              }
 
-       )}
+              loading={loading}
 
-        </form>
+              submitText={
 
-      </div>
+                editingProduct
+
+                  ? "Update Product"
+
+                  : "Create Product"
+
+              }
+
+              onSubmit={handleSubmit}
+
+            />
+
+            {
+
+              editingProduct && (
+
+                <div className="mt-4">
+
+                  <button
+
+                    onClick={cancelEdit}
+
+                    className="px-6 py-3 rounded bg-gray-500 text-white"
+
+                  >
+
+                    Cancel Editing
+
+                  </button>
+
+                </div>
+
+              )
+
+            }
+
+          </div>
+
+        </div>
+
       </RoleGuard>
 
-      <ProductTable
-        products={products}
-        onEdit={editProduct}
-        onDelete={deleteProduct}
-        onRestock={restockProduct}
+      {/* ==========================
+          PRODUCTS
+      ========================== */}
+
+      <div>
+
+        <h2 className="text-2xl font-semibold mb-4">
+
+          Product List
+
+        </h2>  
+
+       <ProductTable
+         products={products}
+         onEdit={handleEdit}
+         onDelete={handleDelete}
+         onRestock={handleRestock}
       />
 
-      <div className="bg-white rounded shadow mt-8 overflow-hidden">
+      </div>
 
-        <div className="p-4 border-b">
+      {/* ==========================
+          STOCK MOVEMENT HISTORY
+      ========================== */}
+
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+
+        <div className="border-b p-6">
 
           <h2 className="text-xl font-semibold">
+
             Stock Movement History
+
           </h2>
 
         </div>
 
-        <table className="w-full">
+        <div className="overflow-x-auto">
 
-          <thead className="bg-gray-100">
+          <table className="min-w-full">
 
-            <tr>
+            <thead className="bg-gray-100">
 
-              <th className="p-4 text-left">
-                Date
-              </th>
+              <tr>
 
-              <th className="p-4 text-left">
-                Product
-              </th>
+                <th className="p-4 text-left">
+                  Date
+                </th>
 
-              <th className="p-4 text-left">
-                Type
-              </th>
+                <th className="p-4 text-left">
+                  Product
+                </th>
 
-              <th className="p-4 text-left">
-                Quantity
-              </th>
+                <th className="p-4 text-left">
+                  Movement
+                </th>
 
-              <th className="p-4 text-left">
-                User
-              </th>
+                <th className="p-4 text-left">
+                  Quantity
+                </th>
 
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {movements.map((movement) => (
-
-              <tr
-                key={movement.id}
-                className="border-b"
-              >
-
-                <td className="p-4">
-                  {new Date(
-                    movement.created_at
-                  ).toLocaleString()}
-                </td>
-
-                <td className="p-4">
-                  {movement.product_name}
-                </td>
-
-                <td className="p-4">
-
-                  <span
-                    className={`px-3 py-1 rounded text-white ${
-                      movement.movement_type === "IN"
-                        ? "bg-green-600"
-                        : movement.movement_type === "OUT"
-                        ? "bg-red-600"
-                        : "bg-yellow-500"
-                    }`}
-                  >
-                    {movement.movement_type}
-                  </span>
-
-                </td>
-
-                <td className="p-4 font-bold">
-                  {movement.quantity}
-                </td>
-
-                <td className="p-4">
-                  {movement.user_name}
-                </td>
+                <th className="p-4 text-left">
+                  User
+                </th>
 
               </tr>
 
-            ))}
+            </thead>
 
-          </tbody>
+            <tbody>
 
-        </table>
+              {movements.map((movement) => (
+
+                <tr
+                  key={movement.id}
+                  className="border-b hover:bg-gray-50"
+                >
+
+                  <td className="p-4">
+
+                    {new Date(
+                      movement.created_at
+                    ).toLocaleString()}
+
+                  </td>
+
+                  <td className="p-4">
+
+                    {movement.product_name}
+
+                  </td>
+
+                  <td className="p-4">
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-white text-sm ${
+                        movement.movement_type === "IN"
+                          ? "bg-green-600"
+                          : movement.movement_type === "OUT"
+                          ? "bg-red-600"
+                          : "bg-yellow-500"
+                      }`}
+                    >
+
+                      {movement.movement_type}
+
+                    </span>
+
+                  </td>
+
+                  <td className="p-4 font-semibold">
+
+                    {movement.quantity}
+
+                  </td>
+
+                  <td className="p-4">
+
+                    {movement.user_name}
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+              {movements.length === 0 && (
+
+                <tr>
+
+                  <td
+                    colSpan={5}
+                    className="p-8 text-center text-gray-500"
+                  >
+
+                    No stock movement history available.
+
+                  </td>
+
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
+    
+    {
+  showImport && (
 
-    </div>
-  );
+    <CsvImport
+
+      onClose={() =>
+        setShowImport(false)
+      }
+
+      onSuccess={() => {
+
+        setShowImport(false);
+
+        fetchProducts();
+
+      }}
+
+    />
+
+  )
 }
 
+    </div>
 
+  );
+
+}
