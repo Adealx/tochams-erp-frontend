@@ -13,47 +13,36 @@ export interface Unit {
   name: string;
 }
 
-export interface Product {
+export type ProductStatus = "ACTIVE" | "INACTIVE";
 
+export interface Product {
   id: number;
 
   sku: string;
-
   name: string;
 
   category: number;
-
   brand: number;
-
   unit: number;
 
   category_name: string;
-
   brand_name: string;
-
   unit_name: string;
 
   supplier: string;
-
   barcode: string;
-
   description: string;
 
-  cost_price: string;
-
-  wholesale_price: string;
-
-  retail_price: string;
+  cost_price: number;
+  wholesale_price: number;
+  retail_price: number;
 
   stock_quantity: number;
-
   reorder_level: number;
 
-  status: string;
+  status: ProductStatus;
 
   stock_value: number;
-
   potential_sales_value: number;
-
   potential_profit: number;
 }
