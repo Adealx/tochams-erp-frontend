@@ -10,7 +10,6 @@ export default function LoginForm() {
   const router = useRouter();
 
   const [username, setUsername] = useState("");
-
   const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
@@ -20,38 +19,53 @@ export default function LoginForm() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (
-  e: React.FormEvent<HTMLFormElement>
-) => {
-  e.preventDefault();
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
 
-  setLoading(true);
-  setError("");
+    setLoading(true);
+    setError("");
 
-  try {
-    const data = await loginUser(username, password);
+    try {
+      console.log("Logging in...");
 
-    localStorage.setItem("access", data.access);
-    localStorage.setItem("refresh", data.refresh);
+      const data = await loginUser(username, password);
 
-    router.push("/dashboard");
+      console.log("Login Response:", data);
 
-  } catch (err: any) {
-    setError(
-      err?.response?.data?.detail ||
-      "Invalid username or password."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
+
+      console.log("Tokens stored.");
+
+      // Small delay to ensure storage is available
+      await new Promise((resolve) =>
+        setTimeout(resolve, 100)
+      );
+
+      router.replace("/dashboard");
+
+    } catch (err: any) {
+
+      console.error("LOGIN FAILED", err);
+
+      setError(
+        err?.response?.data?.detail ||
+        "Invalid username or password."
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      {/* Error */}
-
       {error && (
         <div
           className="
@@ -68,10 +82,7 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* Email */}
-
       <div>
-
         <label
           className="
             mb-2
@@ -89,9 +100,10 @@ export default function LoginForm() {
           required
           autoComplete="username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) =>
+            setUsername(e.target.value)
+          }
           placeholder="Enter your username"
-          
           className="
             w-full
             rounded-2xl
@@ -106,13 +118,9 @@ export default function LoginForm() {
             focus:ring-blue-100
           "
         />
-
       </div>
 
-      {/* Password */}
-
       <div>
-
         <label
           className="
             mb-2
@@ -159,9 +167,7 @@ export default function LoginForm() {
           <button
             type="button"
             onClick={() =>
-              setShowPassword(
-                !showPassword
-              )
+              setShowPassword(!showPassword)
             }
             className="
               absolute
@@ -181,8 +187,6 @@ export default function LoginForm() {
         </div>
 
       </div>
-
-      {/* Options */}
 
       <div className="flex items-center justify-between">
 
@@ -218,8 +222,6 @@ export default function LoginForm() {
 
       </div>
 
-      {/* Button */}
-
       <button
         type="submit"
         disabled={loading}
@@ -253,8 +255,6 @@ export default function LoginForm() {
         )}
       </button>
 
-      {/* Register */}
-
       <div className="text-center text-sm text-slate-600">
 
         Don't have an account?{" "}
@@ -271,6 +271,7 @@ export default function LoginForm() {
         </Link>
 
       </div>
+
     </form>
   );
 }

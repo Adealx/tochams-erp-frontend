@@ -58,70 +58,69 @@ export function AuthProvider({
 
     async function refreshUser() {
 
-        const token =
-            localStorage.getItem("access");
+    const token =
+        localStorage.getItem("access");
 
-        console.log("========== AUTH ==========");
-        console.log("Access Token:", token);
+    console.log("========== AUTH ==========");
+    console.log("Access Token:", token);
 
-        if (!token) {
+    if (!token) {
 
-            console.log("No token found.");
+        console.log("No token found.");
 
-            setUser(null);
+        setUser(null);
 
-            setLoading(false);
+        setLoading(false);
 
-            return;
-
-        }
-
-        try {
-
-            console.log(
-                "Calling /accounts/me/..."
-            );
-
-            const me =
-                await getCurrentUser();
-
-            console.log("SUCCESS:");
-            console.log(me);
-
-            setUser(me);
-
-        } catch (error: any) {
-
-            console.error("AUTH FAILED");
-
-            console.error(error);
-
-            console.error(
-                "Status:",
-                error?.response?.status
-            );
-
-            console.error(
-                "Data:",
-                error?.response?.data
-            );
-
-            // Remove invalid tokens
-
-            localStorage.removeItem("access");
-            localStorage.removeItem("refresh");
-
-            setUser(null);
-
-        } finally {
-
-            setLoading(false);
-
-            console.log("=========================");
-
-        }
+        return;
 
     }
+
+    try {
+
+        console.log(
+            "Calling /accounts/me/..."
+        );
+
+        const me =
+            await getCurrentUser();
+
+        console.log("AUTH SUCCESS");
+
+        console.log(me);
+
+        setUser(me);
+
+    } catch (error: any) {
+
+        console.error("AUTH FAILED");
+
+        console.error(error);
+
+        console.error(
+            "Status:",
+            error?.response?.status
+        );
+
+        console.error(
+            "Data:",
+            error?.response?.data
+        );
+
+        // TEMPORARY:
+        // Keep the tokens while we diagnose the issue.
+
+        setUser(null);
+
+    } finally {
+
+        setLoading(false);
+
+        console.log("=========================");
+
+    }
+
+}
 
     useEffect(() => {
 

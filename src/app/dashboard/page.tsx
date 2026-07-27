@@ -16,9 +16,14 @@ import LowStockCard from "@/components/dashboard/LowStockCard";
 import RecentOrders from "@/components/dashboard/RecentOrders";
 import RecentCustomers from "@/components/dashboard/RecentCustomers";
 
+export const dynamic = "force-dynamic";
+
 export default function Dashboard() {
 
-  const { user } = useAuth();
+  const {
+      user,
+      loading: authLoading,
+  } = useAuth();
 
   const [stats, setStats] = useState({
     customers: 0,
@@ -51,8 +56,17 @@ export default function Dashboard() {
     useState(true);
 
   useEffect(() => {
-    if (!user) return;
-    
+
+    if (authLoading) return;
+
+    if (!user) {
+
+      setLoading(false);
+
+      return;
+
+    }
+
     console.log("================================");
     console.log("Dashboard Mounted");
     console.log("Authenticated User:", user);
@@ -60,7 +74,7 @@ export default function Dashboard() {
 
     loadDashboard();
 
-  }, [user]);
+  }, [user, authLoading]);
 
   async function loadDashboard() {
 

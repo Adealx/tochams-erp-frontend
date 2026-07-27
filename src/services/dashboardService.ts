@@ -31,14 +31,7 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  // Load everything in parallel
-  const [
-    customers,
-    invoices,
-    payments,
-    productsResponse,
-    ordersResponse,
-  ] = await Promise.all([
+  const results = await Promise.allSettled([
     getCustomers(),
     getInvoices(),
     getPayments(),
@@ -46,10 +39,60 @@ export async function getDashboardData(): Promise<DashboardData> {
     api.get("/orders/"),
   ]);
 
-  const products = productsResponse.data;
-  const orders = ordersResponse.data;
+  // Customers
+  const customers =
+    results[0].status === "fulfilled"
+      ? results[0].value
+      : [];
 
-  // Financial calculations
+  if (results[0].status === "rejected") {
+    console.error("Customers API failed:", results[0].reason);
+  }
+
+  // Invoices
+  const invoices =
+    results[1].status === "fulfilled"
+      ? results[1].value
+      : [];
+
+  if (results[1].status === "rejected") {
+    console.error("Invoices API failed:", results[1].reason);
+  }
+
+  // Payments
+  const payments =
+    results[2].status === "fulfilled"
+      ? results[2].value
+      : [];
+
+  if (results[2].status === "rejected") {
+    console.error("Payments API failed:", results[2].reason);
+  }
+
+  // Products
+  const products =
+    results[3].status === "fulfilled"
+      ? results[3].value.data
+      : [];
+
+  if (results[3].status === "rejected") {
+    console.error("Products API failed:", results[3].reason);
+  }
+
+  // Orders
+  const orders =
+    results[4].status === "fulfilled"
+      ? results[4].value.data
+      : [];
+
+  if (results[4].status === "rejected") {
+    console.error("Orders API failed:", results[4].reason);
+  }
+
+  // ==========================
+  // Financial Calculations
+  // ==========================
+
   const storeValue = products.reduce(
     (sum: number, product: any) =>
       sum + Number(product.stock_value || 0),
@@ -70,19 +113,19 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const totalPayments = payments.reduce(
     (sum: number, payment: any) =>
-      sum + Number(payment.amount_paid),
+      sum + Number(payment.amount_paid || 0),
     0
   );
 
   const totalInvoices = invoices.reduce(
     (sum: number, invoice: any) =>
-      sum + Number(invoice.amount),
+      sum + Number(invoice.amount || 0),
     0
   );
 
   const alerts = products.filter(
     (product: any) =>
-      product.stock_quantity <= 10
+      Number(product.stock_quantity) <= 10
   );
 
   const pendingOrders = orders.filter(
