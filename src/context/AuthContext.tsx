@@ -131,12 +131,14 @@ export function AuthProvider({
     function logout() {
 
         localStorage.removeItem("access");
-
         localStorage.removeItem("refresh");
+        localStorage.removeItem("user");
+
+        sessionStorage.clear();
 
         setUser(null);
 
-        window.location.href = "/login";
+        window.location.replace("/login");
 
     }
 

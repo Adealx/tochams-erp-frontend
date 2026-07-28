@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 import {
   Bell,
   Search,
@@ -7,6 +9,10 @@ import {
   Settings,
   ChevronDown,
   PanelLeft,
+  User,
+  KeyRound,
+  LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useSidebar } from "@/context/SidebarContext";
@@ -22,7 +28,50 @@ const today = new Date().toLocaleDateString("en-NG", {
 export default function Topbar() {
   const { toggleSidebar } = useSidebar();
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+    };
+  }, []);
 
   return (
     <header
@@ -47,13 +96,11 @@ export default function Topbar() {
           px-8
         "
       >
-        {/* ================================= */}
+        {/* ============================= */}
         {/* LEFT */}
-        {/* ================================= */}
+        {/* ============================= */}
 
         <div className="flex items-center gap-6">
-
-          {/* Sidebar Toggle */}
 
           <button
             onClick={toggleSidebar}
@@ -73,8 +120,6 @@ export default function Topbar() {
           >
             <PanelLeft size={20} />
           </button>
-
-          {/* Search */}
 
           <div className="relative">
 
@@ -136,13 +181,11 @@ export default function Topbar() {
 
         </div>
 
-        {/* ================================= */}
+        {/* ============================= */}
         {/* RIGHT */}
-        {/* ================================= */}
+        {/* ============================= */}
 
         <div className="flex items-center gap-4">
-
-          {/* Date */}
 
           <div
             className="
@@ -174,8 +217,6 @@ export default function Topbar() {
             </span>
 
           </div>
-
-          {/* Notifications */}
 
           <button
             className="
@@ -209,8 +250,6 @@ export default function Topbar() {
             />
           </button>
 
-          {/* Settings */}
-
           <button
             className="
               flex
@@ -229,77 +268,276 @@ export default function Topbar() {
             <Settings size={20} />
           </button>
 
-          {/* ================================= */}
-          {/* Profile */}
-          {/* ================================= */}
+          {/* ============================= */}
+          {/* USER MENU */}
+          {/* ============================= */}
 
-          <button
-            className="
-              flex
-              items-center
-              gap-3
-              rounded-2xl
-              border
-              border-slate-200
-              bg-white
-              px-4
-              py-2
-              transition-all
-              hover:bg-slate-50
-              hover:shadow-sm
-            "
+          <div
+            className="relative"
+            ref={menuRef}
           >
 
-            <div
+            <button
+              onClick={() =>
+                setMenuOpen(!menuOpen)
+              }
               className="
                 flex
-                h-11
-                w-11
                 items-center
-                justify-center
-                rounded-full
-                bg-blue-600
-                text-white
-                font-bold
+                gap-3
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                py-2
+                transition-all
+                hover:bg-slate-50
+                hover:shadow-sm
               "
             >
-              {user?.username?.charAt(0).toUpperCase() || "U"}
-            </div>
-
-            <div className="text-left">
-
-              <p
+              <div
                 className="
-                  text-sm
-                  font-semibold
-                  text-slate-900
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-blue-600
+                  text-white
+                  text-lg
+                  font-bold
                 "
               >
-                {user?.username || "Loading..."}
-              </p>
+                {user?.username
+                  ?.charAt(0)
+                  .toUpperCase() || "U"}
+              </div>
 
-              <p
+              <div className="text-left">
+
+                <p
+                  className="
+                    text-sm
+                    font-semibold
+                    text-slate-900
+                  "
+                >
+                  {user?.username ||
+                    "Loading..."}
+                </p>
+
+                <p
+                  className="
+                    text-xs
+                    capitalize
+                    text-slate-500
+                  "
+                >
+                  {user?.role?.replace(
+                    "_",
+                    " "
+                  )}
+                </p>
+
+              </div>
+
+              <ChevronDown
+                size={18}
+                className={`transition-transform duration-200 ${
+                  menuOpen
+                    ? "rotate-180"
+                    : ""
+                }`}
+              />
+
+            </button>
+
+            {menuOpen && (
+                            <div
                 className="
-                  text-xs
-                  text-slate-500
-                  capitalize
+                  absolute
+                  right-0
+                  mt-3
+                  w-72
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-white
+                  shadow-2xl
+                  animate-in
+                  fade-in
+                  zoom-in-95
+                  duration-200
                 "
               >
-                {user?.role?.replace("_", " ") || ""}
-              </p>
+                {/* Header */}
 
-            </div>
+                <div className="border-b border-slate-100 p-5">
 
-            <ChevronDown
-              size={18}
-              className="text-slate-500"
-            />
+                  <div className="flex items-center gap-4">
 
-          </button>
+                    <div
+                      className="
+                        flex
+                        h-14
+                        w-14
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-blue-600
+                        text-xl
+                        font-bold
+                        text-white
+                      "
+                    >
+                      {user?.username
+                        ?.charAt(0)
+                        .toUpperCase() || "U"}
+                    </div>
+
+                    <div>
+
+                      <p className="font-semibold text-slate-900">
+                        {user?.username}
+                      </p>
+
+                      <p className="text-sm text-slate-500">
+                        {user?.email}
+                      </p>
+
+                      <span
+                        className="
+                          mt-2
+                          inline-flex
+                          rounded-full
+                          bg-blue-100
+                          px-2
+                          py-1
+                          text-xs
+                          font-semibold
+                          capitalize
+                          text-blue-700
+                        "
+                      >
+                        {user?.role?.replace("_", " ")}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Menu */}
+
+                <div className="py-2">
+
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-5
+                      py-3
+                      text-sm
+                      text-slate-700
+                      transition-colors
+                      hover:bg-slate-100
+                    "
+                  >
+                    <User size={18} />
+                    <span>My Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-5
+                      py-3
+                      text-sm
+                      text-slate-700
+                      transition-colors
+                      hover:bg-slate-100
+                    "
+                  >
+                    <KeyRound size={18} />
+                    <span>Change Password</span>
+                  </button>
+
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      px-5
+                      py-3
+                      text-sm
+                      text-slate-700
+                      transition-colors
+                      hover:bg-slate-100
+                    "
+                  >
+                    <ShieldCheck size={18} />
+                    <span>Account Settings</span>
+                  </button>
+
+                </div>
+
+                {/* Footer */}
+
+                <div className="border-t border-slate-100 p-2">
+
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      gap-3
+                      rounded-xl
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-red-600
+                      transition-all
+                      hover:bg-red-50
+                    "
+                  >
+                    <LogOut size={18} />
+
+                    <span>Logout</span>
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </div>
 
         </div>
 
       </div>
+
     </header>
+
   );
+
 }
