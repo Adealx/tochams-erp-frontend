@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginUser } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginForm() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +45,11 @@ export default function LoginForm() {
         setTimeout(resolve, 100)
       );
 
+      await refreshUser();
+
       router.replace("/dashboard");
+
+      router.refresh();
 
     } catch (err: any) {
 

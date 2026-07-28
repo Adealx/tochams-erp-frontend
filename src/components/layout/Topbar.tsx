@@ -28,7 +28,7 @@ const today = new Date().toLocaleDateString("en-NG", {
 export default function Topbar() {
   const { toggleSidebar } = useSidebar();
 
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -317,29 +317,33 @@ export default function Topbar() {
 
               <div className="text-left">
 
-                <p
-                  className="
-                    text-sm
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  {user?.username ||
-                    "Loading..."}
-                </p>
+                {loading ? (
+                  <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                ) : (
+                  <p
+                    className="
+                      text-sm
+                      font-semibold
+                      text-slate-900
+                    "
+                  >
+                    {user?.username}
+                  </p>
+                )}
 
-                <p
-                  className="
-                    text-xs
-                    capitalize
-                    text-slate-500
-                  "
-                >
-                  {user?.role?.replace(
-                    "_",
-                    " "
-                  )}
-                </p>
+                {loading ? (
+                  <div className="mt-2 h-3 w-16 animate-pulse rounded bg-slate-200" />
+                ) : (
+                  <p
+                    className="
+                      text-xs
+                      capitalize
+                      text-slate-500
+                    "
+                  >
+                    {user?.role?.replace("_", " ")}
+                  </p>
+                )}
 
               </div>
 

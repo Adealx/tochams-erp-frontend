@@ -26,14 +26,11 @@ interface User {
 }
 
 interface AuthContextType {
-
     user: User | null;
-
     loading: boolean;
-
     refreshUser: () => Promise<void>;
-
     logout: () => void;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<
@@ -150,6 +147,7 @@ export function AuthProvider({
                 loading,
                 refreshUser,
                 logout,
+                setUser,
             }}
         >
 
