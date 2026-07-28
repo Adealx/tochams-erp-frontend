@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { createPayment } from "@/services/paymentService";
 import toast from "react-hot-toast";
+import AppShell from "@/components/layout/AppShell";
 
 interface Invoice {
   id: number;
@@ -17,305 +18,241 @@ interface Invoice {
 }
 
 export default function AddPaymentPage() {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [invoices, setInvoices] =
-    useState<Invoice[]>([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [formData, setFormData] =
-    useState({
-      invoice: "",
-      amount_paid: "",
-      payment_method: "Bank Transfer",
-    });
+  const [formData, setFormData] = useState({
+    invoice: "",
+    amount_paid: "",
+    payment_method: "Bank Transfer",
+  });
 
   useEffect(() => {
-
     loadInvoices();
-
   }, []);
 
   const loadInvoices = async () => {
-
     try {
+      const response = await api.get("/invoices/");
 
-      const response =
-        await api.get("/invoices/");
-
-      const unpaidInvoices =
-        response.data.filter(
-          (invoice: Invoice) =>
-            Number(invoice.balance_due) > 0
-        );
-
-      setInvoices(
-        unpaidInvoices
+      const unpaidInvoices = response.data.filter(
+        (invoice: Invoice) => Number(invoice.balance_due) > 0
       );
 
-    } catch (error: any) {
-
-      console.error(
-        "Failed to load invoices",
-        error
-      );
+      setInvoices(unpaidInvoices);
+    } catch (error) {
+      console.error("Failed to load invoices", error);
     }
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement |
-      HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-
     setFormData({
-
       ...formData,
-
-      [e.target.name]:
-        e.target.value,
-
+      [e.target.name]: e.target.value,
     });
   };
 
-  const selectedInvoice =
-    invoices.find(
-      invoice =>
-        invoice.id ===
-        Number(
-          formData.invoice
-        )
-    );
+  const selectedInvoice = invoices.find(
+    (invoice) => invoice.id === Number(formData.invoice)
+  );
 
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
-
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setLoading(true);
 
     try {
-
       await createPayment({
-
-        invoice: Number(
-          formData.invoice
-        ),
-
-        amount_paid:
-          Number(
-            formData.amount_paid
-          ),
-
-        payment_method:
-          formData.payment_method,
-
+        invoice: Number(formData.invoice),
+        amount_paid: Number(formData.amount_paid),
+        payment_method: formData.payment_method,
       });
 
-      toast.success(
-        "Payment recorded successfully"
-      );
+      toast.success("Payment recorded successfully");
 
-      window.location.href =
-        "/payments";
-
+      window.location.href = "/payments";
     } catch (error: any) {
-
       console.error(error);
 
-      alert(
-        JSON.stringify(
-          error.response?.data
-        )
+      toast.error(
+        error.response?.data?.detail ||
+          "Unable to record payment."
       );
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
   return (
-
-    <div className="p-8">
-
-      <h1 className="text-3xl font-bold mb-6">
-
-        Record Payment
-
-      </h1>
-
-      <div className="bg-white p-6 rounded shadow">
-
+    <AppShell
+      title="Record Payment"
+      subtitle="Record customer payments against outstanding invoices."
+      breadcrumbs={[
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+        },
+        {
+          label: "Payments",
+          href: "/payments",
+        },
+        {
+          label: "Record Payment",
+        },
+      ]}
+    >
+      <div
+        className="
+          rounded-2xl
+          border
+          border-slate-200
+          bg-white
+          p-8
+          shadow-sm
+        "
+      >
         <form
           onSubmit={handleSubmit}
-          className="space-y-4"
+          className="space-y-6"
         >
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Invoice
+            </label>
 
-          <select
-            name="invoice"
-            value={formData.invoice}
-            onChange={handleChange}
-            className="border p-3 rounded w-full"
-            required
-          >
+            <select
+              name="invoice"
+              value={formData.invoice}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              required
+            >
+              <option value="">Select Invoice</option>
 
-            <option value="">
-
-              Select Invoice
-
-            </option>
-
-            {invoices.map(
-              (invoice) => (
-
+              {invoices.map((invoice) => (
                 <option
                   key={invoice.id}
                   value={invoice.id}
                 >
-
-                  {invoice.invoice_number}
-                  {" - "}
-                  {invoice.customer_name}
-
+                  {invoice.invoice_number} - {invoice.customer_name}
                 </option>
-
-              )
-            )}
-
-          </select>
+              ))}
+            </select>
+          </div>
 
           {selectedInvoice && (
+            <div
+              className="
+                rounded-xl
+                border
+                border-blue-200
+                bg-blue-50
+                p-5
+              "
+            >
+              <h3 className="mb-4 text-lg font-semibold text-blue-900">
+                Invoice Details
+              </h3>
 
-            <div className="bg-gray-100 p-4 rounded">
+              <div className="grid gap-3 md:grid-cols-2">
+                <p>
+                  <span className="font-semibold">
+                    Invoice:
+                  </span>{" "}
+                  {selectedInvoice.invoice_number}
+                </p>
 
-              <p>
+                <p>
+                  <span className="font-semibold">
+                    Customer:
+                  </span>{" "}
+                  {selectedInvoice.customer_name}
+                </p>
 
-                <strong>
-                  Invoice:
-                </strong>
+                <p>
+                  <span className="font-semibold">
+                    Invoice Amount:
+                  </span>{" "}
+                  ₦
+                  {Number(
+                    selectedInvoice.amount
+                  ).toLocaleString()}
+                </p>
 
-                {" "}
-
-                {
-                  selectedInvoice.invoice_number
-                }
-
-              </p>
-
-              <p>
-
-                <strong>
-                  Customer:
-                </strong>
-
-                {" "}
-
-                {
-                  selectedInvoice.customer_name
-                }
-
-              </p>
-
-              <p>
-
-                <strong>
-                  Amount:
-                </strong>
-
-                {" "}
-
-                ₦
-
-                {Number(
-                  selectedInvoice.amount
-                ).toLocaleString()}
-
-              </p>
-
-              <p>
-
-                <strong>
-                  Balance Due:
-                </strong>
-
-                {" "}
-
-                ₦
-
-                {Number(
-                  selectedInvoice.balance_due
-                ).toLocaleString()}
-
-              </p>
-
+                <p>
+                  <span className="font-semibold">
+                    Balance Due:
+                  </span>{" "}
+                  ₦
+                  {Number(
+                    selectedInvoice.balance_due
+                  ).toLocaleString()}
+                </p>
+              </div>
             </div>
-
           )}
 
-          <input
-            type="number"
-            name="amount_paid"
-            placeholder="Amount Paid"
-            value={
-              formData.amount_paid
-            }
-            onChange={
-              handleChange
-            }
-            className="border p-3 rounded w-full"
-            required
-          />
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Amount Paid
+            </label>
 
-          <select
-            name="payment_method"
-            value={
-              formData.payment_method
-            }
-            onChange={
-              handleChange
-            }
-            className="border p-3 rounded w-full"
-          >
+            <input
+              type="number"
+              name="amount_paid"
+              placeholder="Enter amount paid"
+              value={formData.amount_paid}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              required
+            />
+          </div>
 
-            <option value="Cash">
-              Cash
-            </option>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Payment Method
+            </label>
 
-            <option value="Bank Transfer">
-              Bank Transfer
-            </option>
-
-            <option value="POS">
-              POS
-            </option>
-
-            <option value="Cheque">
-              Cheque
-            </option>
-
-          </select>
+            <select
+              name="payment_method"
+              value={formData.payment_method}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            >
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">
+                Bank Transfer
+              </option>
+              <option value="POS">POS</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-green-600 text-white px-6 py-3 rounded w-full"
+            className="
+              w-full
+              rounded-lg
+              bg-green-600
+              px-6
+              py-3
+              font-semibold
+              text-white
+              transition
+              hover:bg-green-700
+              disabled:cursor-not-allowed
+              disabled:bg-green-300
+            "
           >
-
             {loading
-              ? "Saving..."
+              ? "Recording Payment..."
               : "Record Payment"}
-
           </button>
-
         </form>
-
       </div>
-
-    </div>
+    </AppShell>
   );
 }

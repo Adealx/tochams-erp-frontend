@@ -12,6 +12,7 @@ import {
 import RoleGuard from "@/components/RoleGuard";
 import ProductForm from "@/components/inventory/ProductForm";
 import ProductTable from "@/components/inventory/ProductTable";
+import AppShell from "@/components/layout/AppShell";
 
 import {
   Product,
@@ -320,49 +321,45 @@ export default function InventoryPage() {
   };
 
   if (loading && products.length === 0) {
-
-    return (
-
-      <div className="p-6">
-
-        Loading Inventory...
-
-      </div>
-
-    );
-
-  }
+  return (
+    <AppShell
+      title="Inventory"
+      subtitle="Manage products, pricing and warehouse stock."
+      breadcrumbs={[
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+        },
+        {
+          label: "Inventory",
+        },
+      ]}
+    >
+      <div>Loading Inventory...</div>
+    </AppShell>
+  );
+}
 
   return (
+  <AppShell
+    title="Inventory"
+    subtitle="Manage products, pricing, stock levels and warehouse movements."
+    breadcrumbs={[
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        label: "Inventory",
+      },
+    ]}
+  >
+    <div className="space-y-8">
 
-    <div className="p-6 space-y-8">
-
-      {/* ==========================
-          PAGE HEADER
-      ========================== */}
-
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-
-  <div>
-
-    <h1 className="text-3xl font-bold">
-
-      Product Management
-
-    </h1>
-
-    <p className="text-gray-500">
-
-      Manage inventory products,
-      pricing and stock.
-
-    </p>
-
-  </div>
-
-  <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 justify-end">
 
     <button
+      id="download-template"
       onClick={handleDownloadTemplate}
       className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
     >
@@ -370,6 +367,7 @@ export default function InventoryPage() {
     </button>
 
     <button
+      id="upload-csv"
       onClick={() =>
         setShowImport(true)
       }
@@ -380,15 +378,22 @@ export default function InventoryPage() {
 
   </div>
 
-</div>
-
       {/* ==========================
           DASHBOARD
       ========================== */}
 
       <div className="grid gap-6 md:grid-cols-3">
 
-        <div className="bg-white rounded-xl shadow p-6">
+        <div 
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            p-6
+            shadow-sm
+            "
+          >
 
           <p className="text-gray-500">
 
@@ -404,7 +409,16 @@ export default function InventoryPage() {
 
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
+        <div 
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            p-6
+            shadow-sm
+            "
+          >
 
           <p className="text-gray-500">
 
@@ -420,7 +434,16 @@ export default function InventoryPage() {
 
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            p-6
+            shadow-sm
+            "
+          >
 
           <p className="text-gray-500">
 
@@ -458,8 +481,15 @@ export default function InventoryPage() {
         ]}
       >
 
-        <div className="bg-white rounded-xl shadow">
-
+        <div 
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            shadow-sm
+          "
+        >
           <div className="border-b p-6">
 
             <h2 className="text-xl font-semibold">
@@ -559,7 +589,16 @@ export default function InventoryPage() {
           STOCK MOVEMENT HISTORY
       ========================== */}
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div 
+        className="
+          rounded-2xl
+          border
+          border-slate-200
+          bg-white
+          shadow-sm
+          overflow-hidden
+        "
+      >
 
         <div className="border-b p-6">
 
@@ -685,30 +724,20 @@ export default function InventoryPage() {
 
       </div>
     
-    {
-  showImport && (
+          {/* ==========================
+          CSV IMPORT MODAL
+      ========================== */}
 
-    <CsvImport
-
-      onClose={() =>
-        setShowImport(false)
-      }
-
-      onSuccess={() => {
-
-        setShowImport(false);
-
-        fetchProducts();
-
-      }}
-
-    />
-
-  )
-}
-
+      {showImport && (
+        <CsvImport
+          onClose={() => setShowImport(false)}
+          onSuccess={() => {
+            setShowImport(false);
+            fetchProducts();
+          }}
+        />
+      )}
     </div>
-
-  );
-
+  </AppShell>
+);
 }

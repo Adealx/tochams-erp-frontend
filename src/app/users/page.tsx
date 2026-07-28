@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import toast from "react-hot-toast";
+import AppShell from "@/components/layout/AppShell";
 
 interface User {
   id: number;
@@ -185,54 +186,108 @@ const deleteUser = async (
     }
   };
 
-  if (
-    role &&
-    role !== "admin"
-  ) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-red-600">
+  if (role && role !== "admin") {
+  return (
+    <AppShell
+      title="User Management"
+      subtitle="Manage system users and permissions."
+      breadcrumbs={[
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+        },
+        {
+          label: "Users",
+        },
+      ]}
+    >
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+        <h2 className="text-xl font-semibold text-red-700">
           Unauthorized Access
-        </h1>
+        </h2>
+
+        <p className="mt-2 text-red-600">
+          You do not have permission to access this page.
+        </p>
       </div>
-    );
-  }
+    </AppShell>
+  );
+}
 
   if (loading) {
-    return (
-      <div className="p-6">
-        Loading users...
-      </div>
-    );
-  }
+  return (
+    <AppShell
+      title="User Management"
+      subtitle="Manage system users and permissions."
+      breadcrumbs={[
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+        },
+        {
+          label: "Users",
+        },
+      ]}
+    >
+      <div>Loading users...</div>
+    </AppShell>
+  );
+}
 
   return (
-    <div className="p-6">
+  <AppShell
+    title="User Management"
+    subtitle="Manage user accounts, roles and permissions."
+    breadcrumbs={[
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        label: "Users",
+      },
+    ]}
+  >
+    <div className="space-y-6">
 
-      <div className="flex justify-between items-center mb-6">
-
-        <h1 className="text-3xl font-bold">
-          User Management
-        </h1>
-
+      <div className="flex justify-end">
         <button
+
           onClick={() =>
             router.push(
               "/users/create"
             )
           }
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="
+          rounded-lg
+          bg-blue-600
+          px-5
+          py-2.5
+          font-medium
+          text-white
+          transition
+          hover:bg-blue-700
+          "
         >
           Add User
         </button>
 
       </div>
 
-      <div className="bg-white rounded shadow overflow-hidden">
+      <div
+        className="
+          rounded-2xl
+          border
+          border-slate-200
+          bg-white
+          shadow-sm
+          overflow-hidden
+        "
+      >
 
         <table className="w-full">
 
-          <thead className="bg-gray-100">
+          <thead className="bg-slate-100">
 
             <tr>
 
@@ -266,7 +321,7 @@ const deleteUser = async (
 
               <tr
                 key={user.id}
-                className="border-b"
+                className="border-b hover:bg-slate-50"
               >
 
                 <td className="p-4">
@@ -376,5 +431,6 @@ const deleteUser = async (
       </div>
 
     </div>
-  );
+  </AppShell>
+);
 }

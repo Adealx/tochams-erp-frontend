@@ -5,6 +5,7 @@ import api from "@/services/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import AppShell from "@/components/layout/AppShell";
 
 interface SalesOrderItem {
   id?: number;
@@ -492,7 +493,22 @@ export default function SalesOrdersPage() {
 );
 
   return (
-    <div className="p-6">
+  <AppShell
+    title="Sales Orders"
+    subtitle="Create, approve and manage customer sales orders."
+    breadcrumbs={[
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Sales Orders" },
+    ]}
+    actions={[
+      {
+        label: "New Order",
+        href: "#create-order",
+      },
+    ]}
+  >
+
+      <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
           Sales Orders
@@ -941,7 +957,8 @@ export default function SalesOrdersPage() {
               ))}
           </tbody>
         </table>
-      </div>
-    </div>
+       </div>
+     </div>
+   </AppShell>
   );
-}
+  }
