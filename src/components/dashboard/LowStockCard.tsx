@@ -1,216 +1,112 @@
 "use client";
 
+import { useState } from "react";
 import {
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
   Package,
-  CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
 
-interface Product {
+interface LowStockItem {
   id: number;
   name: string;
-  stock_quantity: number;
+  stock: number;
 }
 
-interface LowStockCardProps {
-  products: Product[];
+interface Props {
+  products: LowStockItem[];
 }
 
 export default function LowStockCard({
   products,
-}: LowStockCardProps) {
+}: Props) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div
-      className="
-        overflow-hidden
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        shadow-sm
-      "
-    >
-      {/* ================= Header ================= */}
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-      <div
-        className="
-          flex
-          items-center
-          justify-between
-          border-b
-          border-slate-100
-          px-6
-          py-5
-        "
+      {/* Header */}
+
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between p-5 transition hover:bg-slate-50"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
 
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-xl
-              bg-red-50
-              text-red-600
-            "
-          >
-            <AlertTriangle size={20} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+            <AlertTriangle
+              size={20}
+              className="text-red-600"
+            />
           </div>
 
-          <div>
+          <div className="text-left">
 
-            <h2 className="text-lg font-bold text-slate-900">
-
+            <h2 className="font-semibold text-slate-900">
               Low Stock Alerts
-
             </h2>
 
             <p className="text-sm text-slate-500">
-
               Products requiring replenishment
-
             </p>
 
           </div>
 
         </div>
 
-        <div className="text-right">
+        <div className="flex items-center gap-3">
 
-          <p className="text-sm text-slate-500">
-
-            Total Alerts
-
-          </p>
-
-          <h3 className="text-2xl font-bold text-red-600">
-
+          <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-bold text-red-600">
             {products.length}
+          </span>
 
-          </h3>
+          {expanded ? (
+            <ChevronUp />
+          ) : (
+            <ChevronDown />
+          )}
 
         </div>
+      </button>
 
-      </div>
+      {expanded && (
 
-      {/* ================= Body ================= */}
+        <>
 
-      <div className="p-6">
-
-        {products.length === 0 ? (
-
-          <div
-            className="
-              flex
-              flex-col
-              items-center
-              justify-center
-              py-10
-            "
-          >
-
-            <CheckCircle2
-              size={54}
-              className="mb-4 text-emerald-500"
-            />
-
-            <h3 className="text-lg font-semibold text-slate-800">
-
-              Inventory Healthy
-
-            </h3>
-
-            <p className="mt-2 text-sm text-slate-500">
-
-              No products are below the minimum stock level.
-
-            </p>
-
-          </div>
-
-        ) : (
-
-          <div className="space-y-4">
+          <div className="max-h-[420px] overflow-y-auto divide-y">
 
             {products.map((product) => (
 
               <div
                 key={product.id}
-                className="
-                  flex
-                  items-center
-                  justify-between
-                  rounded-xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  p-4
-                  transition
-                  hover:border-red-300
-                  hover:bg-red-50
-                "
+                className="flex items-center justify-between p-4 hover:bg-slate-50"
               >
 
-                {/* Left */}
+                <div className="flex items-center gap-3">
 
-                <div className="flex items-center gap-4">
-
-                  <div
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-white
-                    "
-                  >
-
-                    <Package
-                      size={18}
-                      className="text-slate-600"
-                    />
-
-                  </div>
+                  <Package
+                    size={18}
+                    className="text-slate-500"
+                  />
 
                   <div>
 
-                    <h3 className="font-semibold text-slate-900">
-
+                    <p className="text-sm font-semibold">
                       {product.name}
+                    </p>
 
-                    </h3>
-
-                    <p className="text-sm text-slate-500">
-
+                    <p className="text-xs text-slate-500">
                       Inventory Item
-
                     </p>
 
                   </div>
 
                 </div>
 
-                {/* Right */}
-
-                <span
-                  className="
-                    rounded-full
-                    bg-red-100
-                    px-4
-                    py-2
-                    text-sm
-                    font-bold
-                    text-red-700
-                  "
-                >
-
-                  {product.stock_quantity} Left
-
+                <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-600">
+                  {product.stock} Left
                 </span>
 
               </div>
@@ -219,39 +115,18 @@ export default function LowStockCard({
 
           </div>
 
-        )}
+          <div className="border-t bg-slate-50 p-4">
 
-      </div>
+            <Link
+              href="/inventory?filter=low-stock"
+              className="block text-center font-semibold text-blue-600 hover:underline"
+            >
+              View Full Inventory →
+            </Link>
 
-      {/* ================= Footer ================= */}
+          </div>
 
-      {products.length > 0 && (
-
-        <div
-          className="
-            flex
-            items-center
-            justify-between
-            border-t
-            border-slate-100
-            px-6
-            py-4
-          "
-        >
-
-          <span className="text-sm text-slate-500">
-
-            Monitor inventory to avoid stock-outs.
-
-          </span>
-
-          <span className="font-semibold text-red-600">
-
-            Action Required
-
-          </span>
-
-        </div>
+        </>
 
       )}
 
