@@ -1,16 +1,7 @@
 "use client";
 
-import AppShell from "@/components/layout/AppShell";
-
-import ProcurementForm from "./components/forms/ProcurementForm";
+import ProcurementWorkspace from "./components/ProcurementPage";
 
 export default function ProcurementPage() {
-  return (
-    <AppShell
-      title="Procurement"
-      subtitle="Create, manage and approve purchase orders."
-    >
-      <ProcurementForm />
-    </AppShell>
-  );
+  return <ProcurementWorkspace />;
 }

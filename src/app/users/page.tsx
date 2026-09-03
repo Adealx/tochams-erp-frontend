@@ -259,14 +259,14 @@ const deleteUser = async (
             )
           }
           className="
-          rounded-lg
-          bg-blue-600
+          inline-flex items-center rounded-xl
+          bg-indigo-600
           px-5
           py-2.5
           font-medium
           text-white
           transition
-          hover:bg-blue-700
+          shadow-[0_8px_18px_rgba(79,70,229,.22)] hover:bg-indigo-700
           "
         >
           Add User
@@ -276,38 +276,37 @@ const deleteUser = async (
 
       <div
         className="
-          rounded-2xl
+          overflow-hidden rounded-[20px]
           border
           border-slate-200
           bg-white
-          shadow-sm
-          overflow-hidden
+          shadow-[0_6px_20px_rgba(15,23,42,.035)]
         "
       >
 
         <table className="w-full">
 
-          <thead className="bg-slate-100">
+        <thead className="bg-slate-50">
 
             <tr>
 
-              <th className="text-left p-4">
+              <th className="px-6 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.08em] text-slate-500">
                 Username
               </th>
 
-              <th className="text-left p-4">
+              <th className="px-6 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.08em] text-slate-500">
                 Email
               </th>
 
-              <th className="text-left p-4">
+              <th className="px-6 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.08em] text-slate-500">
                 Role
               </th>
 
-              <th className="text-left p-4">
+              <th className="px-6 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.08em] text-slate-500">
                 Change Role
               </th>
 
-              <th className="text-left p-4">
+              <th className="px-6 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.08em] text-slate-500">
                 Actions
               </th>
 
@@ -321,22 +320,21 @@ const deleteUser = async (
 
               <tr
                 key={user.id}
-                className="border-b hover:bg-slate-50"
+                className="border-b border-slate-100 transition hover:bg-slate-50/70"
               >
 
-                <td className="p-4">
+                <td className="px-6 py-4 text-sm font-semibold text-slate-800">
                   {user.username}
                 </td>
 
-                <td className="p-4">
+                <td className="px-6 py-4 text-sm text-slate-600">
                   {user.email}
                 </td>
 
-                <td className="p-4 capitalize">
-                  {user.role}
+                <td className="px-6 py-4"><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold capitalize text-slate-600">{user.role}</span>
                 </td>
 
-                <td className="p-4">
+                <td className="px-6 py-4">
 
                   <select
                     value={user.role}
@@ -346,7 +344,7 @@ const deleteUser = async (
                         e.target.value
                       )
                     }
-                    className="border rounded px-3 py-2"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
                   >
 
                     <option value="pending">
@@ -377,7 +375,7 @@ const deleteUser = async (
 
                 </td>
 
-                <td className="p-4 flex gap-2">
+                <td className="flex gap-2 px-6 py-4">
 
                   {user.role ===
                     "pending" && (
@@ -388,7 +386,7 @@ const deleteUser = async (
                           user.id
                         )
                       }
-                      className="bg-green-600 text-white px-3 py-1 rounded"
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
                     >
                       Approve
                     </button>
@@ -401,7 +399,7 @@ const deleteUser = async (
                         user.id
                       )
                     }
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
                   >
                     Disable
                   </button>
@@ -413,7 +411,7 @@ const deleteUser = async (
                       )
 
                     }
-                    className="bg-red-800 text-white px-3 py-1 rounded"
+                    className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
                   >
                     Delete
                   </button>

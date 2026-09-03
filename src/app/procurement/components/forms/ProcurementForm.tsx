@@ -383,7 +383,7 @@ const handleReject = async (
     console.log("Current Items State:", items);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+    <div className="space-y-6">
 
         <ProcurementInformation
           formData={formData}
@@ -407,14 +407,14 @@ const handleReject = async (
 
       <GrandTotal total={grandTotal} />
 
-      <div className="mt-8">
+      <div className="flex justify-end border-t border-slate-200 pt-6">
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className={`text-white px-8 py-3 rounded-lg ${
+          className={`rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition ${
             editingId
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-green-600 hover:bg-green-700"
+              ? "bg-indigo-600 hover:bg-indigo-700"
+              : "bg-emerald-600 hover:bg-emerald-700"
           }`}
         >
           {loading

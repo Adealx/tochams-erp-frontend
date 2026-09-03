@@ -5,6 +5,7 @@ import api from "@/services/api";
 import { createPayment } from "@/services/paymentService";
 import toast from "react-hot-toast";
 import AppShell from "@/components/layout/AppShell";
+import { CreditCard, Landmark, ReceiptText } from "lucide-react";
 
 interface Invoice {
   id: number;
@@ -103,22 +104,15 @@ export default function AddPaymentPage() {
         },
       ]}
     >
-      <div
-        className="
-          rounded-2xl
-          border
-          border-slate-200
-          bg-white
-          p-8
-          shadow-sm
-        "
-      >
+      <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1.5fr_.85fr]">
+      <div className="rounded-[20px] border border-slate-200/90 bg-white p-5 shadow-[0_6px_20px_rgba(15,23,42,.035)] sm:p-7">
+        <div className="mb-7 flex items-center gap-3 border-b border-slate-100 pb-5"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><CreditCard size={19} /></span><div><h2 className="font-semibold text-slate-900">Payment details</h2><p className="mt-0.5 text-sm text-slate-500">Select an invoice and record the amount received.</p></div></div>
         <form
           onSubmit={handleSubmit}
           className="space-y-6"
         >
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
               Invoice
             </label>
 
@@ -126,7 +120,7 @@ export default function AddPaymentPage() {
               name="invoice"
               value={formData.invoice}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
               required
             >
               <option value="">Select Invoice</option>
@@ -145,18 +139,14 @@ export default function AddPaymentPage() {
           {selectedInvoice && (
             <div
               className="
-                rounded-xl
-                border
-                border-blue-200
-                bg-blue-50
-                p-5
+                rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5
               "
             >
-              <h3 className="mb-4 text-lg font-semibold text-blue-900">
+              <h3 className="mb-4 text-sm font-bold text-indigo-950">
                 Invoice Details
               </h3>
 
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                 <p>
                   <span className="font-semibold">
                     Invoice:
@@ -195,7 +185,7 @@ export default function AddPaymentPage() {
           )}
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
               Amount Paid
             </label>
 
@@ -205,13 +195,13 @@ export default function AddPaymentPage() {
               placeholder="Enter amount paid"
               value={formData.amount_paid}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
               required
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
               Payment Method
             </label>
 
@@ -219,7 +209,7 @@ export default function AddPaymentPage() {
               name="payment_method"
               value={formData.payment_method}
               onChange={handleChange}
-              className="w-full rounded-lg border border-slate-300 p-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
             >
               <option value="Cash">Cash</option>
               <option value="Bank Transfer">
@@ -235,14 +225,11 @@ export default function AddPaymentPage() {
             disabled={loading}
             className="
               w-full
-              rounded-lg
-              bg-green-600
-              px-6
-              py-3
+              rounded-xl bg-emerald-600 px-6 py-3
               font-semibold
               text-white
               transition
-              hover:bg-green-700
+              hover:bg-emerald-700 hover:-translate-y-px
               disabled:cursor-not-allowed
               disabled:bg-green-300
             "
@@ -252,6 +239,8 @@ export default function AddPaymentPage() {
               : "Record Payment"}
           </button>
         </form>
+      </div>
+      <aside className="h-fit rounded-[20px] border border-slate-200/90 bg-white p-6 shadow-[0_6px_20px_rgba(15,23,42,.035)]"><span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-600"><Landmark size={19} /></span><h2 className="mt-5 font-semibold text-slate-900">Good to know</h2><p className="mt-2 text-sm leading-6 text-slate-500">Payments are applied to the selected invoice and update its outstanding balance automatically.</p><div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-600"><div className="flex items-center gap-2 font-medium"><ReceiptText size={16} className="text-indigo-500" />Keep your receipt reference</div><p className="mt-2 leading-5 text-slate-500">Use the same payment method shown on your bank receipt for easier reconciliation.</p></div></aside>
       </div>
     </AppShell>
   );

@@ -8,8 +8,8 @@
 
   /* Brand */
 
-  --primary: #1E3A8A;
-  --primary-light: #2563EB;
+  --primary: #283593;
+  --primary-light: #4f46e5;
 
   /* Status */
 
@@ -19,17 +19,17 @@
 
   /* Background */
 
-  --background: #F8FAFC;
+  --background: #f6f7fb;
   --card: #FFFFFF;
 
   /* Text */
 
-  --text: #111827;
-  --muted: #6B7280;
+  --text: #172033;
+  --muted: #64748b;
 
   /* Borders */
 
-  --border: #E5E7EB;
+  --border: #e5e9f2;
 
   /* Radius */
 
@@ -60,12 +60,18 @@ body{
     color:var(--text);
 
     font-family:
-        Inter,
+        Arial,
         Arial,
         Helvetica,
         sans-serif;
 
 }
+
+::selection { background: #c7d2fe; color: #172033; }
+
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+*:focus-visible { outline: 3px solid rgba(79, 70, 229, .28); outline-offset: 2px; }
 
 /* =======================================================
    Scrollbar
@@ -99,13 +105,13 @@ body{
 
     background:white;
 
-    border-radius:16px;
+    border-radius:20px;
 
     border:1px solid var(--border);
 
     box-shadow:
 
-        0 2px 6px rgba(0,0,0,.04);
+        0 8px 28px rgba(30, 41, 59, .05);
 
 }
 
@@ -123,6 +129,34 @@ body{
 
     transform:translateY(-1px);
 
+}
+
+/* Consistent, work-ready forms across the ERP. */
+.erp-form-section {
+  border: 1px solid #e5e9f2;
+  border-radius: 18px;
+  background: #fff;
+  padding: 1.5rem;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, .035);
+}
+
+.erp-form label { color: #475569; font-size: .8125rem; font-weight: 650; }
+
+.erp-form input,
+.erp-form select,
+.erp-form textarea {
+  border: 1px solid #dbe2ee;
+  border-radius: .75rem;
+  background: #fff;
+  color: #1e293b;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.erp-form input:focus,
+.erp-form select:focus,
+.erp-form textarea:focus {
+  border-color: #a5b4fc;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, .12);
 }
 
 /* =======================================================

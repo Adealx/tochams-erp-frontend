@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 
 import {
@@ -15,9 +14,10 @@ import {
   Receipt,
   CreditCard,
   Truck,
+  Warehouse,
+  Calculator,
   BarChart3,
   Settings,
-  ShieldCheck,
 } from "lucide-react";
 
 const menuGroups = [
@@ -80,6 +80,28 @@ const menuGroups = [
   },
 
   {
+    title: "Operations",
+    items: [
+      {
+        title: "Warehouse",
+        href: "/warehouse",
+        icon: Warehouse,
+      },
+    ],
+  },
+
+  {
+    title: "Finance",
+    items: [
+      {
+        title: "Accounting",
+        href: "/accounting",
+        icon: Calculator,
+      },
+    ],
+  },
+
+  {
     title: "Analytics",
     items: [
       {
@@ -96,7 +118,7 @@ const menuGroups = [
       {
         title: "Users",
         href: "/users",
-        icon: ShieldCheck,
+        icon: Users,
       },
       {
         title: "Settings",
@@ -109,119 +131,75 @@ const menuGroups = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-
   const { collapsed } = useSidebar();
-
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <aside
       className={`
         flex
         flex-col
-        bg-slate-950
+        bg-[#0f172a]
         text-white
         transition-all
         duration-300
-        border-r
-        border-slate-800
         ${collapsed ? "w-20" : "w-72"}
       `}
     >
-      {/* ================= Logo ================= */}
+      {/* Logo */}
 
       <div
         className="
           flex
           h-20
+          shrink-0
           items-center
           border-b
-          border-slate-800
-          px-6
-          shrink-0
+          border-slate-700
+          px-8
         "
       >
         {collapsed ? (
-          <div
-            className="
-              mx-auto
-              flex
-              h-12
-              w-12
-              items-center
-              justify-center
-              rounded-2xl
-              bg-blue-600
-              font-bold
-              text-xl
-            "
-          >
+          <h1 className="mx-auto text-2xl font-bold">
             T
-          </div>
+          </h1>
         ) : (
-          <div className="px-4 py-5">
+          <div>
+            <h1 className="text-2xl font-bold">
+              TOCHAMS
+            </h1>
 
-    <div
-        className="
-            rounded-2xl
-            bg-white
-            p-4
-            shadow-md
-        "
-    >
-
-        <Image
-            src="/logo/tochams-logo.png"
-            alt="Tochams Distribution Limited"
-            width={180}
-            height={65}
-            priority
-            className="mx-auto h-auto w-full object-contain"
-        />
-
-    </div>
-
-    <p
-        className="
-            mt-4
-            text-center
-            text-xs
-            uppercase
-            tracking-[0.25em]
-            text-slate-400
-        "
-    >
-        Enterprise ERP
-    </p>
-
-</div>
+            <p className="text-xs text-slate-400">
+              Enterprise ERP
+            </p>
+          </div>
         )}
       </div>
 
-      {/* ================= Navigation ================= */}
+      {/* Navigation */}
 
       <nav
         className="
           flex-1
           overflow-y-auto
           px-4
-          py-8
+          py-6
         "
       >
         {menuGroups.map((group) => (
           <div
             key={group.title}
-            className="mb-10"
+            className="mb-6"
           >
             {!collapsed && (
               <p
                 className="
-                  mb-4
-                  px-3
+                  mb-2
+                  px-4
                   text-xs
-                  font-bold
+                  font-semibold
                   uppercase
-                  tracking-[0.2em]
+                  tracking-wider
                   text-slate-500
                 "
               >
@@ -231,102 +209,76 @@ export default function Sidebar() {
 
             <div className="space-y-2">
               {group.items.map((item) => {
-
                 const Icon = item.icon;
 
                 const active =
-                  pathname === item.href;
+                  pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
+                    title={collapsed ? item.title : undefined}
                     className={`
-                      group
-                      relative
                       flex
                       items-center
                       gap-4
-                      rounded-2xl
+                      rounded-xl
                       px-4
-                      py-3.5
+                      py-3
                       transition-all
                       duration-200
 
                       ${
                         active
-                          ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-xl"
-                          : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                          ? "bg-blue-600 text-white shadow-lg"
+                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
                       }
+
+                      ${collapsed ? "justify-center" : ""}
                     `}
                   >
-                    {active && (
-                      <div
-                        className="
-                          absolute
-                          left-0
-                          top-2
-                          bottom-2
-                          w-1
-                          rounded-r-full
-                          bg-white
-                        "
-                      />
-                    )}
-
                     <Icon
                       size={20}
-                      className="
-                        shrink-0
-                      "
+                      className="shrink-0"
                     />
 
                     {!collapsed && (
-                      <span
-                        className="
-                          text-[15px]
-                          font-medium
-                        "
-                      >
+                      <span className="font-medium">
                         {item.title}
                       </span>
                     )}
                   </Link>
                 );
-
               })}
             </div>
           </div>
         ))}
       </nav>
 
-      {/* ================= User ================= */}
+      {/* Authenticated User */}
 
       <div
         className="
-          border-t
-          border-slate-800
-          p-5
           shrink-0
+          border-t
+          border-slate-700
+          p-5
         "
       >
         {collapsed ? (
-          <div
-            className="
-              flex
-              justify-center
-            "
-          >
+          <div className="flex justify-center">
             <div
               className="
                 flex
-                h-12
-                w-12
+                h-10
+                w-10
                 items-center
                 justify-center
                 rounded-full
                 bg-blue-600
-                text-lg
+                text-sm
                 font-bold
               "
             >
@@ -334,53 +286,36 @@ export default function Sidebar() {
             </div>
           </div>
         ) : (
-          <div
-            className="
-              rounded-2xl
-              bg-slate-900
-              p-4
-            "
-          >
+          <div className="rounded-xl bg-slate-900 p-3">
             <div className="flex items-center gap-3">
-
               <div
                 className="
                   flex
-                  h-12
-                  w-12
+                  h-10
+                  w-10
+                  shrink-0
                   items-center
                   justify-center
                   rounded-full
                   bg-blue-600
+                  text-sm
                   font-bold
                 "
               >
                 {user?.username?.charAt(0).toUpperCase() || "U"}
               </div>
 
-              <div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-white">
+                  {loading
+                    ? "Loading..."
+                    : user?.username || "User"}
+                </p>
 
-                <p
-  className="
-    font-semibold
-    text-white
-  "
->
-  {user?.username || "Loading..."}
-</p>
-
-<p
-  className="
-    text-sm
-    text-slate-400
-    capitalize
-  "
->
-  {user?.role?.replace("_", " ") || ""}
-</p>
-
+                <p className="truncate text-xs capitalize text-slate-400">
+                  {user?.role?.replace("_", " ") || ""}
+                </p>
               </div>
-
             </div>
           </div>
         )}

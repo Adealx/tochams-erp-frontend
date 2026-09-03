@@ -115,11 +115,11 @@ export default function StatCard({
       padding="sm"
       className={clsx(
         `
-        rounded-2xl
+        rounded-[20px]
         transition-all
         duration-300
         hover:-translate-y-1
-        hover:shadow-xl
+        hover:shadow-[0_16px_32px_rgba(15,23,42,.09)]
         `,
         onClick && "cursor-pointer",
         className
@@ -131,7 +131,7 @@ export default function StatCard({
 
           <div className="flex items-center gap-2">
 
-            <h3 className="text-sm font-semibold text-slate-500">
+            <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
 
               {title}
 
@@ -155,7 +155,7 @@ export default function StatCard({
 
           ) : (
 
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="mt-2 text-[1.7rem] font-bold tracking-[-0.035em] text-slate-950">
 
               {value}
 

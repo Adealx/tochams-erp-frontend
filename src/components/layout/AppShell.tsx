@@ -31,7 +31,7 @@ export default function AppShell({
   actions = [],
 }: AppShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-[#f6f7fb]">
 
       <Sidebar />
 
@@ -45,22 +45,25 @@ export default function AppShell({
             className="
               mx-auto
               w-full
-              max-w-7xl
-              px-8
-              py-8
+              max-w-[1600px]
+              px-4
+              py-5
+              sm:px-6
+              lg:px-9
+              lg:py-8
             "
           >
 
             <section
               className="
-                mb-10
-                rounded-2xl
-                border
-                border-slate-200
-                bg-white
-                px-8
-                py-6
-                shadow-sm
+                mb-8
+                rounded-[22px]
+                border border-slate-200/80
+                bg-white/90
+                px-5 py-5
+                shadow-[0_10px_30px_rgba(15,23,42,0.04)]
+                backdrop-blur-sm
+                sm:px-7 sm:py-6
               "
             >
 
@@ -80,7 +83,7 @@ export default function AppShell({
 
                 <div>
 
-                  <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                  <h1 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">
 
                     {title}
 
@@ -88,7 +91,7 @@ export default function AppShell({
 
                   {subtitle && (
 
-                    <p className="mt-2 text-slate-500">
+                  <p className="mt-2 max-w-2xl text-sm text-slate-500 sm:text-[15px]">
 
                       {subtitle}
 
@@ -110,7 +113,7 @@ export default function AppShell({
 
             </section>
 
-            <section className="space-y-12">
+            <section className="space-y-9">
 
               {children}
 

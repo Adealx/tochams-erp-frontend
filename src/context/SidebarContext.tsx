@@ -10,6 +10,9 @@ import {
 interface SidebarContextType {
   collapsed: boolean;
   toggleSidebar: () => void;
+  mobileOpen: boolean;
+  toggleMobileSidebar: () => void;
+  closeMobileSidebar: () => void;
 }
 
 const SidebarContext = createContext<
@@ -23,15 +26,22 @@ export function SidebarProvider({
 }) {
   const [collapsed, setCollapsed] =
     useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleSidebar = () =>
     setCollapsed((prev) => !prev);
+
+  const toggleMobileSidebar = () => setMobileOpen((prev) => !prev);
+  const closeMobileSidebar = () => setMobileOpen(false);
 
   return (
     <SidebarContext.Provider
       value={{
         collapsed,
         toggleSidebar,
+        mobileOpen,
+        toggleMobileSidebar,
+        closeMobileSidebar,
       }}
     >
       {children}

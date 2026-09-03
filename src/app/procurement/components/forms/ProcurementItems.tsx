@@ -49,11 +49,11 @@ export default function ProcurementItems({
       className="
         mt-10
         overflow-hidden
-        rounded-3xl
+        rounded-[20px]
         border
         border-slate-200
         bg-white
-        shadow-sm
+        shadow-[0_6px_20px_rgba(15,23,42,.035)]
       "
     >
 
@@ -112,7 +112,7 @@ export default function ProcurementItems({
 
             rounded-xl
 
-            bg-blue-600
+            bg-indigo-600
 
             px-5
             py-3
@@ -123,7 +123,7 @@ export default function ProcurementItems({
 
             transition
 
-            hover:bg-blue-700
+            hover:bg-indigo-700
           "
         >
           <Plus size={18} />

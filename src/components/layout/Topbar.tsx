@@ -1,547 +1,200 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
 import {
   Bell,
-  Search,
   CalendarDays,
-  Settings,
   ChevronDown,
-  PanelLeft,
-  User,
   KeyRound,
   LogOut,
+  Menu,
+  PanelLeft,
+  Search,
+  Settings,
   ShieldCheck,
+  User,
 } from "lucide-react";
-
 import { useSidebar } from "@/context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
 
 const today = new Date().toLocaleDateString("en-NG", {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
+  weekday: "short",
+  month: "short",
   day: "numeric",
+  year: "numeric",
 });
 
 export default function Topbar() {
-  const { toggleSidebar } = useSidebar();
-
+  const { toggleSidebar, toggleMobileSidebar } = useSidebar();
   const { user, logout, loading } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
-
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const close = (event: MouseEvent) => {
       if (
         menuRef.current &&
         !menuRef.current.contains(event.target as Node)
       ) {
         setMenuOpen(false);
       }
-    }
+    };
 
-    function handleEscape(event: KeyboardEvent) {
+    const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
       }
-    }
+    };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
-
-    document.addEventListener(
-      "keydown",
-      handleEscape
-    );
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", escape);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
-
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", escape);
     };
   }, []);
 
-  return (
-    <header
-      className="
-        sticky
-        top-0
-        z-40
-        h-[72px]
-        border-b
-        border-slate-200
-        bg-white/95
-        backdrop-blur
-        shadow-sm
-      "
-    >
-      <div
-        className="
-          flex
-          h-full
-          items-center
-          justify-between
-          px-8
-        "
-      >
-        {/* ============================= */}
-        {/* LEFT */}
-        {/* ============================= */}
+  const initial =
+    user?.username?.charAt(0).toUpperCase() || "U";
 
-        <div className="flex items-center gap-6">
+  return (
+    <header className="sticky top-0 z-30 h-[70px] border-b border-slate-200/80 bg-[#f6f7fb]/90 backdrop-blur-xl">
+      <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-9">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+          <button
+            onClick={toggleMobileSidebar}
+            aria-label="Open navigation"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm md:hidden"
+          >
+            <Menu size={19} />
+          </button>
 
           <button
             onClick={toggleSidebar}
-            className="
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-slate-200
-              transition-all
-              hover:bg-slate-100
-              hover:shadow-sm
-            "
+            aria-label="Toggle sidebar"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 md:grid"
           >
-            <PanelLeft size={20} />
+            <PanelLeft size={19} />
           </button>
 
-          <div className="relative">
-
+          <div className="relative hidden lg:block">
             <Search
-              size={18}
-              className="
-                absolute
-                left-4
-                top-1/2
-                -translate-y-1/2
-                text-slate-400
-              "
+              size={17}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
             />
 
             <input
-              type="text"
-              placeholder="Search customers, invoices, products..."
-              className="
-                h-11
-                w-[420px]
-                rounded-2xl
-                border
-                border-slate-200
-                bg-slate-50
-                pl-11
-                pr-20
-                text-sm
-                transition-all
-                outline-none
-
-                focus:border-blue-500
-                focus:bg-white
-                focus:ring-4
-                focus:ring-blue-100
-              "
+              type="search"
+              aria-label="Search workspace"
+              placeholder="Search anything..."
+              className="h-10 w-[310px] rounded-xl border border-slate-200 bg-white pl-10 pr-14 text-sm text-slate-700 shadow-sm transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
             />
 
-            <span
-              className="
-                absolute
-                right-3
-                top-1/2
-                -translate-y-1/2
-                rounded-lg
-                border
-                border-slate-200
-                bg-white
-                px-2
-                py-1
-                text-[11px]
-                font-medium
-                text-slate-400
-              "
-            >
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
               Ctrl + K
             </span>
-
           </div>
-
         </div>
 
-        {/* ============================= */}
-        {/* RIGHT */}
-        {/* ============================= */}
-
-        <div className="flex items-center gap-4">
-
-          <div
-            className="
-              hidden
-              items-center
-              gap-3
-              rounded-xl
-              border
-              border-slate-200
-              bg-slate-50
-              px-4
-              py-2
-              lg:flex
-            "
-          >
-            <CalendarDays
-              size={18}
-              className="text-blue-600"
-            />
-
-            <span
-              className="
-                text-sm
-                font-medium
-                text-slate-600
-              "
-            >
-              {today}
-            </span>
-
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm xl:flex">
+            <CalendarDays size={16} className="text-indigo-500" />
+            {today}
           </div>
 
           <button
-            className="
-              relative
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-slate-200
-              transition-all
-              hover:bg-slate-100
-            "
+            aria-label="Notifications"
+            className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600"
           >
-            <Bell size={20} />
-
-            <span
-              className="
-                absolute
-                right-2
-                top-2
-                h-2.5
-                w-2.5
-                rounded-full
-                border-2
-                border-white
-                bg-red-500
-              "
-            />
+            <Bell size={18} />
+            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-white" />
           </button>
 
           <button
-            className="
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-slate-200
-              transition-all
-              hover:rotate-90
-              hover:bg-slate-100
-            "
+            aria-label="Settings"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:text-indigo-600 sm:grid"
           >
-            <Settings size={20} />
+            <Settings size={18} />
           </button>
 
-          {/* ============================= */}
-          {/* USER MENU */}
-          {/* ============================= */}
-
-          <div
-            className="relative"
-            ref={menuRef}
-          >
-
+          <div ref={menuRef} className="relative">
             <button
-              onClick={() =>
-                setMenuOpen(!menuOpen)
-              }
-              className="
-                flex
-                items-center
-                gap-3
-                rounded-2xl
-                border
-                border-slate-200
-                bg-white
-                px-4
-                py-2
-                transition-all
-                hover:bg-slate-50
-                hover:shadow-sm
-              "
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white py-1.5 pl-1.5 pr-2 shadow-sm transition hover:border-indigo-200"
             >
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-blue-600
-                  text-white
-                  text-lg
-                  font-bold
-                "
-              >
-                {user?.username
-                  ?.charAt(0)
-                  .toUpperCase() || "U"}
-              </div>
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 text-xs font-bold text-white">
+                {initial}
+              </span>
 
-              <div className="text-left">
+              <span className="hidden text-left sm:block">
+                <span className="block max-w-28 truncate text-xs font-bold text-slate-800">
+                  {loading ? "Loading..." : user?.username || "User"}
+                </span>
 
-                {loading ? (
-                  <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                ) : (
-                  <p
-                    className="
-                      text-sm
-                      font-semibold
-                      text-slate-900
-                    "
-                  >
-                    {user?.username}
-                  </p>
-                )}
-
-                {loading ? (
-                  <div className="mt-2 h-3 w-16 animate-pulse rounded bg-slate-200" />
-                ) : (
-                  <p
-                    className="
-                      text-xs
-                      capitalize
-                      text-slate-500
-                    "
-                  >
-                    {user?.role?.replace("_", " ")}
-                  </p>
-                )}
-
-              </div>
+                <span className="block max-w-28 truncate text-[10px] capitalize text-slate-400">
+                  {user?.role?.replace("_", " ") || ""}
+                </span>
+              </span>
 
               <ChevronDown
-                size={18}
-                className={`transition-transform duration-200 ${
-                  menuOpen
-                    ? "rotate-180"
-                    : ""
+                size={15}
+                className={`hidden text-slate-400 transition sm:block ${
+                  menuOpen ? "rotate-180" : ""
                 }`}
               />
-
             </button>
 
             {menuOpen && (
-                            <div
-                className="
-                  absolute
-                  right-0
-                  mt-3
-                  w-72
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-slate-200
-                  bg-white
-                  shadow-2xl
-                  animate-in
-                  fade-in
-                  zoom-in-95
-                  duration-200
-                "
-              >
-                {/* Header */}
+              <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl shadow-slate-900/15">
+                <div className="border-b border-slate-100 px-1 py-1">
+                  <MenuItem
+                    icon={<User size={16} />}
+                    label="My profile"
+                  />
 
-                <div className="border-b border-slate-100 p-5">
+                  <MenuItem
+                    icon={<KeyRound size={16} />}
+                    label="Security"
+                  />
 
-                  <div className="flex items-center gap-4">
-
-                    <div
-                      className="
-                        flex
-                        h-14
-                        w-14
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-blue-600
-                        text-xl
-                        font-bold
-                        text-white
-                      "
-                    >
-                      {user?.username
-                        ?.charAt(0)
-                        .toUpperCase() || "U"}
-                    </div>
-
-                    <div>
-
-                      <p className="font-semibold text-slate-900">
-                        {user?.username}
-                      </p>
-
-                      <p className="text-sm text-slate-500">
-                        {user?.email}
-                      </p>
-
-                      <span
-                        className="
-                          mt-2
-                          inline-flex
-                          rounded-full
-                          bg-blue-100
-                          px-2
-                          py-1
-                          text-xs
-                          font-semibold
-                          capitalize
-                          text-blue-700
-                        "
-                      >
-                        {user?.role?.replace("_", " ")}
-                      </span>
-
-                    </div>
-
-                  </div>
-
+                  <MenuItem
+                    icon={<ShieldCheck size={16} />}
+                    label="Account settings"
+                  />
                 </div>
 
-                {/* Menu */}
-
-                <div className="py-2">
-
-                  <button
-                    onClick={() => setMenuOpen(false)}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      px-5
-                      py-3
-                      text-sm
-                      text-slate-700
-                      transition-colors
-                      hover:bg-slate-100
-                    "
-                  >
-                    <User size={18} />
-                    <span>My Profile</span>
-                  </button>
-
-                  <button
-                    onClick={() => setMenuOpen(false)}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      px-5
-                      py-3
-                      text-sm
-                      text-slate-700
-                      transition-colors
-                      hover:bg-slate-100
-                    "
-                  >
-                    <KeyRound size={18} />
-                    <span>Change Password</span>
-                  </button>
-
-                  <button
-                    onClick={() => setMenuOpen(false)}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      px-5
-                      py-3
-                      text-sm
-                      text-slate-700
-                      transition-colors
-                      hover:bg-slate-100
-                    "
-                  >
-                    <ShieldCheck size={18} />
-                    <span>Account Settings</span>
-                  </button>
-
-                </div>
-
-                {/* Footer */}
-
-                <div className="border-t border-slate-100 p-2">
-
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      logout();
-                    }}
-                    className="
-                      flex
-                      w-full
-                      items-center
-                      gap-3
-                      rounded-xl
-                      px-4
-                      py-3
-                      text-sm
-                      font-medium
-                      text-red-600
-                      transition-all
-                      hover:bg-red-50
-                    "
-                  >
-                    <LogOut size={18} />
-
-                    <span>Logout</span>
-
-                  </button>
-
-                </div>
-
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
               </div>
-
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </header>
-
   );
+}
 
+function MenuItem({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-50">
+      {icon}
+      {label}
+    </button>
+  );
 }

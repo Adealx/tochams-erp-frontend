@@ -27,13 +27,12 @@ export default function QuickActions({
             items-center
             gap-2
             rounded-xl
-            bg-blue-600
-            px-4
-            py-2
+            bg-indigo-600
+            px-4 py-2.5
             text-white
-            shadow-sm
-            hover:bg-blue-700
-            transition
+            shadow-[0_8px_18px_rgba(79,70,229,.22)]
+            hover:bg-indigo-700 hover:-translate-y-px
+            transition-all
           "
         >
           <Plus size={18} />

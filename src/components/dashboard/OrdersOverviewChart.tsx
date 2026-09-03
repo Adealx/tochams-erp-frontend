@@ -44,11 +44,11 @@ export default function OrdersOverviewChart({
     <div
       className="
         overflow-hidden
-        rounded-2xl
+        rounded-[20px]
         border
         border-slate-200
         bg-white
-        shadow-sm
+        shadow-[0_6px_20px_rgba(15,23,42,.035)]
       "
     >
       {/* Header */}

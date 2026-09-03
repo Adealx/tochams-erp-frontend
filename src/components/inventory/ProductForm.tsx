@@ -189,13 +189,13 @@ export default function ProductForm({
   return (
   <form
     onSubmit={submit}
-    className="space-y-8"
+    className="erp-form space-y-6"
   >
     {/* ===========================================
         PRODUCT INFORMATION
     =========================================== */}
 
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="erp-form-section">
 
       <h2 className="text-xl font-semibold border-b pb-3 mb-6">
         📦 Product Information
@@ -271,7 +271,7 @@ export default function ProductForm({
         CLASSIFICATION
     =========================================== */}
 
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="erp-form-section">
 
       <h2 className="text-xl font-semibold border-b pb-3 mb-6">
         🏷 Classification
@@ -411,7 +411,7 @@ export default function ProductForm({
         PRICING
     =========================================== */}
 
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="erp-form-section">
 
       <h2 className="text-xl font-semibold border-b pb-3 mb-6">
         💰 Pricing
@@ -478,7 +478,7 @@ export default function ProductForm({
         INVENTORY
     =========================================== */}
 
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="erp-form-section">
 
       <h2 className="text-xl font-semibold border-b pb-3 mb-6">
         📦 Inventory
@@ -561,7 +561,7 @@ export default function ProductForm({
         className={`px-8 py-3 rounded-lg font-semibold text-white transition ${
           loading
             ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            : "bg-indigo-600 hover:bg-indigo-700 shadow-[0_8px_18px_rgba(79,70,229,.22)]"
         }`}
       >
         {loading ? "Saving..." : submitText}
