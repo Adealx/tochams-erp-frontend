@@ -261,13 +261,14 @@ export default function WarehousePage() {
 
 
     /* --------------------------------------------------------
-       Prevent backward movement in UI
+       Prevent backward movement
     -------------------------------------------------------- */
 
     if (
       STATUS_ORDER[nextStatus] <=
       STATUS_ORDER[currentStatus]
     ) {
+
       toast.error(
         "Warehouse status cannot move backwards."
       );
@@ -287,8 +288,9 @@ export default function WarehousePage() {
       const confirmed =
         window.confirm(
           `Dispatch ${order.order_number || `Order #${order.id}`}?\n\n` +
-          "This action will deduct the reserved quantity from physical stock " +
-          "and mark the inventory reservations as fulfilled."
+          "This action will deduct the reserved quantity from physical stock, " +
+          "create a stock OUT movement, fulfill the inventory reservation, " +
+          "and post the Cost of Sales journal entry."
         );
 
       if (!confirmed) {
@@ -303,6 +305,11 @@ export default function WarehousePage() {
         order.id
       );
 
+
+      /* ------------------------------------------------------
+         BACKEND UPDATE
+      ------------------------------------------------------ */
+
       await api.post(
         `/orders/${order.id}/warehouse/`,
         {
@@ -312,13 +319,107 @@ export default function WarehousePage() {
       );
 
 
+      /* ------------------------------------------------------
+         SUCCESS TOAST
+      ------------------------------------------------------ */
+
       toast.success(
         `Order moved to ${nextStatus}.`
       );
 
 
+      /* ------------------------------------------------------
+         OPTIMISTIC / IMMEDIATE UI UPDATE
+
+         The backend has already confirmed success.
+         Update the local order immediately so the KPI
+         counters and queue do not remain stale.
+      ------------------------------------------------------ */
+
+      const updatedOrder: SalesOrder = {
+        ...order,
+        warehouse_status:
+          nextStatus,
+
+        status:
+          nextStatus === "Delivered"
+            ? "Completed"
+            : order.status,
+      };
+
+
+      setOrders(
+        (currentOrders) =>
+          currentOrders.map(
+            (currentOrder) =>
+              currentOrder.id ===
+              order.id
+                ? updatedOrder
+                : currentOrder
+          )
+      );
+
+
+      /* ------------------------------------------------------
+         UPDATE OPEN ORDER DRAWER
+      ------------------------------------------------------ */
+
+      setSelectedOrder(
+        (current) =>
+          current?.id === order.id
+            ? updatedOrder
+            : current
+      );
+
+
+      /* ------------------------------------------------------
+         BACKEND REFRESH
+
+         Refresh the rest of the warehouse queue from the
+         server so other orders and counters stay synchronized.
+      ------------------------------------------------------ */
+
       await loadOrders();
 
+
+      /* ------------------------------------------------------
+         RECONCILE THE UPDATED ORDER
+
+         If the immediate GET happens to return a stale
+         warehouse_status, keep the status that the successful
+         POST already confirmed.
+
+         This prevents:
+
+         Picking → Pending
+
+         from appearing in the UI after a successful update.
+      ------------------------------------------------------ */
+
+      setOrders(
+        (currentOrders) =>
+          currentOrders.map(
+            (currentOrder) =>
+              currentOrder.id ===
+              order.id
+                ? {
+                    ...currentOrder,
+                    warehouse_status:
+                      nextStatus,
+                    status:
+                      nextStatus ===
+                      "Delivered"
+                        ? "Completed"
+                        : currentOrder.status,
+                  }
+                : currentOrder
+          )
+      );
+
+
+      /* ------------------------------------------------------
+         RECONCILE OPEN DRAWER
+      ------------------------------------------------------ */
 
       setSelectedOrder(
         (current) =>
@@ -328,7 +429,8 @@ export default function WarehousePage() {
                 warehouse_status:
                   nextStatus,
                 status:
-                  nextStatus === "Delivered"
+                  nextStatus ===
+                  "Delivered"
                     ? "Completed"
                     : current.status,
               }
@@ -337,25 +439,32 @@ export default function WarehousePage() {
 
     } catch (error: any) {
 
-      console.error(error);
+      console.error(
+        "Warehouse status update failed:",
+        error
+      );
 
       const message =
         error?.response?.data?.error ||
         error?.response?.data?.detail ||
         `Unable to move order to ${nextStatus}.`;
 
-      toast.error(message);
+      toast.error(
+        message
+      );
 
     } finally {
 
-      setUpdatingOrderId(null);
+      setUpdatingOrderId(
+        null
+      );
     }
   };
 
 
-  /* ==========================================================
+  /* ============================================================
      FILTER ORDERS
-  ========================================================== */
+  ============================================================ */
 
   const filteredOrders =
     useMemo(() => {
@@ -422,9 +531,9 @@ export default function WarehousePage() {
     ]);
 
 
-  /* ==========================================================
+  /* ============================================================
      SUMMARY COUNTS
-  ========================================================== */
+  ============================================================ */
 
   const counts =
     useMemo(() => {
@@ -454,9 +563,9 @@ export default function WarehousePage() {
     }, [orders]);
 
 
-  /* ==========================================================
+  /* ============================================================
      NEXT STATUS
-  ========================================================== */
+  ============================================================ */
 
   const getNextStatus = (
     status: WarehouseStatus
@@ -478,9 +587,9 @@ export default function WarehousePage() {
   };
 
 
-  /* ==========================================================
+  /* ============================================================
      LOADING
-  ========================================================== */
+  ============================================================ */
 
   if (loading) {
 
@@ -521,9 +630,9 @@ export default function WarehousePage() {
   }
 
 
-  /* ==========================================================
+  /* ============================================================
      PAGE
-  ========================================================== */
+  ============================================================ */
 
   return (
 
@@ -668,10 +777,10 @@ export default function WarehousePage() {
 
               <p className="mt-1 text-sm text-amber-800">
                 Dispatching an order deducts physical stock,
-                creates a stock OUT movement and fulfills its
-                inventory reservation. Cost of Sales accounting
-                will be connected after Accounts confirms the
-                official Inventory and Cost of Sales accounts.
+                creates a stock OUT movement, fulfills its
+                inventory reservation, and posts the corresponding
+                Cost of Sales journal entry using the configured
+                Inventory and Cost of Sales accounts.
               </p>
 
             </div>
@@ -1662,6 +1771,7 @@ export default function WarehousePage() {
                     );
 
                   if (!nextStatus) {
+
                     return (
                       <div className="
                         rounded-2xl
@@ -1689,9 +1799,11 @@ export default function WarehousePage() {
                     );
                   }
 
+
                   const isUpdating =
                     updatingOrderId ===
                     selectedOrder.id;
+
 
                   return (
 
@@ -1764,8 +1876,10 @@ export default function WarehousePage() {
                           text-amber-600
                         ">
 
-                          Dispatch will deduct physical stock
-                          and fulfill inventory reservations.
+                          Dispatch will deduct physical stock,
+                          fulfill the inventory reservation,
+                          create a stock OUT movement,
+                          and post the Cost of Sales journal entry.
 
                         </p>
 
