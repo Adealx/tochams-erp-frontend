@@ -13,9 +13,11 @@ import {
   ClipboardList,
   Receipt,
   CreditCard,
+  ReceiptText,
   Truck,
   Warehouse,
   Calculator,
+  Table2,
   BarChart3,
   Settings,
 } from "lucide-react";
@@ -97,6 +99,16 @@ const menuGroups = [
         title: "Accounting",
         href: "/accounting",
         icon: Calculator,
+      },
+      {
+        title: "Expenses",
+        href: "/expenses",
+        icon: ReceiptText,
+      },
+      {
+        title: "Transaction Tracker",
+        href: "/transaction-tracker",
+        icon: Table2,
       },
     ],
   },

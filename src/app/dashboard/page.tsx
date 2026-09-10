@@ -19,13 +19,17 @@ import RecentCustomers from "@/components/dashboard/RecentCustomers";
 export const dynamic = "force-dynamic";
 
 export default function Dashboard() {
-
   const {
-      user,
-      loading: authLoading,
+    user,
+    loading: authLoading,
   } = useAuth();
 
+  // =========================================================
+  // DASHBOARD STATS
+  // =========================================================
+
   const [stats, setStats] = useState({
+    // Operational metrics
     customers: 0,
     products: 0,
     orders: 0,
@@ -35,10 +39,20 @@ export default function Dashboard() {
     pendingOrders: 0,
     lowStock: 0,
 
+    // Inventory / projection metrics
     storeValue: 0,
     potentialSalesValue: 0,
     potentialProfit: 0,
+
+    // Accounting / financial metrics
+    revenue: 0,
+    expenses: 0,
+    netProfit: 0,
   });
+
+  // =========================================================
+  // DASHBOARD DATA
+  // =========================================================
 
   const [invoiceChart, setInvoiceChart] =
     useState<any[]>([]);
@@ -55,16 +69,18 @@ export default function Dashboard() {
   const [loading, setLoading] =
     useState(true);
 
-  useEffect(() => {
+  // =========================================================
+  // LOAD DASHBOARD AFTER AUTHENTICATION
+  // =========================================================
 
-    if (authLoading) return;
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
 
     if (!user) {
-
       setLoading(false);
-
       return;
-
     }
 
     console.log("================================");
@@ -73,62 +89,83 @@ export default function Dashboard() {
     console.log("================================");
 
     loadDashboard();
-
   }, [user, authLoading]);
 
+  // =========================================================
+  // LOAD DASHBOARD DATA
+  // =========================================================
+
   async function loadDashboard() {
-
     try {
-
       console.log("Loading dashboard...");
       console.log("Current User:", user);
 
       const dashboard =
         await getDashboardData();
 
-      console.log("Dashboard API:", dashboard);
+      console.log(
+        "Dashboard Data:",
+        dashboard
+      );
+
+      // -----------------------------------------------------
+      // FINANCIAL + OPERATIONAL STATS
+      // -----------------------------------------------------
 
       setStats(dashboard.stats);
+
+      // -----------------------------------------------------
+      // INVOICE CHART
+      // -----------------------------------------------------
 
       setInvoiceChart(
         dashboard.invoiceChart
       );
 
+      // -----------------------------------------------------
+      // LOW STOCK
+      // -----------------------------------------------------
+
       setLowStock(
         dashboard.lowStock
       );
 
+      // -----------------------------------------------------
+      // RECENT ORDERS
+      // -----------------------------------------------------
+
       setOrders(
         dashboard.orders
       );
+
+      // -----------------------------------------------------
+      // RECENT CUSTOMERS
+      // -----------------------------------------------------
 
       setCustomers(
         dashboard.customers
       );
 
     } catch (error) {
-
       console.error(
         "Dashboard Error:",
         error
       );
-
     } finally {
-
       setLoading(false);
-
     }
   }
 
+  // =========================================================
+  // LOADING STATE
+  // =========================================================
+
   if (loading) {
-
     return (
-
       <AppShell
         title="Dashboard"
         subtitle="Enterprise Resource Planning Overview"
       >
-
         <div
           className="
             flex
@@ -141,7 +178,6 @@ export default function Dashboard() {
             bg-white
           "
         >
-
           <p
             className="
               text-lg
@@ -151,39 +187,49 @@ export default function Dashboard() {
           >
             Loading Dashboard...
           </p>
-
         </div>
-
       </AppShell>
-
     );
   }
 
-  return (
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
 
+  return (
     <AppShell
       title="Dashboard"
       subtitle="Enterprise Resource Planning Overview"
     >
 
-      {/* Financial KPIs */}
+      {/* ===================================================
+          FINANCIAL OVERVIEW
+          =================================================== */}
 
       <FinancialOverview
-        stats={stats}
+        stats={{
+          revenue: stats.revenue,
+          expenses: stats.expenses,
+          netProfit: stats.netProfit,
+          outstanding: stats.outstanding,
+        }}
       />
 
-      {/* Operational KPIs */}
+      {/* ===================================================
+          OPERATIONAL KPIs
+          =================================================== */}
 
       <StatsGrid
         stats={stats}
       />
 
-      {/* Analytics */}
+      {/* ===================================================
+          BUSINESS ANALYTICS
+          =================================================== */}
 
       <section className="space-y-5">
 
         <div>
-
           <h2
             className="
               text-2xl
@@ -197,7 +243,6 @@ export default function Dashboard() {
           <p className="text-slate-500">
             Sales and invoice insights
           </p>
-
         </div>
 
         <div
@@ -225,12 +270,13 @@ export default function Dashboard() {
 
       </section>
 
-      {/* Inventory */}
+      {/* ===================================================
+          INVENTORY ALERTS
+          =================================================== */}
 
       <section className="space-y-5">
 
         <div>
-
           <h2
             className="
               text-2xl
@@ -244,7 +290,6 @@ export default function Dashboard() {
           <p className="text-slate-500">
             Products requiring attention
           </p>
-
         </div>
 
         <LowStockCard
@@ -253,12 +298,13 @@ export default function Dashboard() {
 
       </section>
 
-      {/* Recent Activity */}
+      {/* ===================================================
+          RECENT ACTIVITY
+          =================================================== */}
 
       <section className="space-y-5">
 
         <div>
-
           <h2
             className="
               text-2xl
@@ -272,7 +318,6 @@ export default function Dashboard() {
           <p className="text-slate-500">
             Latest sales and customer updates
           </p>
-
         </div>
 
         <div
@@ -298,6 +343,5 @@ export default function Dashboard() {
       </section>
 
     </AppShell>
-
   );
 }

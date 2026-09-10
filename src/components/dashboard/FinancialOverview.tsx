@@ -3,17 +3,17 @@
 import StatCard from "@/components/cards/StatCard";
 
 import {
-  Wallet,
   TrendingUp,
+  TrendingDown,
   BadgeDollarSign,
   CircleDollarSign,
 } from "lucide-react";
 
 interface FinancialOverviewProps {
   stats: {
-    storeValue: number;
-    potentialSalesValue: number;
-    potentialProfit: number;
+    revenue: number;
+    expenses: number;
+    netProfit: number;
     outstanding: number;
   };
 }
@@ -31,7 +31,7 @@ export default function FinancialOverview({
         </h2>
 
         <p className="text-sm text-slate-500">
-          Financial performance and revenue metrics
+          Current accounting performance and receivables
         </p>
 
       </div>
@@ -46,41 +46,43 @@ export default function FinancialOverview({
         "
       >
 
-        <StatCard
-          title="Store Value"
-          value={`₦${stats.storeValue.toLocaleString()}`}
-          icon={<Wallet size={22} />}
-          color="blue"
-          description="Inventory value"
-        />
+        {/* Revenue */}
 
         <StatCard
-          title="Potential Sales"
-          value={`₦${stats.potentialSalesValue.toLocaleString()}`}
+          title="Revenue"
+          value={`₦${stats.revenue.toLocaleString()}`}
           icon={<TrendingUp size={22} />}
           color="green"
-          trend="+12%"
-          trendDirection="up"
-          description="Projected revenue"
+          description="Posted sales revenue"
         />
 
+        {/* Expenses */}
+
         <StatCard
-          title="Potential Profit"
-          value={`₦${stats.potentialProfit.toLocaleString()}`}
+          title="Expenses"
+          value={`₦${stats.expenses.toLocaleString()}`}
+          icon={<TrendingDown size={22} />}
+          color="red"
+          description="Posted and reversed accounting activity"
+        />
+
+        {/* Net Profit */}
+
+        <StatCard
+          title="Net Profit"
+          value={`₦${stats.netProfit.toLocaleString()}`}
           icon={<BadgeDollarSign size={22} />}
           color="amber"
-          trend="+8%"
-          trendDirection="up"
-          description="Estimated profit"
+          description="Revenue less expenses"
         />
+
+        {/* Outstanding */}
 
         <StatCard
           title="Outstanding"
           value={`₦${stats.outstanding.toLocaleString()}`}
           icon={<CircleDollarSign size={22} />}
           color="red"
-          trend="-5%"
-          trendDirection="down"
           description="Customer balances"
         />
 
