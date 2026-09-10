@@ -8,29 +8,30 @@ const badges = [
   {
     icon: ShieldCheck,
     title: "Secure Login",
-    description: "Enterprise-grade authentication",
-    color: "text-green-600",
-    bg: "bg-green-100",
+    description: "Protected",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
   },
   {
     icon: UserCog,
-    title: "Role Based Access",
-    description: "Department-specific permissions",
+    title: "Role Access",
+    description: "Controlled",
     color: "text-blue-600",
-    bg: "bg-blue-100",
+    bg: "bg-blue-50",
   },
   {
     icon: LockKeyhole,
-    title: "Encrypted Connection",
-    description: "Protected data transmission",
-    color: "text-purple-600",
-    bg: "bg-purple-100",
+    title: "Encrypted",
+    description: "Protected",
+    color: "text-violet-600",
+    bg: "bg-violet-50",
   },
 ];
 
 export default function TrustBadges() {
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid grid-cols-3 divide-x divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+
       {badges.map((badge) => {
         const Icon = badge.icon;
 
@@ -38,23 +39,22 @@ export default function TrustBadges() {
           <div
             key={badge.title}
             className="
-              rounded-2xl
-              border
-              border-slate-200
-              bg-slate-50
-              p-4
-              transition-all
-              duration-300
-              hover:-translate-y-1
+              flex
+              flex-col
+              items-center
+              px-2
+              py-3
+              text-center
+              transition
               hover:bg-white
-              hover:shadow-md
             "
           >
+
             <div
               className={`
                 flex
-                h-12
-                w-12
+                h-9
+                w-9
                 items-center
                 justify-center
                 rounded-xl
@@ -62,21 +62,23 @@ export default function TrustBadges() {
               `}
             >
               <Icon
-                size={22}
+                size={17}
                 className={badge.color}
               />
             </div>
 
-            <h3 className="mt-4 text-sm font-bold text-slate-900">
+            <h3 className="mt-2 text-[10px] font-bold text-slate-700 sm:text-[11px]">
               {badge.title}
             </h3>
 
-            <p className="mt-2 text-xs leading-6 text-slate-500">
+            <p className="mt-0.5 text-[9px] text-slate-400">
               {badge.description}
             </p>
+
           </div>
         );
       })}
+
     </div>
   );
 }

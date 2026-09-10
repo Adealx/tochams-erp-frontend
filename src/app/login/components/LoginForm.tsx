@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  User,
+  KeyRound,
+  ArrowRight,
+} from "lucide-react";
+
 import { loginUser } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 
@@ -15,9 +23,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
 
   const handleSubmit = async (
@@ -40,7 +46,6 @@ export default function LoginForm() {
 
       console.log("Tokens stored.");
 
-      // Small delay to ensure storage is available
       await new Promise((resolve) =>
         setTimeout(resolve, 100)
       );
@@ -70,16 +75,22 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6"
+      className="space-y-5"
     >
+
+      {/* =================================================
+          ERROR
+      ================================================= */}
+
       {error && (
         <div
           className="
-            rounded-2xl
+            rounded-xl
             border
             border-red-200
             bg-red-50
-            p-4
+            px-4
+            py-3
             text-sm
             text-red-700
           "
@@ -88,51 +99,86 @@ export default function LoginForm() {
         </div>
       )}
 
+      {/* =================================================
+          USERNAME
+      ================================================= */}
+
       <div>
+
         <label
+          htmlFor="username"
           className="
             mb-2
             block
-            text-sm
-            font-semibold
+            text-xs
+            font-bold
             text-slate-700
           "
         >
           Username
         </label>
 
-        <input
-          type="text"
-          required
-          autoComplete="username"
-          value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
-          placeholder="Enter your username"
-          className="
-            w-full
-            rounded-2xl
-            border
-            border-slate-300
-            px-5
-            py-4
-            outline-none
-            transition
-            focus:border-blue-600
-            focus:ring-4
-            focus:ring-blue-100
-          "
-        />
+        <div className="relative">
+
+          <User
+            size={17}
+            className="
+              absolute
+              left-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <input
+            id="username"
+            type="text"
+            required
+            autoComplete="username"
+            value={username}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
+            placeholder="Enter your username"
+            className="
+              h-12
+              w-full
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              pl-11
+              pr-4
+              text-sm
+              text-slate-900
+              outline-none
+              transition-all
+              placeholder:text-slate-400
+              hover:border-slate-300
+              focus:border-blue-500
+              focus:ring-4
+              focus:ring-blue-500/10
+            "
+          />
+
+        </div>
+
       </div>
 
+      {/* =================================================
+          PASSWORD
+      ================================================= */}
+
       <div>
+
         <label
+          htmlFor="password"
           className="
             mb-2
             block
-            text-sm
-            font-semibold
+            text-xs
+            font-bold
             text-slate-700
           "
         >
@@ -141,32 +187,45 @@ export default function LoginForm() {
 
         <div className="relative">
 
+          <KeyRound
+            size={17}
+            className="
+              absolute
+              left-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
           <input
-            type={
-              showPassword
-                ? "text"
-                : "password"
-            }
+            id="password"
+            type={showPassword ? "text" : "password"}
             required
             autoComplete="current-password"
             value={password}
             onChange={(e) =>
               setPassword(e.target.value)
             }
-            placeholder="••••••••"
+            placeholder="Enter your password"
             className="
+              h-12
               w-full
-              rounded-2xl
+              rounded-xl
               border
-              border-slate-300
-              px-5
-              py-4
-              pr-14
+              border-slate-200
+              bg-white
+              pl-11
+              pr-12
+              text-sm
+              text-slate-900
               outline-none
-              transition
-              focus:border-blue-600
+              transition-all
+              placeholder:text-slate-400
+              hover:border-slate-300
+              focus:border-blue-500
               focus:ring-4
-              focus:ring-blue-100
+              focus:ring-blue-500/10
             "
           />
 
@@ -177,16 +236,30 @@ export default function LoginForm() {
             }
             className="
               absolute
-              right-4
+              right-2
               top-1/2
+              flex
+              h-8
+              w-8
               -translate-y-1/2
-              text-slate-500
+              items-center
+              justify-center
+              rounded-lg
+              text-slate-400
+              transition
+              hover:bg-slate-100
+              hover:text-slate-700
             "
+            aria-label={
+              showPassword
+                ? "Hide password"
+                : "Show password"
+            }
           >
             {showPassword ? (
-              <EyeOff size={20} />
+              <EyeOff size={17} />
             ) : (
-              <Eye size={20} />
+              <Eye size={17} />
             )}
           </button>
 
@@ -194,20 +267,33 @@ export default function LoginForm() {
 
       </div>
 
+      {/* =================================================
+          OPTIONS
+      ================================================= */}
+
       <div className="flex items-center justify-between">
 
         <label
           className="
             flex
+            cursor-pointer
             items-center
             gap-2
-            text-sm
-            text-slate-600
+            text-xs
+            text-slate-500
           "
         >
+
           <input
             type="checkbox"
-            className="rounded"
+            className="
+              h-4
+              w-4
+              rounded
+              border-slate-300
+              text-blue-600
+              focus:ring-blue-500
+            "
           />
 
           Remember me
@@ -217,10 +303,11 @@ export default function LoginForm() {
         <Link
           href="/forgot-password"
           className="
-            text-sm
-            font-semibold
+            text-xs
+            font-bold
             text-blue-600
-            hover:underline
+            transition
+            hover:text-blue-700
           "
         >
           Forgot Password?
@@ -228,49 +315,79 @@ export default function LoginForm() {
 
       </div>
 
+      {/* =================================================
+          SIGN IN
+      ================================================= */}
+
       <button
         type="submit"
         disabled={loading}
         className="
+          group
           flex
+          h-12
           w-full
           items-center
           justify-center
-          rounded-2xl
-          bg-blue-700
-          py-4
-          text-lg
+          gap-2
+          rounded-xl
+          bg-blue-600
+          text-sm
           font-bold
           text-white
-          transition
-          hover:bg-blue-800
+          shadow-lg
+          shadow-blue-600/20
+          transition-all
+          duration-200
+          hover:bg-blue-700
+          hover:shadow-blue-600/30
+          active:scale-[0.99]
           disabled:cursor-not-allowed
-          disabled:opacity-70
+          disabled:opacity-60
         "
       >
+
         {loading ? (
           <>
             <Loader2
-              className="mr-2 animate-spin"
-              size={20}
+              size={18}
+              className="animate-spin"
             />
+
             Signing In...
           </>
         ) : (
-          "Sign In"
+          <>
+            Sign In
+
+            <ArrowRight
+              size={18}
+              className="
+                transition-transform
+                duration-200
+                group-hover:translate-x-1
+              "
+            />
+          </>
         )}
+
       </button>
 
-      <div className="text-center text-sm text-slate-600">
+      {/* =================================================
+          REGISTER
+      ================================================= */}
+
+      <div className="text-center text-xs text-slate-500">
 
         Don't have an account?{" "}
 
         <Link
           href="/register"
           className="
-            font-semibold
-            text-blue-700
-            hover:underline
+            font-bold
+            text-blue-600
+            transition
+            hover:text-blue-700
           "
         >
           Create Account

@@ -5,16 +5,8 @@ import RightPanel from "./components/RightPanel";
 
 export default function LoginPage() {
   return (
-    <main
-      className="
-        h-screen
-        overflow-hidden
-        lg:grid
-        lg:grid-cols-[50%_50%]
-      "
-    >
+    <main className="min-h-screen overflow-hidden bg-slate-100 lg:grid lg:grid-cols-[56%_44%]">
       <LeftPanel />
-
       <RightPanel />
     </main>
   );

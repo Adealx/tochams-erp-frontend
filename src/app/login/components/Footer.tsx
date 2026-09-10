@@ -1,35 +1,40 @@
 import Link from "next/link";
-import { ShieldCheck, Lock } from "lucide-react";
+import {
+  ShieldCheck,
+  Lock,
+} from "lucide-react";
 
 export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-200 pt-8">
+    <footer className="border-t border-slate-100 pt-5">
 
-      {/* Security Notice */}
+      {/* Security */}
 
-      <div className="flex flex-wrap items-center justify-center gap-6">
+      <div className="flex items-center justify-center gap-5">
 
-        <div className="flex items-center gap-2 text-sm text-slate-600">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
 
           <ShieldCheck
-            size={16}
-            className="text-green-600"
+            size={13}
+            className="text-emerald-500"
           />
 
-          <span>Enterprise Security</span>
+          Enterprise Security
 
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-600">
+        <span className="h-3 w-px bg-slate-200" />
+
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
 
           <Lock
-            size={16}
-            className="text-blue-600"
+            size={13}
+            className="text-blue-500"
           />
 
-          <span>SSL Encrypted Connection</span>
+          Secure Connection
 
         </div>
 
@@ -37,46 +42,45 @@ export default function Footer() {
 
       {/* Links */}
 
-      <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm">
+      <div className="mt-4 flex justify-center gap-4 text-[10px]">
 
         <Link
           href="/privacy"
-          className="text-slate-500 transition hover:text-blue-600"
+          className="text-slate-400 transition hover:text-blue-600"
         >
-          Privacy Policy
+          Privacy
         </Link>
+
+        <span className="text-slate-300">•</span>
 
         <Link
           href="/terms"
-          className="text-slate-500 transition hover:text-blue-600"
+          className="text-slate-400 transition hover:text-blue-600"
         >
-          Terms of Service
+          Terms
         </Link>
+
+        <span className="text-slate-300">•</span>
 
         <Link
           href="/support"
-          className="text-slate-500 transition hover:text-blue-600"
+          className="text-slate-400 transition hover:text-blue-600"
         >
-          Contact Support
+          Support
         </Link>
 
       </div>
 
       {/* Copyright */}
 
-      <div className="mt-8 text-center">
+      <div className="mt-4 text-center">
 
-        <p className="text-sm text-slate-500">
-          © {year} <strong>TOCHAMS Distribution Limited</strong>.
-          All rights reserved.
+        <p className="text-[10px] text-slate-400">
+          © {year} TOCHAMS Distribution Limited. All rights reserved.
         </p>
 
-        <p className="mt-2 text-xs text-slate-400">
-          TOCHAMS ERP • Enterprise Resource Planning Platform
-        </p>
-
-        <p className="mt-1 text-xs text-slate-400">
-          Version 1.0.0
+        <p className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-300">
+          TOCHAMS ERP · Enterprise Platform · v1.0.0
         </p>
 
       </div>
