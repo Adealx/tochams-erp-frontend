@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
-
 import { getDashboardData } from "@/services/dashboardService";
 
 import AppShell from "@/components/layout/AppShell";
 
+import DashboardSection from "@/components/dashboard/DashboardSection";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
@@ -84,7 +84,7 @@ export default function Dashboard() {
     }
 
     console.log("================================");
-    console.log("Dashboard Mounted");
+    console.log("TOCHAMS ERP Dashboard Mounted");
     console.log("Authenticated User:", user);
     console.log("================================");
 
@@ -97,8 +97,7 @@ export default function Dashboard() {
 
   async function loadDashboard() {
     try {
-      console.log("Loading dashboard...");
-      console.log("Current User:", user);
+      console.log("Loading TOCHAMS ERP dashboard...");
 
       const dashboard =
         await getDashboardData();
@@ -148,7 +147,7 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error(
-        "Dashboard Error:",
+        "TOCHAMS ERP Dashboard Error:",
         error
       );
     } finally {
@@ -169,24 +168,64 @@ export default function Dashboard() {
         <div
           className="
             flex
-            h-[500px]
+            min-h-[520px]
             items-center
             justify-center
-            rounded-3xl
+            rounded-[22px]
             border
             border-slate-200
             bg-white
+            shadow-[0_8px_30px_rgba(15,23,42,0.045)]
           "
         >
-          <p
-            className="
-              text-lg
-              font-medium
-              text-slate-500
-            "
-          >
-            Loading Dashboard...
-          </p>
+          <div className="flex flex-col items-center">
+
+            <div
+              className="
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-2xl
+                bg-blue-50
+              "
+            >
+              <div
+                className="
+                  h-6
+                  w-6
+                  animate-spin
+                  rounded-full
+                  border-2
+                  border-blue-200
+                  border-t-blue-600
+                "
+              />
+            </div>
+
+            <p
+              className="
+                mt-4
+                text-sm
+                font-bold
+                text-slate-800
+              "
+            >
+              Loading Dashboard
+            </p>
+
+            <p
+              className="
+                mt-1
+                text-xs
+                text-slate-400
+              "
+            >
+              Preparing your enterprise overview...
+            </p>
+
+          </div>
         </div>
       </AppShell>
     );
@@ -202,145 +241,327 @@ export default function Dashboard() {
       subtitle="Enterprise Resource Planning Overview"
     >
 
-      {/* ===================================================
-          FINANCIAL OVERVIEW
-          =================================================== */}
+      <div className="space-y-7">
 
-      <FinancialOverview
-        stats={{
-          revenue: stats.revenue,
-          expenses: stats.expenses,
-          netProfit: stats.netProfit,
-          outstanding: stats.outstanding,
-        }}
-      />
+        {/* =================================================
+            EXECUTIVE INTRO
+        ================================================== */}
 
-      {/* ===================================================
-          OPERATIONAL KPIs
-          =================================================== */}
-
-      <StatsGrid
-        stats={stats}
-      />
-
-      {/* ===================================================
-          BUSINESS ANALYTICS
-          =================================================== */}
-
-      <section className="space-y-5">
-
-        <div>
-          <h2
-            className="
-              text-2xl
-              font-bold
-              text-slate-900
-            "
-          >
-            Business Analytics
-          </h2>
-
-          <p className="text-slate-500">
-            Sales and invoice insights
-          </p>
-        </div>
-
-        <div
+        <section
           className="
-            grid
-            grid-cols-1
-            xl:grid-cols-2
-            gap-8
-            items-stretch
+            relative
+            overflow-hidden
+            rounded-[22px]
+            border
+            border-blue-100
+            bg-gradient-to-r
+            from-[#08245F]
+            via-[#0D3FAF]
+            to-[#155EEF]
+            px-6
+            py-6
+            text-white
+            shadow-[0_12px_35px_rgba(15,23,42,0.10)]
+            sm:px-7
           "
         >
 
-          <InvoiceStatusChart
-            data={invoiceChart}
-          />
+          {/* Background decoration */}
 
-          <OrdersOverviewChart
-            totalOrders={stats.orders}
-            pendingOrders={
-              stats.pendingOrders
-            }
-          />
-
-        </div>
-
-      </section>
-
-      {/* ===================================================
-          INVENTORY ALERTS
-          =================================================== */}
-
-      <section className="space-y-5">
-
-        <div>
-          <h2
+          <div
             className="
-              text-2xl
-              font-bold
-              text-slate-900
+              pointer-events-none
+              absolute
+              -right-20
+              -top-28
+              h-64
+              w-64
+              rounded-full
+              bg-cyan-300/15
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -bottom-28
+              left-1/3
+              h-52
+              w-52
+              rounded-full
+              bg-blue-300/10
+              blur-3xl
+            "
+          />
+
+          {/* Content */}
+
+          <div
+            className="
+              relative
+              z-10
+              flex
+              flex-col
+              gap-5
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
             "
           >
-            Inventory Alerts
-          </h2>
 
-          <p className="text-slate-500">
-            Products requiring attention
-          </p>
-        </div>
+            <div>
+
+              <div
+                className="
+                  mb-2
+                  flex
+                  items-center
+                  gap-2
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.18em]
+                  text-cyan-200
+                "
+              >
+
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    rounded-full
+                    bg-cyan-300
+                  "
+                />
+
+                TOCHAMS ERP
+
+                <span className="text-blue-200">
+                  •
+                </span>
+
+                Executive Command Center
+
+              </div>
+
+              <h1
+                className="
+                  text-2xl
+                  font-black
+                  tracking-[-0.035em]
+                  sm:text-3xl
+                "
+              >
+                Business Overview
+              </h1>
+
+              <p
+                className="
+                  mt-2
+                  max-w-2xl
+                  text-sm
+                  leading-6
+                  text-blue-100
+                "
+              >
+                Monitor financial performance, sales,
+                inventory, customers and operational
+                activity from one central control center.
+              </p>
+
+            </div>
+
+            {/* System status */}
+
+            <div
+              className="
+                flex
+                w-fit
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-white/15
+                bg-white/10
+                px-4
+                py-2
+                backdrop-blur-md
+              "
+            >
+
+              <span className="relative flex h-2 w-2">
+
+                <span
+                  className="
+                    absolute
+                    inline-flex
+                    h-full
+                    w-full
+                    animate-ping
+                    rounded-full
+                    bg-emerald-300
+                    opacity-60
+                  "
+                />
+
+                <span
+                  className="
+                    relative
+                    inline-flex
+                    h-2
+                    w-2
+                    rounded-full
+                    bg-emerald-400
+                  "
+                />
+
+              </span>
+
+              <span
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-wider
+                  text-white
+                "
+              >
+                ERP Services Operational
+              </span>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        {/* =================================================
+            FINANCIAL OVERVIEW
+        ================================================== */}
+
+        <DashboardSection
+          title="Financial Overview"
+          description="Current accounting performance and customer receivables"
+          accent="blue"
+        >
+
+          <FinancialOverview
+            stats={{
+              revenue: stats.revenue,
+              expenses: stats.expenses,
+              netProfit: stats.netProfit,
+              outstanding: stats.outstanding,
+            }}
+          />
+
+        </DashboardSection>
+
+
+        {/* =================================================
+            OPERATIONS OVERVIEW
+        ================================================== */}
+
+        <DashboardSection
+          title="Operations Overview"
+          description="Live operational performance across the enterprise"
+          accent="cyan"
+        >
+
+          <StatsGrid
+            stats={stats}
+          />
+
+        </DashboardSection>
+
+
+        {/* =================================================
+            BUSINESS ANALYTICS
+        ================================================== */}
+
+        <DashboardSection
+          title="Business Analytics"
+          description="Sales, invoice and order fulfillment insights"
+          accent="violet"
+        >
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-5
+              xl:grid-cols-2
+            "
+          >
+
+            <InvoiceStatusChart
+              data={invoiceChart}
+            />
+
+            <OrdersOverviewChart
+              totalOrders={stats.orders}
+              pendingOrders={stats.pendingOrders}
+            />
+
+          </div>
+
+        </DashboardSection>
+
+
+        {/* =================================================
+            INVENTORY ALERTS
+            -------------------------------------------------
+            IMPORTANT:
+            This is intentionally NOT wrapped inside
+            DashboardSection.
+
+            LowStockCard owns its own:
+            - header
+            - collapse / expand state
+            - alert count
+            - inventory list
+            - empty state
+        ================================================== */}
 
         <LowStockCard
           products={lowStock}
         />
 
-      </section>
 
-      {/* ===================================================
-          RECENT ACTIVITY
-          =================================================== */}
+        {/* =================================================
+            RECENT ACTIVITY
+        ================================================== */}
 
-      <section className="space-y-5">
-
-        <div>
-          <h2
-            className="
-              text-2xl
-              font-bold
-              text-slate-900
-            "
-          >
-            Recent Activity
-          </h2>
-
-          <p className="text-slate-500">
-            Latest sales and customer updates
-          </p>
-        </div>
-
-        <div
-          className="
-            grid
-            grid-cols-1
-            xl:grid-cols-2
-            gap-8
-            items-stretch
-          "
+        <DashboardSection
+          title="Recent Activity"
+          description="Latest sales and customer activity across TOCHAMS ERP"
+          accent="emerald"
         >
 
-          <RecentOrders
-            orders={orders}
-          />
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-5
+              xl:grid-cols-2
+            "
+          >
 
-          <RecentCustomers
-            customers={customers}
-          />
+            <RecentOrders
+              orders={orders}
+            />
 
-        </div>
+            <RecentCustomers
+              customers={customers}
+            />
 
-      </section>
+          </div>
+
+        </DashboardSection>
+
+      </div>
 
     </AppShell>
   );

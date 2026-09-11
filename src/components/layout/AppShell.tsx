@@ -1,10 +1,14 @@
 "use client";
 
 import { ReactNode } from "react";
+import Link from "next/link";
+import {
+  ChevronRight,
+  Home,
+} from "lucide-react";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import Breadcrumbs from "./Breadcrumbs";
 import QuickActions from "./QuickActions";
 
 interface AppShellProps {
@@ -31,100 +35,269 @@ export default function AppShell({
   actions = [],
 }: AppShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f6f7fb]">
+    <div
+      className="
+        flex
+        h-screen
+        overflow-hidden
+        bg-[#f6f7fb]
+        text-slate-900
+      "
+    >
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
 
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* =====================================================
+          APPLICATION AREA
+      ====================================================== */}
+
+      <div
+        className="
+          flex
+          min-w-0
+          flex-1
+          flex-col
+          overflow-hidden
+        "
+      >
+        {/* Topbar */}
 
         <Topbar />
 
-        <main className="flex-1 overflow-y-auto">
+        {/* =================================================
+            MAIN CONTENT
+        ================================================== */}
 
+        <main
+          className="
+            min-h-0
+            flex-1
+            overflow-y-auto
+            scroll-smooth
+          "
+        >
           <div
             className="
               mx-auto
               w-full
-              max-w-[1600px]
+              max-w-[1680px]
               px-4
               py-5
               sm:px-6
-              lg:px-9
-              lg:py-8
+              lg:px-8
+              lg:py-6
+              xl:px-9
             "
           >
+            {/* =================================================
+                PAGE HEADER
+            ================================================== */}
 
-            <section
-              className="
-                mb-8
-                rounded-[22px]
-                border border-slate-200/80
-                bg-white/90
-                px-5 py-5
-                shadow-[0_10px_30px_rgba(15,23,42,0.04)]
-                backdrop-blur-sm
-                sm:px-7 sm:py-6
-              "
-            >
+            <header className="mb-6">
+              {/* Breadcrumbs */}
 
               {breadcrumbs.length > 0 && (
+                <nav
+                  aria-label="Breadcrumb"
+                  className="mb-3"
+                >
+                  <ol
+                    className="
+                      flex
+                      flex-wrap
+                      items-center
+                      gap-1.5
+                      text-[11px]
+                      font-medium
+                    "
+                  >
+                    {/* Home */}
 
-                <div className="mb-5">
+                    <li>
+                      <Link
+                        href="/dashboard"
+                        className="
+                          flex
+                          items-center
+                          gap-1
+                          text-slate-400
+                          transition
+                          hover:text-blue-600
+                        "
+                      >
+                        <Home size={12} />
 
-                  <Breadcrumbs
-                    items={breadcrumbs}
-                  />
+                        <span className="hidden sm:inline">
+                          Home
+                        </span>
+                      </Link>
+                    </li>
 
-                </div>
+                    {breadcrumbs.map(
+                      (item, index) => (
+                        <li
+                          key={`${item.label}-${index}`}
+                          className="
+                            flex
+                            items-center
+                            gap-1.5
+                          "
+                        >
+                          <ChevronRight
+                            size={12}
+                            className="text-slate-300"
+                          />
 
+                          {item.href ? (
+                            <Link
+                              href={item.href}
+                              className="
+                                text-slate-400
+                                transition
+                                hover:text-blue-600
+                              "
+                            >
+                              {item.label}
+                            </Link>
+                          ) : (
+                            <span className="text-slate-500">
+                              {item.label}
+                            </span>
+                          )}
+                        </li>
+                      )
+                    )}
+                  </ol>
+                </nav>
               )}
 
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              {/* Page heading */}
 
-                <div>
+              <div
+                className="
+                  flex
+                  flex-col
+                  gap-4
+                  rounded-2xl
+                  border
+                  border-slate-200/80
+                  bg-white
+                  px-5
+                  py-4
+                  shadow-[0_4px_18px_rgba(15,23,42,0.035)]
+                  sm:px-6
+                  sm:py-5
+                  lg:flex-row
+                  lg:items-center
+                  lg:justify-between
+                "
+              >
+                {/* Title */}
 
-                  <h1 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="
+                        h-6
+                        w-1
+                        rounded-full
+                        bg-gradient-to-b
+                        from-blue-500
+                        to-cyan-400
+                      "
+                    />
 
-                    {title}
-
-                  </h1>
+                    <h1
+                      className="
+                        truncate
+                        text-xl
+                        font-black
+                        tracking-[-0.025em]
+                        text-slate-950
+                        sm:text-2xl
+                      "
+                    >
+                      {title}
+                    </h1>
+                  </div>
 
                   {subtitle && (
-
-                  <p className="mt-2 max-w-2xl text-sm text-slate-500 sm:text-[15px]">
-
+                    <p
+                      className="
+                        mt-1.5
+                        max-w-3xl
+                        pl-3
+                        text-xs
+                        leading-5
+                        text-slate-500
+                        sm:text-sm
+                      "
+                    >
                       {subtitle}
-
                     </p>
-
                   )}
-
                 </div>
 
+                {/* Actions */}
+
                 {actions.length > 0 && (
-
-                  <QuickActions
-                    actions={actions}
-                  />
-
+                  <div className="shrink-0">
+                    <QuickActions
+                      actions={actions}
+                    />
+                  </div>
                 )}
-
               </div>
+            </header>
 
-            </section>
+            {/* =================================================
+                PAGE CONTENT
+            ================================================== */}
 
-            <section className="space-y-9">
-
+            <section className="space-y-7">
               {children}
-
             </section>
 
+            {/* =================================================
+                FOOTER
+            ================================================== */}
+
+            <footer
+              className="
+                mt-8
+                border-t
+                border-slate-200/80
+                py-4
+              "
+            >
+              <div
+                className="
+                  flex
+                  flex-col
+                  gap-1
+                  text-[10px]
+                  text-slate-400
+                  sm:flex-row
+                  sm:items-center
+                  sm:justify-between
+                "
+              >
+                <span>
+                  TOCHAMS ERP • Enterprise Resource
+                  Planning Platform
+                </span>
+
+                <span>
+                  Operational workspace
+                </span>
+              </div>
+            </footer>
           </div>
-
         </main>
-
       </div>
-
     </div>
   );
 }

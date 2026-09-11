@@ -3,51 +3,100 @@
 import Link from "next/link";
 
 import {
+  ArrowUpRight,
+  ClipboardList,
+  Clock3,
   ShoppingCart,
-  ArrowRight,
-  User,
-  PackageOpen,
 } from "lucide-react";
 
-interface Order {
-  id: number;
-  customer_name: string;
-  status: string;
-  total_amount: number;
-}
-
 interface RecentOrdersProps {
-  orders: Order[];
+  orders: any[];
 }
 
-const statusStyles = {
-  Approved:
-    "bg-emerald-100 text-emerald-700",
+function formatCurrency(value: any) {
+  return `₦${Number(value || 0).toLocaleString("en-NG")}`;
+}
 
-  Pending:
-    "bg-amber-100 text-amber-700",
+function getStatusStyle(status: string) {
+  const normalized =
+    String(status || "").toLowerCase();
 
-  Rejected:
-    "bg-red-100 text-red-700",
+  if (
+    normalized.includes("complete") ||
+    normalized.includes("delivered") ||
+    normalized.includes("paid")
+  ) {
+    return {
+      wrapper:
+        "border-emerald-200 bg-emerald-50",
+      text:
+        "text-emerald-700",
+      dot:
+        "bg-emerald-500",
+    };
+  }
 
-  Draft:
-    "bg-slate-100 text-slate-700",
-};
+  if (
+    normalized.includes("pending") ||
+    normalized.includes("processing") ||
+    normalized.includes("picking") ||
+    normalized.includes("packed")
+  ) {
+    return {
+      wrapper:
+        "border-amber-200 bg-amber-50",
+      text:
+        "text-amber-700",
+      dot:
+        "bg-amber-500",
+    };
+  }
+
+  if (
+    normalized.includes("cancel") ||
+    normalized.includes("reject")
+  ) {
+    return {
+      wrapper:
+        "border-red-200 bg-red-50",
+      text:
+        "text-red-700",
+      dot:
+        "bg-red-500",
+    };
+  }
+
+  return {
+    wrapper:
+      "border-blue-200 bg-blue-50",
+    text:
+      "text-blue-700",
+    dot:
+      "bg-blue-500",
+  };
+}
 
 export default function RecentOrders({
   orders,
 }: RecentOrdersProps) {
+  const visibleOrders =
+    orders.slice(0, 5);
+
   return (
     <div
       className="
+        overflow-hidden
         rounded-[20px]
         border
         border-slate-200
         bg-white
-        shadow-[0_6px_20px_rgba(15,23,42,.035)]
+        shadow-[0_6px_24px_rgba(15,23,42,0.045)]
       "
     >
-      {/* ================= Header ================= */}
+
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
 
       <div
         className="
@@ -55,12 +104,100 @@ export default function RecentOrders({
           items-center
           justify-between
           border-b
-          border-slate-200
-          px-8
-          py-6
+          border-slate-100
+          px-5
+          py-4
         "
       >
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
+
+          <div
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-xl
+              bg-violet-50
+              text-violet-600
+            "
+          >
+            <ShoppingCart size={17} />
+          </div>
+
+          <div>
+
+            <h3
+              className="
+                text-sm
+                font-black
+                text-slate-900
+              "
+            >
+              Recent Orders
+            </h3>
+
+            <p
+              className="
+                mt-0.5
+                text-[10px]
+                text-slate-400
+              "
+            >
+              Latest sales order activity
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* =================================================
+            VIEW ALL → SALES ORDERS
+        ================================================== */}
+
+        <Link
+          href="/sales-orders"
+          className="
+            flex
+            items-center
+            gap-1
+            rounded-lg
+            px-2
+            py-1.5
+            text-[10px]
+            font-bold
+            text-blue-600
+            transition
+            hover:bg-blue-50
+            hover:text-blue-700
+          "
+        >
+          View all
+          <ArrowUpRight size={12} />
+        </Link>
+
+      </div>
+
+
+      {/* =====================================================
+          ORDER LIST
+      ====================================================== */}
+
+      {visibleOrders.length === 0 ? (
+
+        <div
+          className="
+            flex
+            min-h-[180px]
+            flex-col
+            items-center
+            justify-center
+            px-6
+            text-center
+          "
+        >
 
           <div
             className="
@@ -70,220 +207,174 @@ export default function RecentOrders({
               items-center
               justify-center
               rounded-2xl
-              bg-blue-100
+              bg-slate-100
+              text-slate-400
             "
           >
-
-            <ShoppingCart
-              size={24}
-              className="text-blue-600"
-            />
-
+            <ClipboardList size={21} />
           </div>
 
-          <div>
-
-            <h2
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              Recent Orders
-            </h2>
-
-            <p
-              className="
-                mt-1
-                text-sm
-                text-slate-500
-              "
-            >
-              Latest customer purchase orders
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-5">
-
-          <div className="text-right">
-
-            <p
-              className="
-                text-sm
-                text-slate-500
-              "
-            >
-              Showing
-            </p>
-
-            <p
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              {Math.min(orders.length, 5)}
-            </p>
-
-          </div>
-
-          <Link
-            href="/sales-orders"
+          <p
             className="
-              flex
-              items-center
-              gap-2
-              rounded-xl
-              bg-blue-600
-              px-4
-              py-2
+              mt-3
               text-sm
-              font-semibold
-              text-white
-              transition
-              hover:bg-blue-700
+              font-bold
+              text-slate-800
             "
           >
-            View All
+            No sales orders yet
+          </p>
 
-            <ArrowRight size={16} />
-
-          </Link>
+          <p
+            className="
+              mt-1
+              text-xs
+              text-slate-500
+            "
+          >
+            New sales order activity will appear here.
+          </p>
 
         </div>
 
-      </div>
+      ) : (
 
-      {/* ================= Body ================= */}
+        <div className="divide-y divide-slate-100">
 
-      <div className="p-6">
+          {visibleOrders.map(
+            (order: any, index: number) => {
 
-        {orders.length === 0 ? (
+              const orderId =
+                order.id ??
+                order.order_id;
 
-          <div
-            className="
-              flex
-              flex-col
-              items-center
-              justify-center
-              py-12
-              text-center
-            "
-          >
+              const orderNumber =
+                order.order_number ||
+                order.orderNumber ||
+                order.reference ||
+                `Order ${index + 1}`;
 
-            <PackageOpen
-              size={52}
-              className="mb-4 text-slate-300"
-            />
+              const customerName =
+                order.customer_name ||
+                order.customer?.name ||
+                order.customer ||
+                "Customer";
 
-            <h3
-              className="
-                text-lg
-                font-semibold
-                text-slate-700
-              "
-            >
-              No Recent Orders
-            </h3>
+              const status =
+                order.status ||
+                order.order_status ||
+                "Pending";
 
-            <p
-              className="
-                mt-2
-                text-sm
-                text-slate-500
-              "
-            >
-              Orders will appear here once sales begin.
-            </p>
+              const amount =
+                order.total_amount ??
+                order.total ??
+                order.amount ??
+                order.grand_total ??
+                0;
 
-          </div>
+              const statusStyle =
+                getStatusStyle(status);
 
-        ) : (
+              const content = (
+                <>
+                  {/* Order icon */}
 
-          <div className="space-y-4">
+                  <div
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-slate-50
+                      text-slate-500
+                      transition
+                      group-hover:bg-blue-50
+                      group-hover:text-blue-600
+                    "
+                  >
+                    <ClipboardList size={16} />
+                  </div>
 
-            {orders
-              .slice(0, 5)
-              .map((order) => (
+                  {/* Main information */}
 
-                <div
-                  key={order.id}
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-slate-50
-                    p-5
-                    transition-all
-                    hover:border-blue-300
-                    hover:bg-blue-50
-                  "
-                >
-
-                  {/* Customer */}
-
-                  <div className="flex items-center gap-4">
+                  <div className="min-w-0 flex-1">
 
                     <div
                       className="
                         flex
-                        h-12
-                        w-12
+                        min-w-0
                         items-center
-                        justify-center
-                        rounded-full
-                        bg-white
+                        gap-2
                       "
                     >
 
-                      <User
-                        size={22}
-                        className="text-slate-600"
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <h3
+                      <p
                         className="
-                          font-semibold
-                          text-slate-900
+                          truncate
+                          text-xs
+                          font-bold
+                          text-slate-800
                         "
                       >
-                        {order.customer_name}
-                      </h3>
+                        {orderNumber}
+                      </p>
 
-                      <div className="mt-2">
+                      <span
+                        className={`
+                          hidden
+                          shrink-0
+                          items-center
+                          gap-1
+                          rounded-full
+                          border
+                          px-2
+                          py-0.5
+                          text-[8px]
+                          font-bold
+                          sm:inline-flex
+                          ${statusStyle.wrapper}
+                          ${statusStyle.text}
+                        `}
+                      >
 
                         <span
                           className={`
+                            h-1.5
+                            w-1.5
                             rounded-full
-                            px-3
-                            py-1
-                            text-xs
-                            font-semibold
-
-                            ${
-                              statusStyles[
-                                order.status as keyof typeof statusStyles
-                              ] ||
-                              statusStyles.Draft
-                            }
+                            ${statusStyle.dot}
                           `}
-                        >
-                          {order.status}
-                        </span>
+                        />
 
-                      </div>
+                        {status}
+
+                      </span>
+
+                    </div>
+
+                    <div
+                      className="
+                        mt-1
+                        flex
+                        min-w-0
+                        items-center
+                        gap-1.5
+                        text-[10px]
+                        text-slate-400
+                      "
+                    >
+
+                      <Clock3
+                        size={10}
+                        className="shrink-0"
+                      />
+
+                      <span className="truncate">
+                        {customerName}
+                      </span>
 
                     </div>
 
@@ -291,42 +382,92 @@ export default function RecentOrders({
 
                   {/* Amount */}
 
-                  <div className="text-right">
+                  <div
+                    className="
+                      shrink-0
+                      text-right
+                    "
+                  >
 
                     <p
                       className="
-                        text-sm
-                        text-slate-500
+                        text-xs
+                        font-black
+                        text-slate-900
                       "
                     >
-                      Order Value
+                      {formatCurrency(amount)}
                     </p>
 
                     <p
                       className="
-                        mt-1
-                        text-lg
-                        font-bold
-                        text-slate-900
+                        mt-0.5
+                        text-[9px]
+                        uppercase
+                        tracking-wider
+                        text-slate-400
                       "
                     >
-                      ₦
-                      {Number(
-                        order.total_amount || 0
-                      ).toLocaleString()}
+                      Order value
                     </p>
 
                   </div>
 
+                  {/* Arrow */}
+
+                  <ArrowUpRight
+                    size={14}
+                    className="
+                      hidden
+                      shrink-0
+                      text-slate-300
+                      transition
+                      group-hover:text-blue-500
+                      sm:block
+                    "
+                  />
+                </>
+              );
+
+              return orderId ? (
+                <Link
+                  key={
+                    orderId ??
+                    `${orderNumber}-${index}`
+                  }
+                  href={`/sales-orders/${orderId}`}
+                  className="
+                    group
+                    flex
+                    items-center
+                    gap-3
+                    px-5
+                    py-3.5
+                    transition
+                    hover:bg-blue-50/40
+                  "
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div
+                  key={`${orderNumber}-${index}`}
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    px-5
+                    py-3.5
+                  "
+                >
+                  {content}
                 </div>
+              );
+            }
+          )}
 
-              ))}
-
-          </div>
-
-        )}
-
-      </div>
+        </div>
+      )}
 
     </div>
   );

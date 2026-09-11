@@ -1,15 +1,14 @@
 "use client";
 
-import StatCard from "@/components/cards/StatCard";
-
 import {
-  Users,
-  Package,
-  ShoppingCart,
-  FileText,
-  Clock3,
   AlertTriangle,
-  CreditCard,
+  Boxes,
+  ClipboardList,
+  FileText,
+  ShoppingCart,
+  Users,
+  WalletCards,
+  Clock3,
 } from "lucide-react";
 
 interface StatsGridProps {
@@ -18,106 +17,233 @@ interface StatsGridProps {
     products: number;
     orders: number;
     invoices: number;
+    payments: number;
+    outstanding: number;
     pendingOrders: number;
     lowStock: number;
-    payments: number;
   };
+}
+
+function MetricCard({
+  label,
+  value,
+  description,
+  icon,
+  tone,
+  alert = false,
+}: {
+  label: string;
+  value: string | number;
+  description: string;
+  icon: React.ReactNode;
+  tone: "blue" | "cyan" | "violet" | "emerald" | "amber" | "red";
+  alert?: boolean;
+}) {
+  const tones = {
+    blue: {
+      icon: "bg-blue-50 text-blue-600",
+      accent: "bg-blue-500",
+    },
+    cyan: {
+      icon: "bg-cyan-50 text-cyan-600",
+      accent: "bg-cyan-500",
+    },
+    violet: {
+      icon: "bg-violet-50 text-violet-600",
+      accent: "bg-violet-500",
+    },
+    emerald: {
+      icon: "bg-emerald-50 text-emerald-600",
+      accent: "bg-emerald-500",
+    },
+    amber: {
+      icon: "bg-amber-50 text-amber-600",
+      accent: "bg-amber-500",
+    },
+    red: {
+      icon: "bg-red-50 text-red-600",
+      accent: "bg-red-500",
+    },
+  };
+
+  const selected = tones[tone];
+
+  return (
+    <div
+      className="
+        group
+        relative
+        overflow-hidden
+        rounded-[20px]
+        border
+        border-slate-200
+        bg-white
+        p-5
+        shadow-[0_7px_25px_rgba(15,23,42,0.045)]
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:border-slate-300
+        hover:shadow-[0_15px_35px_rgba(15,23,42,0.08)]
+      "
+    >
+      <div
+        className={`
+          absolute
+          left-0
+          top-0
+          h-full
+          w-[3px]
+          ${selected.accent}
+          opacity-70
+        `}
+      />
+
+      <div className="flex items-start justify-between">
+
+        <div>
+
+          <p
+            className="
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-[0.13em]
+              text-slate-400
+            "
+          >
+            {label}
+          </p>
+
+          <p
+            className="
+              mt-3
+              text-2xl
+              font-black
+              tracking-[-0.035em]
+              text-slate-950
+            "
+          >
+            {value}
+          </p>
+
+        </div>
+
+        <div
+          className={`
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-xl
+            ${selected.icon}
+          `}
+        >
+          {icon}
+        </div>
+
+      </div>
+
+      <div className="mt-4 flex items-center justify-between">
+
+        <p className="text-[11px] text-slate-500">
+          {description}
+        </p>
+
+        {alert && (
+          <span className="flex items-center gap-1 text-[10px] font-bold text-red-600">
+            <AlertTriangle size={11} />
+            Attention
+          </span>
+        )}
+
+      </div>
+    </div>
+  );
 }
 
 export default function StatsGrid({
   stats,
 }: StatsGridProps) {
   return (
-    <section className="space-y-5">
+    <div
+      className="
+        grid
+        grid-cols-1
+        gap-4
+        sm:grid-cols-2
+        lg:grid-cols-3
+        xl:grid-cols-4
+      "
+    >
 
-      <div>
+      <MetricCard
+        label="Customers"
+        value={stats.customers}
+        description="Registered customers"
+        icon={<Users size={19} />}
+        tone="blue"
+      />
 
-        <h2 className="text-xl font-bold text-slate-900">
-          Operations Overview
-        </h2>
+      <MetricCard
+        label="Products"
+        value={stats.products}
+        description="Products in catalogue"
+        icon={<Boxes size={19} />}
+        tone="cyan"
+      />
 
-        <p className="text-sm text-slate-500">
-          Live operational performance
-        </p>
+      <MetricCard
+        label="Sales Orders"
+        value={stats.orders}
+        description="Orders received"
+        icon={<ShoppingCart size={19} />}
+        tone="violet"
+      />
 
-      </div>
+      <MetricCard
+        label="Invoices"
+        value={stats.invoices}
+        description="Invoices generated"
+        icon={<FileText size={19} />}
+        tone="emerald"
+      />
 
-      <div
-        className="
-          grid
-          grid-cols-1
-          sm:grid-cols-2
-          lg:grid-cols-3
-          xl:grid-cols-4
-          gap-7
-        "
-      >
+      <MetricCard
+        label="Pending Orders"
+        value={stats.pendingOrders}
+        description="Awaiting approval"
+        icon={<Clock3 size={19} />}
+        tone="amber"
+        alert={stats.pendingOrders > 0}
+      />
 
-        <StatCard
-          title="Customers"
-          value={stats.customers}
-          icon={<Users size={20} />}
-          color="blue"
-          description="Registered"
-        />
+      <MetricCard
+        label="Low Stock"
+        value={stats.lowStock}
+        description="Products below minimum"
+        icon={<AlertTriangle size={19} />}
+        tone="red"
+        alert={stats.lowStock > 0}
+      />
 
-        <StatCard
-          title="Products"
-          value={stats.products}
-          icon={<Package size={20} />}
-          color="cyan"
-          description="Available"
-        />
+      <MetricCard
+        label="Payments"
+        value={`₦${Number(stats.payments || 0).toLocaleString("en-NG")}`}
+        description="Payments received"
+        icon={<WalletCards size={19} />}
+        tone="emerald"
+      />
 
-        <StatCard
-          title="Sales Orders"
-          value={stats.orders}
-          icon={<ShoppingCart size={20} />}
-          color="purple"
-          description="Received"
-        />
+      <MetricCard
+        label="Receivables"
+        value={`₦${Number(stats.outstanding || 0).toLocaleString("en-NG")}`}
+        description="Customer balances"
+        icon={<ClipboardList size={19} />}
+        tone="amber"
+      />
 
-        <StatCard
-          title="Invoices"
-          value={stats.invoices}
-          icon={<FileText size={20} />}
-          color="green"
-          description="Generated"
-        />
-
-        <StatCard
-          title="Pending Orders"
-          value={stats.pendingOrders}
-          icon={<Clock3 size={20} />}
-          color="amber"
-          trend="Attention"
-          trendDirection="neutral"
-          description="Awaiting approval"
-        />
-
-        <StatCard
-          title="Low Stock"
-          value={stats.lowStock}
-          icon={<AlertTriangle size={20} />}
-          color="red"
-          badge="Critical"
-          trend="Restock"
-          trendDirection="down"
-          description="Below minimum"
-        />
-
-        <StatCard
-          title="Payments"
-          value={`₦${stats.payments.toLocaleString()}`}
-          icon={<CreditCard size={20} />}
-          color="green"
-          trend="+18%"
-          trendDirection="up"
-          description="Received"
-        />
-
-      </div>
-
-    </section>
+    </div>
   );
 }

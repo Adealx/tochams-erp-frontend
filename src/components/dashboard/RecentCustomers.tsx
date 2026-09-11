@@ -1,39 +1,37 @@
 "use client";
 
 import Link from "next/link";
-
 import {
+  ArrowUpRight,
+  Mail,
+  Phone,
+  UserRound,
   Users,
-  User,
-  ArrowRight,
-  UserPlus,
 } from "lucide-react";
 
-interface Customer {
-  id: number;
-  name: string;
-  email: string;
-  company?: string;
-}
-
 interface RecentCustomersProps {
-  customers: Customer[];
+  customers: any[];
 }
 
 export default function RecentCustomers({
   customers,
 }: RecentCustomersProps) {
+  const visibleCustomers = customers.slice(0, 5);
+
   return (
     <div
       className="
+        overflow-hidden
         rounded-[20px]
         border
         border-slate-200
         bg-white
-        shadow-[0_6px_20px_rgba(15,23,42,.035)]
+        shadow-[0_6px_24px_rgba(15,23,42,0.045)]
       "
     >
-      {/* ================= Header ================= */}
+      {/* =====================================================
+          HEADER
+      ====================================================== */}
 
       <div
         className="
@@ -41,12 +39,97 @@ export default function RecentCustomers({
           items-center
           justify-between
           border-b
-          border-slate-200
-          px-8
-          py-6
+          border-slate-100
+          px-5
+          py-4
         "
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+
+          <div
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-xl
+              bg-blue-50
+              text-blue-600
+            "
+          >
+            <Users size={17} />
+          </div>
+
+          <div>
+
+            <h3
+              className="
+                text-sm
+                font-black
+                text-slate-900
+              "
+            >
+              Recent Customers
+            </h3>
+
+            <p
+              className="
+                mt-0.5
+                text-[10px]
+                text-slate-400
+              "
+            >
+              Latest customer activity
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* View all */}
+
+        <Link
+          href="/customers"
+          className="
+            flex
+            items-center
+            gap-1
+            rounded-lg
+            px-2
+            py-1.5
+            text-[10px]
+            font-bold
+            text-blue-600
+            transition
+            hover:bg-blue-50
+            hover:text-blue-700
+          "
+        >
+          View all
+          <ArrowUpRight size={12} />
+        </Link>
+
+      </div>
+
+
+      {/* =====================================================
+          CUSTOMER LIST
+      ====================================================== */}
+
+      {visibleCustomers.length === 0 ? (
+
+        <div
+          className="
+            flex
+            min-h-[180px]
+            flex-col
+            items-center
+            justify-center
+            px-6
+            text-center
+          "
+        >
 
           <div
             className="
@@ -56,241 +139,222 @@ export default function RecentCustomers({
               items-center
               justify-center
               rounded-2xl
-              bg-indigo-100
+              bg-slate-100
+              text-slate-400
             "
           >
-            <Users
-              size={24}
-              className="text-indigo-600"
-            />
+            <UserRound size={21} />
           </div>
 
-          <div>
-
-            <h2
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              Recent Customers
-            </h2>
-
-            <p
-              className="
-                mt-1
-                text-sm
-                text-slate-500
-              "
-            >
-              Recently registered customers
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-5">
-
-          <div className="text-right">
-
-            <p className="text-sm text-slate-500">
-              Showing
-            </p>
-
-            <p
-              className="
-                text-xl
-                font-bold
-                text-slate-900
-              "
-            >
-              {Math.min(customers.length, 5)}
-            </p>
-
-          </div>
-
-          <Link
-            href="/customers"
+          <p
             className="
-              flex
-              items-center
-              gap-2
-              rounded-xl
-              bg-indigo-600
-              px-4
-              py-2
+              mt-3
               text-sm
-              font-semibold
-              text-white
-              transition
-              hover:bg-indigo-700
+              font-bold
+              text-slate-800
             "
           >
-            View All
+            No customers yet
+          </p>
 
-            <ArrowRight size={16} />
-          </Link>
+          <p
+            className="
+              mt-1
+              text-xs
+              text-slate-500
+            "
+          >
+            Customer activity will appear here.
+          </p>
 
         </div>
 
-      </div>
+      ) : (
 
-      {/* ================= Body ================= */}
+        <div className="divide-y divide-slate-100">
 
-      <div className="p-6">
+          {visibleCustomers.map(
+            (customer: any, index: number) => {
 
-        {customers.length === 0 ? (
+              const customerId =
+                customer.id ??
+                customer.customer_id;
 
-          <div
-            className="
-              flex
-              flex-col
-              items-center
-              justify-center
-              py-12
-              text-center
-            "
-          >
+              const customerName =
+                customer.name ||
+                customer.customer_name ||
+                customer.company_name ||
+                customer.full_name ||
+                `Customer ${index + 1}`;
 
-            <UserPlus
-              size={52}
-              className="mb-4 text-slate-300"
-            />
+              const email =
+                customer.email ||
+                customer.email_address ||
+                "";
 
-            <h3
-              className="
-                text-lg
-                font-semibold
-                text-slate-700
-              "
-            >
-              No Customers Yet
-            </h3>
+              const phone =
+                customer.phone ||
+                customer.phone_number ||
+                "";
 
-            <p
-              className="
-                mt-2
-                text-sm
-                text-slate-500
-              "
-            >
-              New customers will appear here once they are created.
-            </p>
+              const initials =
+                customerName
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map(
+                    (part: string) =>
+                      part.charAt(0).toUpperCase()
+                  )
+                  .join("") || "C";
 
-          </div>
+              const content = (
+                <>
+                  {/* Avatar */}
 
-        ) : (
+                  <div
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-gradient-to-br
+                      from-blue-50
+                      to-cyan-50
+                      text-[11px]
+                      font-black
+                      text-blue-600
+                    "
+                  >
+                    {initials}
+                  </div>
 
-          <div className="space-y-4">
+                  {/* Customer information */}
 
-            {customers
-              .slice(0, 5)
-              .map((customer) => (
+                  <div className="min-w-0 flex-1">
 
-                <div
-                  key={customer.id}
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-slate-50
-                    p-5
-                    transition-all
-                    hover:border-indigo-300
-                    hover:bg-indigo-50
-                  "
-                >
-
-                  {/* Left */}
-
-                  <div className="flex items-center gap-4">
-
-                    <div
+                    <p
                       className="
-                        flex
-                        h-12
-                        w-12
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-white
+                        truncate
+                        text-xs
+                        font-bold
+                        text-slate-800
                       "
                     >
-                      <User
-                        size={22}
-                        className="text-slate-600"
-                      />
-                    </div>
+                      {customerName}
+                    </p>
 
-                    <div>
-
-                      <h3
+                    {email ? (
+                      <div
                         className="
-                          font-semibold
-                          text-slate-900
+                          mt-1
+                          flex
+                          min-w-0
+                          items-center
+                          gap-1.5
+                          text-[10px]
+                          text-slate-400
                         "
                       >
-                        {customer.name}
-                      </h3>
+                        <Mail
+                          size={11}
+                          className="shrink-0"
+                        />
 
+                        <span className="truncate">
+                          {email}
+                        </span>
+                      </div>
+                    ) : phone ? (
+                      <div
+                        className="
+                          mt-1
+                          flex
+                          items-center
+                          gap-1.5
+                          text-[10px]
+                          text-slate-400
+                        "
+                      >
+                        <Phone
+                          size={11}
+                          className="shrink-0"
+                        />
+
+                        <span>
+                          {phone}
+                        </span>
+                      </div>
+                    ) : (
                       <p
                         className="
                           mt-1
-                          text-sm
-                          text-slate-500
+                          text-[10px]
+                          text-slate-400
                         "
                       >
-                        {customer.email}
+                        Customer account
                       </p>
-
-                      {customer.company && (
-
-                        <p
-                          className="
-                            mt-1
-                            text-xs
-                            text-slate-400
-                          "
-                        >
-                          {customer.company}
-                        </p>
-
-                      )}
-
-                    </div>
+                    )}
 
                   </div>
 
-                  {/* Right */}
+                  {/* Arrow */}
 
-                  <span
+                  <ArrowUpRight
+                    size={14}
                     className="
-                      rounded-full
-                      bg-indigo-100
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      text-indigo-700
+                      shrink-0
+                      text-slate-300
+                      transition
+                      group-hover:text-blue-500
                     "
-                  >
-                    New
-                  </span>
+                  />
+                </>
+              );
 
+              return customerId ? (
+                <Link
+                  key={
+                    customerId ??
+                    `${customerName}-${index}`
+                  }
+                  href={`/customers/${customerId}`}
+                  className="
+                    group
+                    flex
+                    items-center
+                    gap-3
+                    px-5
+                    py-3.5
+                    transition
+                    hover:bg-blue-50/40
+                  "
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div
+                  key={`${customerName}-${index}`}
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    px-5
+                    py-3.5
+                  "
+                >
+                  {content}
                 </div>
+              );
+            }
+          )}
 
-              ))}
-
-          </div>
-
-        )}
-
-      </div>
+        </div>
+      )}
 
     </div>
   );

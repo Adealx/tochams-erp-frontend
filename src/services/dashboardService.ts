@@ -5,6 +5,10 @@ import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
 import { getProfitAndLoss } from "@/services/accountingService";
 
+// ============================================================
+// TYPES
+// ============================================================
+
 export interface DashboardStats {
   customers: number;
   products: number;
@@ -37,6 +41,10 @@ export interface DashboardData {
   customers: any[];
 }
 
+// ============================================================
+// DASHBOARD SERVICE
+// ============================================================
+
 export async function getDashboardData(): Promise<DashboardData> {
   const results = await Promise.allSettled([
     getCustomers(),
@@ -47,9 +55,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     getProfitAndLoss(),
   ]);
 
-  // =========================================================
+  // ==========================================================
   // CUSTOMERS
-  // =========================================================
+  // ==========================================================
 
   const customers =
     results[0].status === "fulfilled"
@@ -63,9 +71,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
+  // ==========================================================
   // INVOICES
-  // =========================================================
+  // ==========================================================
 
   const invoices =
     results[1].status === "fulfilled"
@@ -79,9 +87,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
+  // ==========================================================
   // PAYMENTS
-  // =========================================================
+  // ==========================================================
 
   const payments =
     results[2].status === "fulfilled"
@@ -95,9 +103,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
+  // ==========================================================
   // PRODUCTS
-  // =========================================================
+  // ==========================================================
 
   const products =
     results[3].status === "fulfilled"
@@ -111,9 +119,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
+  // ==========================================================
   // ORDERS
-  // =========================================================
+  // ==========================================================
 
   const orders =
     results[4].status === "fulfilled"
@@ -127,9 +135,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
+  // ==========================================================
   // PROFIT & LOSS
-  // =========================================================
+  // ==========================================================
 
   const pnl =
     results[5].status === "fulfilled"
@@ -143,9 +151,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     );
   }
 
-  // =========================================================
-  // INVENTORY / OPERATIONAL CALCULATIONS
-  // =========================================================
+  // ==========================================================
+  // INVENTORY VALUES
+  // ==========================================================
 
   const storeValue = products.reduce(
     (sum: number, product: any) =>
@@ -165,9 +173,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     0
   );
 
-  // =========================================================
-  // PAYMENT / RECEIVABLE CALCULATIONS
-  // =========================================================
+  // ==========================================================
+  // PAYMENTS / RECEIVABLES
+  // ==========================================================
 
   const totalPayments = payments.reduce(
     (sum: number, payment: any) =>
@@ -175,40 +183,33 @@ export async function getDashboardData(): Promise<DashboardData> {
     0
   );
 
-  const totalInvoices = invoices.reduce(
+  const outstanding = invoices.reduce(
     (sum: number, invoice: any) =>
-      sum + Number(invoice.amount || 0),
+      sum + Number(invoice.balance_due || 0),
     0
   );
 
-  const outstanding =
-    invoices.reduce(
-      (sum: number, invoice: any) =>
-        sum + Number(invoice.balance_due || 0),
-      0
-    );
-
-  // =========================================================
-  // INVENTORY ALERTS
-  // =========================================================
+  // ==========================================================
+  // LOW STOCK
+  // ==========================================================
 
   const alerts = products.filter(
     (product: any) =>
       Number(product.stock_quantity) <= 10
   );
 
-  // =========================================================
+  // ==========================================================
   // PENDING ORDERS
-  // =========================================================
+  // ==========================================================
 
   const pendingOrders = orders.filter(
     (order: any) =>
       order.status === "Pending"
   ).length;
 
-  // =========================================================
-  // INVOICE STATUS CHART
-  // =========================================================
+  // ==========================================================
+  // INVOICE STATUS
+  // ==========================================================
 
   const invoiceChart: InvoiceChartItem[] = [
     {
@@ -218,7 +219,6 @@ export async function getDashboardData(): Promise<DashboardData> {
           invoice.invoice_status === "Paid"
       ).length,
     },
-
     {
       name: "Pending",
       value: invoices.filter(
@@ -226,7 +226,6 @@ export async function getDashboardData(): Promise<DashboardData> {
           invoice.invoice_status === "Pending"
       ).length,
     },
-
     {
       name: "Partially Paid",
       value: invoices.filter(
@@ -234,7 +233,6 @@ export async function getDashboardData(): Promise<DashboardData> {
           invoice.invoice_status === "Partially Paid"
       ).length,
     },
-
     {
       name: "Overdue",
       value: invoices.filter(
@@ -244,24 +242,31 @@ export async function getDashboardData(): Promise<DashboardData> {
     },
   ];
 
-  // =========================================================
-  // ACCOUNTING FINANCIAL VALUES
-  // =========================================================
+  // ==========================================================
+  // ACCOUNTING SOURCE OF TRUTH
+  // ==========================================================
   //
-  // These values come directly from the backend P&L.
+  // Financial values come from the backend P&L.
   //
-  // Do NOT calculate them from invoices, payments or
-  // expenses on the frontend.
+  // Dashboard does NOT calculate:
   //
-  // This keeps the dashboard synchronized with:
+  // Revenue
+  // Expenses
+  // Net Profit
   //
-  //     Accounting
-  //          ↓
-  //        P&L
-  //          ↓
-  //      Dashboard
+  // from invoices/payments/expenses.
   //
-  // =========================================================
+  // Accounting remains:
+  //
+  // Journal
+  //    ↓
+  // Ledger
+  //    ↓
+  // P&L
+  //    ↓
+  // Dashboard
+  //
+  // ==========================================================
 
   const revenue = pnl
     ? Number(pnl.total_revenue || 0)
@@ -275,9 +280,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     ? Number(pnl.net_profit || 0)
     : 0;
 
-  // =========================================================
-  // RETURN DASHBOARD DATA
-  // =========================================================
+  // ==========================================================
+  // RETURN
+  // ==========================================================
 
   return {
     stats: {

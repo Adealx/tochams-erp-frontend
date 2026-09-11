@@ -18,76 +18,70 @@ interface FinancialOverviewProps {
   };
 }
 
+function formatCurrency(value: number) {
+  return `₦${Number(value || 0).toLocaleString("en-NG")}`;
+}
+
 export default function FinancialOverview({
   stats,
 }: FinancialOverviewProps) {
   return (
-    <section className="space-y-5">
+    <div
+      className="
+        grid
+        grid-cols-1
+        gap-4
+        sm:grid-cols-2
+        xl:grid-cols-4
+      "
+    >
+      {/* =====================================================
+          REVENUE
+      ====================================================== */}
 
-      <div>
+      <StatCard
+        title="Revenue"
+        value={formatCurrency(stats.revenue)}
+        icon={<TrendingUp size={21} />}
+        color="green"
+        description="Posted sales revenue"
+      />
 
-        <h2 className="text-xl font-bold text-slate-900">
-          Financial Overview
-        </h2>
+      {/* =====================================================
+          EXPENSES
+      ====================================================== */}
 
-        <p className="text-sm text-slate-500">
-          Current accounting performance and receivables
-        </p>
+      <StatCard
+        title="Expenses"
+        value={formatCurrency(stats.expenses)}
+        icon={<TrendingDown size={21} />}
+        color="red"
+        description="Posted and reversed accounting activity"
+      />
 
-      </div>
+      {/* =====================================================
+          NET PROFIT
+      ====================================================== */}
 
-      <div
-        className="
-          grid
-          grid-cols-1
-          sm:grid-cols-2
-          xl:grid-cols-4
-          gap-7
-        "
-      >
+      <StatCard
+        title="Net Profit"
+        value={formatCurrency(stats.netProfit)}
+        icon={<BadgeDollarSign size={21} />}
+        color="amber"
+        description="Revenue less expenses"
+      />
 
-        {/* Revenue */}
+      {/* =====================================================
+          OUTSTANDING
+      ====================================================== */}
 
-        <StatCard
-          title="Revenue"
-          value={`₦${stats.revenue.toLocaleString()}`}
-          icon={<TrendingUp size={22} />}
-          color="green"
-          description="Posted sales revenue"
-        />
-
-        {/* Expenses */}
-
-        <StatCard
-          title="Expenses"
-          value={`₦${stats.expenses.toLocaleString()}`}
-          icon={<TrendingDown size={22} />}
-          color="red"
-          description="Posted and reversed accounting activity"
-        />
-
-        {/* Net Profit */}
-
-        <StatCard
-          title="Net Profit"
-          value={`₦${stats.netProfit.toLocaleString()}`}
-          icon={<BadgeDollarSign size={22} />}
-          color="amber"
-          description="Revenue less expenses"
-        />
-
-        {/* Outstanding */}
-
-        <StatCard
-          title="Outstanding"
-          value={`₦${stats.outstanding.toLocaleString()}`}
-          icon={<CircleDollarSign size={22} />}
-          color="red"
-          description="Customer balances"
-        />
-
-      </div>
-
-    </section>
+      <StatCard
+        title="Outstanding"
+        value={formatCurrency(stats.outstanding)}
+        icon={<CircleDollarSign size={21} />}
+        color="red"
+        description="Customer receivable balances"
+      />
+    </div>
   );
 }

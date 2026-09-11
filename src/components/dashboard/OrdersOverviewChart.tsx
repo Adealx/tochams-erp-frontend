@@ -1,21 +1,13 @@
 "use client";
 
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Cell,
-} from "recharts";
-
-import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
   ShoppingCart,
 } from "lucide-react";
 
-interface Props {
+interface OrdersOverviewChartProps {
   totalOrders: number;
   pendingOrders: number;
 }
@@ -23,55 +15,66 @@ interface Props {
 export default function OrdersOverviewChart({
   totalOrders,
   pendingOrders,
-}: Props) {
-  const completedOrders =
-    Math.max(totalOrders - pendingOrders, 0);
+}: OrdersOverviewChartProps) {
+  const completedOrders = Math.max(
+    totalOrders - pendingOrders,
+    0
+  );
 
-  const chartData = [
-    {
-      name: "Completed",
-      value: completedOrders,
-      color: "#22c55e",
-    },
-    {
-      name: "Pending",
-      value: pendingOrders,
-      color: "#f59e0b",
-    },
-  ];
+  const completionRate =
+    totalOrders > 0
+      ? Math.round(
+          (completedOrders / totalOrders) * 100
+        )
+      : 0;
 
   return (
     <div
       className="
+        relative
         overflow-hidden
-        rounded-[20px]
+        rounded-[22px]
         border
         border-slate-200
         bg-white
-        shadow-[0_6px_20px_rgba(15,23,42,.035)]
+        shadow-[0_8px_30px_rgba(15,23,42,0.05)]
       "
     >
-      {/* Header */}
+
+      {/* Decorative gradient */}
 
       <div
         className="
-          flex
-          items-center
-          justify-between
-          border-b
-          border-slate-100
-          px-6
-          py-5
+          pointer-events-none
+          absolute
+          -right-24
+          -top-24
+          h-64
+          w-64
+          rounded-full
+          bg-blue-100/50
+          blur-3xl
         "
-      >
+      />
+
+      {/* Header */}
+
+      <div className="relative z-10 flex items-center justify-between border-b border-slate-100 px-5 py-5">
+
         <div>
 
-          <h2 className="text-lg font-bold text-slate-900">
-            Orders Overview
-          </h2>
+          <div className="flex items-center gap-2">
 
-          <p className="text-sm text-slate-500">
-            Current order fulfillment status
+            <div className="h-6 w-1 rounded-full bg-violet-500" />
+
+            <h3 className="text-sm font-black text-slate-900">
+              Orders Overview
+            </h3>
+
+          </div>
+
+          <p className="mt-1 text-[11px] text-slate-500">
+            Current order fulfillment performance
           </p>
 
         </div>
@@ -79,128 +82,164 @@ export default function OrdersOverviewChart({
         <div
           className="
             flex
-            h-11
-            w-11
+            h-9
+            w-9
             items-center
             justify-center
             rounded-xl
-            bg-purple-50
-            text-purple-600
+            bg-violet-50
+            text-violet-600
           "
         >
-          <ShoppingCart size={20} />
+          <ShoppingCart size={17} />
         </div>
 
       </div>
 
-      {/* Chart */}
+      {/* Body */}
 
-      <div className="h-[320px] w-full min-w-0 px-5 py-4">
+      <div className="relative z-10 p-6">
 
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-        >
+        {/* Main KPI */}
 
-          <BarChart
-            data={chartData}
-            margin={{
-              top: 10,
-              right: 10,
-              left: -20,
-              bottom: 0,
-            }}
+        <div className="flex items-end justify-between">
+
+          <div>
+
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Completion Rate
+            </p>
+
+            <p className="mt-2 text-4xl font-black tracking-[-0.04em] text-slate-950">
+              {completionRate}%
+            </p>
+
+          </div>
+
+          <div className="text-right">
+
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Total Orders
+            </p>
+
+            <p className="mt-1 text-xl font-black text-slate-900">
+              {totalOrders}
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* Progress */}
+
+        <div className="mt-6">
+
+          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+
+            <div
+              className="
+                h-full
+                rounded-full
+                bg-gradient-to-r
+                from-blue-600
+                to-cyan-400
+                transition-all
+                duration-700
+              "
+              style={{
+                width: `${completionRate}%`,
+              }}
+            />
+
+          </div>
+
+        </div>
+
+        {/* Status cards */}
+
+        <div className="mt-7 grid grid-cols-2 gap-3">
+
+          <div
+            className="
+              rounded-2xl
+              border
+              border-emerald-100
+              bg-emerald-50/60
+              p-4
+            "
           >
 
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#e5e7eb"
-            />
+            <div className="flex items-center gap-2">
 
-            <XAxis
-              dataKey="name"
-              tick={{
-                fontSize: 13,
-              }}
-              axisLine={false}
-              tickLine={false}
-            />
+              <CheckCircle2
+                size={16}
+                className="text-emerald-600"
+              />
 
-            <YAxis
-              allowDecimals={false}
-              axisLine={false}
-              tickLine={false}
-            />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                Processed
+              </span>
 
-            <Tooltip
-              cursor={{
-                fill: "#f8fafc",
-              }}
-            />
+            </div>
 
-            <Bar
-              dataKey="value"
-              radius={[10, 10, 0, 0]}
-              maxBarSize={70}
-            >
+            <p className="mt-3 text-2xl font-black text-slate-900">
+              {completedOrders}
+            </p>
 
-              {chartData.map((entry, index) => (
+          </div>
 
-                <Cell
-                  key={index}
-                  fill={entry.color}
-                />
+          <div
+            className="
+              rounded-2xl
+              border
+              border-amber-100
+              bg-amber-50/60
+              p-4
+            "
+          >
 
-              ))}
+            <div className="flex items-center gap-2">
 
-            </Bar>
+              <Clock3
+                size={16}
+                className="text-amber-600"
+              />
 
-          </BarChart>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                Pending
+              </span>
 
-        </ResponsiveContainer>
+            </div>
 
-      </div>
+            <p className="mt-3 text-2xl font-black text-slate-900">
+              {pendingOrders}
+            </p>
 
-      {/* Footer */}
-
-      <div
-        className="
-          grid
-          grid-cols-2
-          border-t
-          border-slate-100
-        "
-      >
-
-        <div className="px-6 py-4">
-
-          <p className="text-sm text-slate-500">
-            Total Orders
-          </p>
-
-          <h3 className="mt-1 text-2xl font-bold text-slate-900">
-            {totalOrders}
-          </h3>
+          </div>
 
         </div>
 
-        <div
-          className="
-            border-l
-            border-slate-100
-            px-6
-            py-4
-          "
-        >
+        {/* Pipeline */}
 
-          <p className="text-sm text-slate-500">
-            Pending
-          </p>
+        <div className="mt-6 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
 
-          <h3 className="mt-1 text-2xl font-bold text-amber-600">
-            {pendingOrders}
-          </h3>
+          <span className="text-[10px] font-bold text-slate-500">
+            Order pipeline
+          </span>
+
+          <div className="flex items-center gap-2 text-[10px] font-bold text-blue-600">
+
+            Received
+
+            <ArrowRight size={12} />
+
+            Fulfillment
+
+            <ArrowRight size={12} />
+
+            Completed
+
+          </div>
 
         </div>
 

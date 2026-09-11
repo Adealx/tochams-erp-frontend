@@ -1,33 +1,46 @@
 ﻿"use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSidebar } from "@/context/SidebarContext";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 
 import {
   LayoutDashboard,
   Users,
   ShoppingCart,
-  Package,
-  ClipboardList,
-  Receipt,
+  FileText,
   CreditCard,
-  ReceiptText,
-  Truck,
+  Package,
+  Building2,
   Warehouse,
   Calculator,
-  Table2,
+  Receipt,
+  ClipboardList,
   BarChart3,
+  UserCog,
   Settings,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 
-const menuGroups = [
+interface NavigationItem {
+  label: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+interface NavigationGroup {
+  title: string;
+  items: NavigationItem[];
+}
+
+const navigationGroups: NavigationGroup[] = [
   {
-    title: "Dashboard",
+    title: "Overview",
     items: [
       {
-        title: "Dashboard",
+        label: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
       },
@@ -35,25 +48,25 @@ const menuGroups = [
   },
 
   {
-    title: "Sales",
+    title: "Sales & Distribution",
     items: [
       {
-        title: "Customers",
+        label: "Customers",
         href: "/customers",
         icon: Users,
       },
       {
-        title: "Sales Orders",
+        label: "Sales Orders",
         href: "/sales-orders",
         icon: ShoppingCart,
       },
       {
-        title: "Invoices",
+        label: "Invoices",
         href: "/invoices",
-        icon: Receipt,
+        icon: FileText,
       },
       {
-        title: "Payments",
+        label: "Payments",
         href: "/payments",
         icon: CreditCard,
       },
@@ -64,19 +77,19 @@ const menuGroups = [
     title: "Inventory",
     items: [
       {
-        title: "Inventory",
+        label: "Inventory",
         href: "/inventory",
         icon: Package,
       },
       {
-        title: "Procurement",
+        label: "Procurement",
         href: "/procurement",
-        icon: ClipboardList,
+        icon: ShoppingCart,
       },
       {
-        title: "Vendors",
+        label: "Vendors",
         href: "/vendors",
-        icon: Truck,
+        icon: Building2,
       },
     ],
   },
@@ -85,7 +98,7 @@ const menuGroups = [
     title: "Operations",
     items: [
       {
-        title: "Warehouse",
+        label: "Warehouse",
         href: "/warehouse",
         icon: Warehouse,
       },
@@ -96,19 +109,19 @@ const menuGroups = [
     title: "Finance",
     items: [
       {
-        title: "Accounting",
+        label: "Accounting",
         href: "/accounting",
         icon: Calculator,
       },
       {
-        title: "Expenses",
+        label: "Expenses",
         href: "/expenses",
-        icon: ReceiptText,
+        icon: Receipt,
       },
       {
-        title: "Transaction Tracker",
+        label: "Transaction Tracker",
         href: "/transaction-tracker",
-        icon: Table2,
+        icon: ClipboardList,
       },
     ],
   },
@@ -117,7 +130,7 @@ const menuGroups = [
     title: "Analytics",
     items: [
       {
-        title: "Reports",
+        label: "Reports",
         href: "/reports",
         icon: BarChart3,
       },
@@ -128,12 +141,12 @@ const menuGroups = [
     title: "Administration",
     items: [
       {
-        title: "Users",
+        label: "Users",
         href: "/users",
-        icon: Users,
+        icon: UserCog,
       },
       {
-        title: "Settings",
+        label: "Settings",
         href: "/settings",
         icon: Settings,
       },
@@ -143,194 +156,526 @@ const menuGroups = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { collapsed } = useSidebar();
-  const { user, loading } = useAuth();
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  /*
+   * Restore saved sidebar state.
+   */
+  useEffect(() => {
+    const savedState = window.localStorage.getItem(
+      "tochams-sidebar-collapsed"
+    );
+
+    if (savedState === "true") {
+      setCollapsed(true);
+    }
+  }, []);
+
+  /*
+   * Toggle and persist sidebar state.
+   */
+  function toggleSidebar() {
+    setCollapsed((current) => {
+      const next = !current;
+
+      window.localStorage.setItem(
+        "tochams-sidebar-collapsed",
+        String(next)
+      );
+
+      return next;
+    });
+  }
+
+  function isActive(href: string) {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+  }
 
   return (
     <aside
       className={`
+        relative
         flex
+        h-screen
+        shrink-0
         flex-col
-        bg-[#0f172a]
+        border-r
+        border-slate-800/70
+        bg-[#071633]
         text-white
-        transition-all
+        transition-[width]
         duration-300
-        ${collapsed ? "w-20" : "w-72"}
+        ease-in-out
+        ${collapsed ? "w-[76px]" : "w-[260px]"}
       `}
     >
-      {/* Logo */}
+      {/* =====================================================
+          BRAND
+      ====================================================== */}
 
       <div
-        className="
-          flex
-          h-20
+        className={`
+          relative
           shrink-0
-          items-center
           border-b
-          border-slate-700
-          px-8
-        "
+          border-white/[0.07]
+          transition-all
+          duration-300
+          ${collapsed ? "px-3 py-5" : "px-5 py-5"}
+        `}
       >
-        {collapsed ? (
-          <h1 className="mx-auto text-2xl font-bold">
-            T
-          </h1>
-        ) : (
-          <div>
-            <h1 className="text-2xl font-bold">
-              TOCHAMS
-            </h1>
+        {/* Decorative glow */}
 
-            <p className="text-xs text-slate-400">
-              Enterprise ERP
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-12
+            -top-12
+            h-32
+            w-32
+            rounded-full
+            bg-blue-500/10
+            blur-3xl
+          "
+        />
+
+        <Link
+          href="/dashboard"
+          title={collapsed ? "TOCHAMS ERP" : undefined}
+          className={`
+            relative
+            flex
+            min-w-0
+            items-center
+            transition-all
+            duration-300
+            ${collapsed ? "justify-center" : "gap-3"}
+          `}
+        >
+          {/* Logo */}
+
+          <div
+            className="
+              flex
+              h-11
+              w-11
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-white/10
+              bg-white
+              shadow-[0_8px_25px_rgba(0,0,0,0.20)]
+            "
+          >
+            <Image
+              src="/logo/tochams-logo.png"
+              alt="TOCHAMS"
+              width={36}
+              height={36}
+              priority
+              className="h-8 w-8 object-contain"
+            />
+          </div>
+
+          {/* Brand text */}
+
+          <div
+            className={`
+              min-w-0
+              overflow-hidden
+              whitespace-nowrap
+              transition-all
+              duration-300
+              ${
+                collapsed
+                  ? "w-0 opacity-0"
+                  : "w-auto opacity-100"
+              }
+            `}
+          >
+            <p
+              className="
+                truncate
+                text-sm
+                font-black
+                tracking-tight
+                text-white
+              "
+            >
+              TOCHAMS ERP
+            </p>
+
+            <p
+              className="
+                mt-0.5
+                truncate
+                text-[9px]
+                font-medium
+                uppercase
+                tracking-[0.14em]
+                text-blue-300/60
+              "
+            >
+              Enterprise Platform
             </p>
           </div>
-        )}
+        </Link>
+
+        {/* =================================================
+            COLLAPSE BUTTON
+        ================================================== */}
+
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={
+            collapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar"
+          }
+          title={
+            collapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar"
+          }
+          className="
+            absolute
+            right-2
+            top-1/2
+            z-30
+            flex
+            h-7
+            w-7
+            -translate-y-1/2
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-slate-700
+            bg-[#0b2147]
+            text-slate-400
+            shadow-lg
+            transition-all
+            duration-200
+            hover:border-blue-400/40
+            hover:bg-blue-600
+            hover:text-white
+            focus:outline-none
+            focus:ring-2
+            focus:ring-blue-400/40
+          "
+        >
+          {collapsed ? (
+            <ChevronRight
+              size={14}
+              strokeWidth={2.5}
+            />
+          ) : (
+            <ChevronLeft
+              size={14}
+              strokeWidth={2.5}
+            />
+          )}
+        </button>
       </div>
 
-      {/* Navigation */}
+      {/* =====================================================
+          NAVIGATION
+      ====================================================== */}
 
       <nav
         className="
+          min-h-0
           flex-1
+          overflow-x-hidden
           overflow-y-auto
-          px-4
-          py-6
+          px-3
+          py-4
+          scrollbar-thin
+          scrollbar-thumb-white/10
         "
       >
-        {menuGroups.map((group) => (
-          <div
-            key={group.title}
-            className="mb-6"
-          >
-            {!collapsed && (
-              <p
-                className="
+        <div className="space-y-5">
+          {navigationGroups.map((group) => (
+            <div key={group.title}>
+              {/* Group heading */}
+
+              <div
+                className={`
                   mb-2
-                  px-4
-                  text-xs
-                  font-semibold
+                  overflow-hidden
+                  whitespace-nowrap
+                  px-3
+                  text-[9px]
+                  font-black
                   uppercase
-                  tracking-wider
+                  tracking-[0.17em]
                   text-slate-500
-                "
+                  transition-all
+                  duration-300
+                  ${
+                    collapsed
+                      ? "h-0 opacity-0"
+                      : "h-auto opacity-100"
+                  }
+                `}
               >
                 {group.title}
-              </p>
-            )}
+              </div>
 
-            <div className="space-y-2">
-              {group.items.map((item) => {
-                const Icon = item.icon;
+              {/* Navigation items */}
 
-                const active =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={collapsed ? item.title : undefined}
-                    className={`
-                      flex
-                      items-center
-                      gap-4
-                      rounded-xl
-                      px-4
-                      py-3
-                      transition-all
-                      duration-200
-
-                      ${
-                        active
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={
+                        collapsed
+                          ? item.label
+                          : undefined
                       }
+                      className={`
+                        group
+                        relative
+                        flex
+                        min-w-0
+                        items-center
+                        rounded-xl
+                        transition-all
+                        duration-200
 
-                      ${collapsed ? "justify-center" : ""}
-                    `}
-                  >
-                    <Icon
-                      size={20}
-                      className="shrink-0"
-                    />
+                        ${
+                          collapsed
+                            ? "justify-center px-2.5 py-2.5"
+                            : "gap-3 px-3 py-2.5"
+                        }
 
-                    {!collapsed && (
-                      <span className="font-medium">
-                        {item.title}
+                        ${
+                          active
+                            ? `
+                              bg-blue-600/15
+                              text-white
+                              shadow-[inset_0_0_0_1px_rgba(96,165,250,0.10)]
+                            `
+                            : `
+                              text-slate-400
+                              hover:bg-white/[0.045]
+                              hover:text-white
+                            `
+                        }
+                      `}
+                    >
+                      {/* Active indicator */}
+
+                      {active && (
+                        <span
+                          className="
+                            absolute
+                            left-0
+                            top-1/2
+                            h-6
+                            w-[3px]
+                            -translate-y-1/2
+                            rounded-r-full
+                            bg-gradient-to-b
+                            from-cyan-300
+                            to-blue-500
+                          "
+                        />
+                      )}
+
+                      {/* Icon */}
+
+                      <span
+                        className={`
+                          flex
+                          h-8
+                          w-8
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-lg
+                          transition-all
+                          duration-200
+
+                          ${
+                            active
+                              ? "bg-blue-500/15 text-cyan-300"
+                              : "text-slate-500 group-hover:bg-white/[0.05] group-hover:text-blue-300"
+                          }
+                        `}
+                      >
+                        <Icon
+                          size={16}
+                          strokeWidth={1.9}
+                        />
                       </span>
-                    )}
-                  </Link>
-                );
-              })}
+
+                      {/* Label */}
+
+                      <span
+                        className={`
+                          min-w-0
+                          overflow-hidden
+                          whitespace-nowrap
+                          truncate
+                          text-[12px]
+                          transition-all
+                          duration-300
+                          ${
+                            active
+                              ? "font-bold"
+                              : "font-medium"
+                          }
+                          ${
+                            collapsed
+                              ? "w-0 flex-none opacity-0"
+                              : "w-auto flex-1 opacity-100"
+                          }
+                        `}
+                      >
+                        {item.label}
+                      </span>
+
+                      {/* Active arrow */}
+
+                      {active && !collapsed && (
+                        <ChevronRight
+                          size={14}
+                          className="
+                            shrink-0
+                            text-blue-300
+                          "
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </nav>
 
-      {/* Authenticated User */}
+      {/* =====================================================
+          SYSTEM STATUS
+      ====================================================== */}
 
       <div
-        className="
+        className={`
           shrink-0
           border-t
-          border-slate-700
-          p-5
-        "
+          border-white/[0.07]
+          transition-all
+          duration-300
+          ${collapsed ? "px-3 py-3" : "px-4 py-3"}
+        `}
       >
-        {collapsed ? (
-          <div className="flex justify-center">
-            <div
+        <div
+          title={
+            collapsed
+              ? "System Operational"
+              : undefined
+          }
+          className={`
+            flex
+            items-center
+            rounded-xl
+            border
+            border-emerald-400/10
+            bg-emerald-400/[0.045]
+            transition-all
+            duration-300
+            ${
+              collapsed
+                ? "justify-center px-2 py-3"
+                : "gap-3 px-3 py-2.5"
+            }
+          `}
+        >
+          {/* Status indicator */}
+
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span
               className="
-                flex
-                h-10
-                w-10
-                items-center
-                justify-center
+                absolute
+                inline-flex
+                h-full
+                w-full
+                animate-ping
                 rounded-full
-                bg-blue-600
-                text-sm
+                bg-emerald-400
+                opacity-50
+              "
+            />
+
+            <span
+              className="
+                relative
+                inline-flex
+                h-2
+                w-2
+                rounded-full
+                bg-emerald-400
+              "
+            />
+          </span>
+
+          {/* Status text */}
+
+          <div
+            className={`
+              min-w-0
+              overflow-hidden
+              whitespace-nowrap
+              transition-all
+              duration-300
+              ${
+                collapsed
+                  ? "w-0 opacity-0"
+                  : "w-auto opacity-100"
+              }
+            `}
+          >
+            <p
+              className="
+                text-[9px]
                 font-bold
+                uppercase
+                tracking-wider
+                text-emerald-300
               "
             >
-              {user?.username?.charAt(0).toUpperCase() || "U"}
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl bg-slate-900 p-3">
-            <div className="flex items-center gap-3">
-              <div
-                className="
-                  flex
-                  h-10
-                  w-10
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-blue-600
-                  text-sm
-                  font-bold
-                "
-              >
-                {user?.username?.charAt(0).toUpperCase() || "U"}
-              </div>
+              System Operational
+            </p>
 
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white">
-                  {loading
-                    ? "Loading..."
-                    : user?.username || "User"}
-                </p>
-
-                <p className="truncate text-xs capitalize text-slate-400">
-                  {user?.role?.replace("_", " ") || ""}
-                </p>
-              </div>
-            </div>
+            <p
+              className="
+                mt-0.5
+                text-[8px]
+                text-slate-500
+              "
+            >
+              TOCHAMS ERP v1.0.0
+            </p>
           </div>
-        )}
+        </div>
       </div>
     </aside>
   );
