@@ -20,6 +20,7 @@ import {
   BarChart3,
   UserCog,
   Settings,
+  Clock3,
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
@@ -144,6 +145,11 @@ const navigationGroups: NavigationGroup[] = [
         label: "Users",
         href: "/users",
         icon: UserCog,
+      },
+      {
+        label: "Attendance",
+        href: "/attendance",
+        icon: Clock3,
       },
       {
         label: "Settings",
