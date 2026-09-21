@@ -2,103 +2,134 @@
 
 import { useEffect, useState } from "react";
 import {
-    getSalesReport,
-    SalesReport,
+  CircleDollarSign,
+  FileCheck2,
+  FileClock,
+  ShoppingCart,
+  TrendingUp,
+} from "lucide-react";
+
+import {
+  getSalesReport,
+  SalesReport,
 } from "@/services/reportService";
 
+import ReportCard from "./ReportCard";
+
 export default function SalesSummary() {
-    const [report, setReport] = useState<SalesReport | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+  const [report, setReport] =
+    useState<SalesReport | null>(null);
 
-    useEffect(() => {
-        async function loadReport() {
-            try {
-                const data = await getSalesReport();
-                setReport(data);
-            } catch {
-                setError("Failed to load Sales Report");
-            } finally {
-                setLoading(false);
-            }
-        }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-        loadReport();
-    }, []);
-
-    const money = (value: number) =>
-        new Intl.NumberFormat("en-NG", {
-            style: "currency",
-            currency: "NGN",
-        }).format(value);
-
-    if (loading) {
-        return (
-            <div className="bg-white rounded-xl shadow p-6 mt-6">
-                Loading Sales Report...
-            </div>
-        );
+  useEffect(() => {
+    async function loadReport() {
+      try {
+        const data = await getSalesReport();
+        setReport(data);
+      } catch {
+        setError("Failed to load Sales Report");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (error) {
-        return (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6 mt-6">
-                {error}
-            </div>
-        );
-    }
+    loadReport();
+  }, []);
 
-    if (!report) return null;
+  const money = (value: number) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(value);
 
-    const cards = [
-        {
-            title: "Total Sales",
-            value: money(report.total_sales),
-        },
-        {
-            title: "Orders",
-            value: report.total_orders,
-        },
-        {
-            title: "Average Sale",
-            value: money(report.average_sale),
-        },
-        {
-            title: "Paid Invoices",
-            value: report.paid_invoices,
-        },
-        {
-            title: "Pending Invoices",
-            value: report.pending_invoices,
-        },
-        {
-            title: "Outstanding Amount",
-            value: money(report.outstanding_amount),
-        },
-    ];
-
+  if (loading) {
     return (
-        <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">
-                Sales Report
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {cards.map((card) => (
-                    <div
-                        key={card.title}
-                        className="bg-white rounded-xl shadow p-5"
-                    >
-                        <p className="text-gray-500 text-sm">
-                            {card.title}
-                        </p>
-
-                        <h3 className="text-2xl font-bold mt-2">
-                            {card.value}
-                        </h3>
-                    </div>
-                ))}
-            </div>
-        </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+        <p className="text-sm font-semibold text-slate-500">
+          Loading Sales Report...
+        </p>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (!report) return null;
+
+  const cards = [
+    {
+      title: "Total Sales",
+      value: money(report.total_sales),
+      subtitle: "Recorded sales value",
+      icon: <CircleDollarSign size={19} />,
+    },
+    {
+      title: "Orders",
+      value: report.total_orders,
+      subtitle: "Total sales orders",
+      icon: <ShoppingCart size={19} />,
+    },
+    {
+      title: "Average Sale",
+      value: money(report.average_sale),
+      subtitle: "Average order value",
+      icon: <TrendingUp size={19} />,
+    },
+    {
+      title: "Paid Invoices",
+      value: report.paid_invoices,
+      subtitle: "Fully settled invoices",
+      icon: <FileCheck2 size={19} />,
+    },
+    {
+      title: "Pending Invoices",
+      value: report.pending_invoices,
+      subtitle: "Awaiting payment",
+      icon: <FileClock size={19} />,
+    },
+    {
+      title: "Outstanding Amount",
+      value: money(report.outstanding_amount),
+      subtitle: "Receivable balance",
+      icon: <CircleDollarSign size={19} />,
+    },
+  ];
+
+  return (
+    <section className="space-y-5">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-500">
+          Sales Intelligence
+        </p>
+
+        <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">
+          Sales Report
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Revenue, order and invoice performance.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {cards.map((card) => (
+          <ReportCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            subtitle={card.subtitle}
+            icon={card.icon}
+          />
+        ))}
+      </div>
+    </section>
+  );
 }
