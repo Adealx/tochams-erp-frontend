@@ -428,9 +428,9 @@ export default function AttendancePage() {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              gps_accuracy: position.coords.accuracy,
+              latitude: Number(position.coords.latitude.toFixed(6)),
+              longitude: Number(position.coords.longitude.toFixed(6)),
+              gps_accuracy: Number(position.coords.accuracy.toFixed(2)),
             });
           },
           () => {
