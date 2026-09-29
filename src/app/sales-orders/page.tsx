@@ -34,6 +34,7 @@ interface SalesOrder {
 interface Customer {
   id: number;
   name: string;
+  is_active: boolean;
 }
 
 interface Product {
@@ -62,9 +63,7 @@ const createEmptyItem = (): OrderItemForm => ({
   price_type: "Retail",
 });
 
-const formatNaira = (
-  value: number | string
-) => {
+const formatNaira = (value: number | string) => {
   const amount = Number(value || 0);
 
   return `₦${amount.toLocaleString("en-NG", {
@@ -76,35 +75,22 @@ const formatNaira = (
 const formatDate = (value: string) => {
   if (!value) return "—";
 
-  return new Date(value).toLocaleDateString(
-    "en-NG",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  );
+  return new Date(value).toLocaleDateString("en-NG", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
-const getErrorMessage = (
-  error: any,
-  fallback: string
-) => {
+const getErrorMessage = (error: any, fallback: string) => {
   const data = error?.response?.data;
 
   if (!data) return fallback;
 
-  if (typeof data === "string") {
-    return data;
-  }
+  if (typeof data === "string") return data;
 
-  if (data.error) {
-    return data.error;
-  }
-
-  if (data.detail) {
-    return data.detail;
-  }
+  if (data.error) return data.error;
+  if (data.detail) return data.detail;
 
   if (data.quantity) {
     return Array.isArray(data.quantity)
@@ -130,74 +116,42 @@ const getErrorMessage = (
 export default function SalesOrdersPage() {
   const { user } = useAuth();
 
-  const [orders, setOrders] =
-    useState<SalesOrder[]>([]);
+  const [orders, setOrders] = useState<SalesOrder[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const [customers, setCustomers] =
-    useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [products, setProducts] =
-    useState<Product[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [statusFilter, setStatusFilter] =
-    useState("All");
-
-  /*
-   * The create form stays on the Sales Orders page.
-   * New Order simply scrolls the user to it.
-   */
-  const [showCreateForm, setShowCreateForm] =
-    useState(true);
-
+  const [showCreateForm, setShowCreateForm] = useState(true);
   const [editingOrder, setEditingOrder] =
     useState<SalesOrder | null>(null);
 
-  /*
-   * Stores the IDs of orders whose product
-   * lists are currently expanded.
-   */
   const [expandedOrders, setExpandedOrders] =
-    useState<Set<number>>(
-      new Set()
-    );
+    useState<Set<number>>(new Set());
 
-  const [formData, setFormData] =
-    useState({
-      customer: "",
-      remarks: "",
-    });
+  const [formData, setFormData] = useState({
+    customer: "",
+    remarks: "",
+  });
 
-  const [items, setItems] =
-    useState<OrderItemForm[]>([
-      createEmptyItem(),
-    ]);
+  const [items, setItems] = useState<OrderItemForm[]>([
+    createEmptyItem(),
+  ]);
 
-  /*
-   * --------------------------------------------------
-   * DATA LOADING
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     DATA LOADING
+  ===================================================== */
 
   const loadOrders = async () => {
     try {
-      const response =
-        await api.get("/orders/");
-
+      const response = await api.get("/orders/");
       setOrders(response.data);
     } catch (error: any) {
-      console.error(
-        "Sales Orders Error:",
-        error
-      );
+      console.error("Sales Orders Error:", error);
 
       toast.error(
         getErrorMessage(
@@ -210,29 +164,26 @@ export default function SalesOrdersPage() {
 
   const loadCustomers = async () => {
     try {
-      const response =
-        await api.get("/customers/");
+      /*
+       * We need archived customers here because an existing
+       * Pending order may still belong to one.
+       */
+      const response = await api.get(
+        "/customers/?include_archived=true"
+      );
 
       setCustomers(response.data);
     } catch (error: any) {
-      console.error(
-        "Customers Error:",
-        error
-      );
+      console.error("Customers Error:", error);
     }
   };
 
   const loadProducts = async () => {
     try {
-      const response =
-        await api.get("/products/");
-
+      const response = await api.get("/products/");
       setProducts(response.data);
     } catch (error: any) {
-      console.error(
-        "Products Error:",
-        error
-      );
+      console.error("Products Error:", error);
     }
   };
 
@@ -254,11 +205,35 @@ export default function SalesOrdersPage() {
     loadPage();
   }, []);
 
-  /*
-   * --------------------------------------------------
-   * FORM HELPERS
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     CUSTOMER HELPERS
+  ===================================================== */
+
+  const activeCustomers = useMemo(
+    () =>
+      customers.filter(
+        (customer) => customer.is_active
+      ),
+    [customers]
+  );
+
+  const selectedCustomer = useMemo(
+    () =>
+      customers.find(
+        (customer) =>
+          customer.id === Number(formData.customer)
+      ),
+    [customers, formData.customer]
+  );
+
+  const originalCustomerIsArchived =
+    editingOrder &&
+    editingOrder.customer === Number(formData.customer) &&
+    selectedCustomer?.is_active === false;
+
+  /* =====================================================
+     FORM HELPERS
+  ===================================================== */
 
   const resetForm = () => {
     setFormData({
@@ -266,10 +241,7 @@ export default function SalesOrdersPage() {
       remarks: "",
     });
 
-    setItems([
-      createEmptyItem(),
-    ]);
-
+    setItems([createEmptyItem()]);
     setEditingOrder(null);
   };
 
@@ -286,16 +258,9 @@ export default function SalesOrdersPage() {
     }, 50);
   };
 
-  /*
-   * Support /sales-orders#create-order
-   * if the user opens that URL directly.
-   */
   useEffect(() => {
     const handleHash = () => {
-      if (
-        window.location.hash ===
-        "#create-order"
-      ) {
+      if (window.location.hash === "#create-order") {
         setShowCreateForm(true);
 
         setTimeout(() => {
@@ -311,10 +276,7 @@ export default function SalesOrdersPage() {
 
     handleHash();
 
-    window.addEventListener(
-      "hashchange",
-      handleHash
-    );
+    window.addEventListener("hashchange", handleHash);
 
     return () => {
       window.removeEventListener(
@@ -324,6 +286,10 @@ export default function SalesOrdersPage() {
     };
   }, []);
 
+  /* =====================================================
+     ITEMS
+  ===================================================== */
+
   const addItem = () => {
     setItems((current) => [
       ...current,
@@ -331,17 +297,12 @@ export default function SalesOrdersPage() {
     ]);
   };
 
-  const removeItem = (
-    index: number
-  ) => {
+  const removeItem = (index: number) => {
     setItems((current) => {
-      if (current.length === 1) {
-        return current;
-      }
+      if (current.length === 1) return current;
 
       return current.filter(
-        (_, itemIndex) =>
-          itemIndex !== index
+        (_, itemIndex) => itemIndex !== index
       );
     });
   };
@@ -351,34 +312,29 @@ export default function SalesOrdersPage() {
     changes: Partial<OrderItemForm>
   ) => {
     setItems((current) =>
-      current.map(
-        (item, itemIndex) =>
-          itemIndex === index
-            ? {
-                ...item,
-                ...changes,
-              }
-            : item
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              ...changes,
+            }
+          : item
       )
     );
   };
 
-  /*
-   * --------------------------------------------------
-   * PRODUCT / PRICE HANDLING
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     PRODUCT / PRICE
+  ===================================================== */
 
   const handleProductChange = (
     index: number,
     productId: string
   ) => {
-    const selectedProduct =
-      products.find(
-        (product) =>
-          product.id ===
-          Number(productId)
-      );
+    const selectedProduct = products.find(
+      (product) =>
+        product.id === Number(productId)
+    );
 
     if (!selectedProduct) {
       updateItem(index, {
@@ -389,18 +345,12 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const currentItem =
-      items[index];
+    const currentItem = items[index];
 
     const price =
-      currentItem.price_type ===
-      "Wholesale"
-        ? Number(
-            selectedProduct.wholesale_price
-          )
-        : Number(
-            selectedProduct.retail_price
-          );
+      currentItem.price_type === "Wholesale"
+        ? Number(selectedProduct.wholesale_price)
+        : Number(selectedProduct.retail_price);
 
     updateItem(index, {
       product: selectedProduct.id,
@@ -410,27 +360,19 @@ export default function SalesOrdersPage() {
 
   const handlePriceTypeChange = (
     index: number,
-    priceType:
-      | "Retail"
-      | "Wholesale"
+    priceType: "Retail" | "Wholesale"
   ) => {
     const item = items[index];
 
-    const selectedProduct =
-      products.find(
-        (product) =>
-          product.id ===
-          Number(item.product)
-      );
+    const selectedProduct = products.find(
+      (product) =>
+        product.id === Number(item.product)
+    );
 
     const price = selectedProduct
       ? priceType === "Wholesale"
-        ? Number(
-            selectedProduct.wholesale_price
-          )
-        : Number(
-            selectedProduct.retail_price
-          )
+        ? Number(selectedProduct.wholesale_price)
+        : Number(selectedProduct.retail_price)
       : 0;
 
     updateItem(index, {
@@ -439,23 +381,16 @@ export default function SalesOrdersPage() {
     });
   };
 
-  /*
-   * --------------------------------------------------
-   * ORDER TOTALS
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     TOTALS
+  ===================================================== */
 
   const grandTotal = useMemo(() => {
     return items.reduce(
-      (total, item) => {
-        return (
-          total +
-          Number(item.quantity || 0) *
-            Number(
-              item.retail_price || 0
-            )
-        );
-      },
+      (total, item) =>
+        total +
+        Number(item.quantity || 0) *
+          Number(item.retail_price || 0),
       0
     );
   }, [items]);
@@ -463,51 +398,65 @@ export default function SalesOrdersPage() {
   const totalQuantity = useMemo(() => {
     return items.reduce(
       (total, item) =>
-        total +
-        Number(
-          item.quantity || 0
-        ),
+        total + Number(item.quantity || 0),
       0
     );
   }, [items]);
 
-  /*
-   * --------------------------------------------------
-   * CREATE ORDER
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     VALIDATION
+  ===================================================== */
 
-  const validateOrder = () => {
+  const validateCustomer = () => {
     if (!formData.customer) {
+      toast.error("Please select a customer.");
+      return false;
+    }
+
+    const customer = customers.find(
+      (item) =>
+        item.id === Number(formData.customer)
+    );
+
+    if (!customer) {
+      toast.error("Selected customer was not found.");
+      return false;
+    }
+
+    /*
+     * New orders must use active customers.
+     */
+    if (
+      !customer.is_active &&
+      !originalCustomerIsArchived
+    ) {
       toast.error(
-        "Please select a customer."
+        "Archived customers cannot be used for sales orders."
       );
 
       return false;
     }
 
-    const validItems =
-      items.filter(
-        (item) =>
-          item.product &&
-          Number(item.quantity) > 0
-      );
+    return true;
+  };
+
+  const validateItems = () => {
+    const validItems = items.filter(
+      (item) =>
+        item.product &&
+        Number(item.quantity) > 0
+    );
 
     if (!validItems.length) {
-      toast.error(
-        "Add at least one product."
-      );
-
+      toast.error("Add at least one product.");
       return false;
     }
 
     for (const item of validItems) {
-      const product =
-        products.find(
-          (productItem) =>
-            productItem.id ===
-            Number(item.product)
-        );
+      const product = products.find(
+        (productItem) =>
+          productItem.id === Number(item.product)
+      );
 
       if (!product) {
         toast.error(
@@ -532,60 +481,38 @@ export default function SalesOrdersPage() {
     return true;
   };
 
+  /* =====================================================
+     CREATE ORDER
+  ===================================================== */
+
   const createOrder = async (
     event: React.FormEvent
   ) => {
     event.preventDefault();
 
-    if (!validateOrder()) {
-      return;
-    }
+    if (!validateCustomer()) return;
+    if (!validateItems()) return;
 
-    const validItems =
-      items.filter(
-        (item) =>
-          item.product &&
-          Number(item.quantity) > 0
-      );
+    const validItems = items.filter(
+      (item) =>
+        item.product &&
+        Number(item.quantity) > 0
+    );
 
     setSaving(true);
 
     try {
-      await api.post(
-        "/orders/",
-        {
-          customer:
-            Number(
-              formData.customer
-            ),
+      await api.post("/orders/", {
+        customer: Number(formData.customer),
+        remarks: formData.remarks,
 
-          remarks:
-            formData.remarks,
-
-          items:
-            validItems.map(
-              (item) => ({
-                product:
-                  Number(
-                    item.product
-                  ),
-
-                quantity:
-                  Number(
-                    item.quantity
-                  ),
-
-                retail_price:
-                  Number(
-                    item.retail_price
-                  ),
-
-                price_type:
-                  item.price_type,
-              })
-            ),
-        }
-      );
+        items: validItems.map((item) => ({
+          product: Number(item.product),
+          quantity: Number(item.quantity),
+          retail_price: Number(item.retail_price),
+          price_type: item.price_type,
+        })),
+      });
 
       toast.success(
         "Sales Order created successfully."
@@ -614,19 +541,12 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * EDIT ORDER
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     EDIT ORDER
+  ===================================================== */
 
-  const editOrder = (
-    order: SalesOrder
-  ) => {
-    if (
-      order.status !==
-      "Pending"
-    ) {
+  const editOrder = (order: SalesOrder) => {
+    if (order.status !== "Pending") {
       toast.error(
         "Only Pending orders can be edited."
       );
@@ -637,32 +557,20 @@ export default function SalesOrdersPage() {
     setEditingOrder(order);
 
     setFormData({
-      customer:
-        String(order.customer),
-
-      remarks:
-        order.remarks || "",
+      customer: String(order.customer),
+      remarks: order.remarks || "",
     });
 
     setItems(
-      order.items.map(
-        (item) => ({
-          product:
-            item.product,
-
-          quantity:
-            item.quantity,
-
-          retail_price:
-            Number(
-              item.retail_price
-            ),
-
-          price_type:
-            item.price_type ||
-            "Retail",
-        })
-      )
+      order.items.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+        retail_price: Number(
+          item.retail_price
+        ),
+        price_type:
+          item.price_type || "Retail",
+      }))
     );
 
     scrollToCreateForm();
@@ -673,9 +581,7 @@ export default function SalesOrdersPage() {
   ) => {
     event.preventDefault();
 
-    if (!editingOrder) {
-      return;
-    }
+    if (!editingOrder) return;
 
     if (!formData.customer) {
       toast.error(
@@ -685,20 +591,48 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const validItems =
-      items.filter(
-        (item) =>
-          item.product &&
-          Number(item.quantity) > 0
-      );
+    const customer = customers.find(
+      (item) =>
+        item.id === Number(formData.customer)
+    );
 
-    if (!validItems.length) {
+    if (!customer) {
       toast.error(
-        "Add at least one product."
+        "Selected customer was not found."
       );
 
       return;
     }
+
+    /*
+     * Allow the original archived customer to remain
+     * on an existing order.
+     *
+     * But do not allow the user to change the order
+     * to another archived customer.
+     */
+    const changingCustomer =
+      editingOrder.customer !==
+      Number(formData.customer);
+
+    if (
+      changingCustomer &&
+      !customer.is_active
+    ) {
+      toast.error(
+        "You cannot change a sales order to an archived customer."
+      );
+
+      return;
+    }
+
+    if (!validateItems()) return;
+
+    const validItems = items.filter(
+      (item) =>
+        item.product &&
+        Number(item.quantity) > 0
+    );
 
     setSaving(true);
 
@@ -706,36 +640,17 @@ export default function SalesOrdersPage() {
       await api.put(
         `/orders/${editingOrder.id}/`,
         {
-          customer:
-            Number(
-              formData.customer
+          customer: Number(formData.customer),
+          remarks: formData.remarks,
+
+          items: validItems.map((item) => ({
+            product: Number(item.product),
+            quantity: Number(item.quantity),
+            retail_price: Number(
+              item.retail_price
             ),
-
-          remarks:
-            formData.remarks,
-
-          items:
-            validItems.map(
-              (item) => ({
-                product:
-                  Number(
-                    item.product
-                  ),
-
-                quantity:
-                  Number(
-                    item.quantity
-                  ),
-
-                retail_price:
-                  Number(
-                    item.retail_price
-                  ),
-
-                price_type:
-                  item.price_type,
-              })
-            ),
+            price_type: item.price_type,
+          })),
         }
       );
 
@@ -766,29 +681,18 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * DELETE ORDER
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     DELETE
+  ===================================================== */
 
-  const deleteOrder = async (
-    id: number
-  ) => {
-    const order =
-      orders.find(
-        (item) =>
-          item.id === id
-      );
+  const deleteOrder = async (id: number) => {
+    const order = orders.find(
+      (item) => item.id === id
+    );
 
-    if (!order) {
-      return;
-    }
+    if (!order) return;
 
-    if (
-      order.status !==
-      "Pending"
-    ) {
+    if (order.status !== "Pending") {
       toast.error(
         "Only Pending orders can be deleted."
       );
@@ -796,22 +700,17 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        `Delete ${
-          order.order_number ||
-          `Order #${order.id}`
-        }?`
-      );
+    const confirmed = window.confirm(
+      `Delete ${
+        order.order_number ||
+        `Order #${order.id}`
+      }?`
+    );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
-      await api.delete(
-        `/orders/${id}/`
-      );
+      await api.delete(`/orders/${id}/`);
 
       toast.success(
         "Sales Order deleted successfully."
@@ -833,11 +732,9 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * APPROVAL WORKFLOW
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     APPROVAL
+  ===================================================== */
 
   const approveOrder = async (
     order: SalesOrder
@@ -851,19 +748,10 @@ export default function SalesOrdersPage() {
     }
 
     try {
-      /*
-       * Sales Head / Admin:
-       * Pending -> Sales Head Approved
-       */
       if (
-        (
-          user.role ===
-            "sales_head" ||
-          user.role ===
-            "admin"
-        ) &&
-        order.status ===
-          "Pending"
+        (user.role === "sales_head" ||
+          user.role === "admin") &&
+        order.status === "Pending"
       ) {
         await api.post(
           `/orders/${order.id}/sales-head-approve/`
@@ -872,19 +760,9 @@ export default function SalesOrdersPage() {
         toast.success(
           "Sales Head approval successful."
         );
-      }
-
-      /*
-       * Manager / Admin:
-       * Sales Head Approved -> Manager Approved
-       */
-      else if (
-        (
-          user.role ===
-            "manager" ||
-          user.role ===
-            "admin"
-        ) &&
+      } else if (
+        (user.role === "manager" ||
+          user.role === "admin") &&
         order.status ===
           "Sales Head Approved"
       ) {
@@ -895,9 +773,7 @@ export default function SalesOrdersPage() {
         toast.success(
           "Manager approval successful."
         );
-      }
-
-      else {
+      } else {
         toast.error(
           "You are not authorized for the next approval step."
         );
@@ -921,20 +797,16 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * CONVERT TO INVOICE
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     INVOICE
+  ===================================================== */
 
   const convertToInvoice = async (
     order: SalesOrder
   ) => {
     if (
-      user?.role !==
-        "manager" &&
-      user?.role !==
-        "admin"
+      user?.role !== "manager" &&
+      user?.role !== "admin"
     ) {
       toast.error(
         "Only a Manager or Admin can create an invoice."
@@ -944,8 +816,7 @@ export default function SalesOrdersPage() {
     }
 
     if (
-      order.status !==
-      "Manager Approved"
+      order.status !== "Manager Approved"
     ) {
       toast.error(
         "Manager approval is required before invoicing."
@@ -954,27 +825,22 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        `Create an invoice for ${
-          order.order_number ||
-          `Order #${order.id}`
-        }?`
-      );
+    const confirmed = window.confirm(
+      `Create an invoice for ${
+        order.order_number ||
+        `Order #${order.id}`
+      }?`
+    );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
-      const response =
-        await api.post(
-          `/orders/${order.id}/invoice/`
-        );
+      const response = await api.post(
+        `/orders/${order.id}/invoice/`
+      );
 
       const invoiceNumber =
-        response.data
-          ?.invoice_number;
+        response.data?.invoice_number;
 
       toast.success(
         invoiceNumber
@@ -998,159 +864,109 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * COLLAPSIBLE ORDERS
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     EXPAND ORDERS
+  ===================================================== */
 
-  const toggleOrder = (
-    id: number
-  ) => {
-    setExpandedOrders(
-      (current) => {
-        const next =
-          new Set(current);
+  const toggleOrder = (id: number) => {
+    setExpandedOrders((current) => {
+      const next = new Set(current);
 
-        if (
-          next.has(id)
-        ) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-
-        return next;
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
       }
-    );
+
+      return next;
+    });
   };
 
-  /*
-   * --------------------------------------------------
-   * SEARCH / FILTER
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     SEARCH / FILTER
+  ===================================================== */
 
-  const filteredOrders =
-    useMemo(() => {
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+  const filteredOrders = useMemo(() => {
+    const query = search
+      .trim()
+      .toLowerCase();
 
-      return orders.filter(
-        (order) => {
-          const matchesStatus =
-            statusFilter ===
-              "All" ||
-            order.status ===
-              statusFilter;
+    return orders.filter((order) => {
+      const matchesStatus =
+        statusFilter === "All" ||
+        order.status === statusFilter;
 
-          if (
-            !matchesStatus
-          ) {
-            return false;
-          }
+      if (!matchesStatus) return false;
 
-          if (!query) {
-            return true;
-          }
+      if (!query) return true;
 
-          const orderNumber =
-            order.order_number
-              ?.toLowerCase() ||
-            "";
+      const orderNumber =
+        order.order_number?.toLowerCase() || "";
 
-          const customer =
-            order.customer_name
-              ?.toLowerCase() ||
-            "";
+      const customer =
+        order.customer_name?.toLowerCase() || "";
 
-          const salesRep =
-            order.sales_rep_name
-              ?.toLowerCase() ||
-            "";
+      const salesRep =
+        order.sales_rep_name?.toLowerCase() || "";
 
-          const productsText =
-            order.items
-              ?.map(
-                (item) =>
-                  item.product_name
-                    ?.toLowerCase() ||
-                  ""
-              )
-              .join(" ") ||
-            "";
+      const productsText =
+        order.items
+          ?.map(
+            (item) =>
+              item.product_name?.toLowerCase() ||
+              ""
+          )
+          .join(" ") || "";
 
-          return (
-            orderNumber.includes(
-              query
-            ) ||
-            customer.includes(
-              query
-            ) ||
-            salesRep.includes(
-              query
-            ) ||
-            productsText.includes(
-              query
-            )
-          );
-        }
+      return (
+        orderNumber.includes(query) ||
+        customer.includes(query) ||
+        salesRep.includes(query) ||
+        productsText.includes(query)
       );
-    }, [
-      orders,
-      search,
-      statusFilter,
-    ]);
+    });
+  }, [
+    orders,
+    search,
+    statusFilter,
+  ]);
 
-  /*
-   * --------------------------------------------------
-   * STATUS COUNTS
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     STATUS COUNTS
+  ===================================================== */
 
-  const statusCounts =
-    useMemo(() => {
-      return {
-        all:
-          orders.length,
+  const statusCounts = useMemo(
+    () => ({
+      all: orders.length,
 
-        pending:
-          orders.filter(
-            (order) =>
-              order.status ===
-              "Pending"
-          ).length,
+      pending: orders.filter(
+        (order) =>
+          order.status === "Pending"
+      ).length,
 
-        salesHeadApproved:
-          orders.filter(
-            (order) =>
-              order.status ===
-              "Sales Head Approved"
-          ).length,
+      salesHeadApproved: orders.filter(
+        (order) =>
+          order.status ===
+          "Sales Head Approved"
+      ).length,
 
-        managerApproved:
-          orders.filter(
-            (order) =>
-              order.status ===
-              "Manager Approved"
-          ).length,
+      managerApproved: orders.filter(
+        (order) =>
+          order.status ===
+          "Manager Approved"
+      ).length,
 
-        invoiced:
-          orders.filter(
-            (order) =>
-              order.status ===
-              "Invoiced"
-          ).length,
-      };
-    }, [orders]);
+      invoiced: orders.filter(
+        (order) =>
+          order.status === "Invoiced"
+      ).length,
+    }),
+    [orders]
+  );
 
-  /*
-   * --------------------------------------------------
-   * STATUS STYLING
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     STATUS STYLING
+  ===================================================== */
 
   const getStatusClass = (
     status: string
@@ -1203,11 +1019,9 @@ export default function SalesOrdersPage() {
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * LOADING STATE
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     LOADING
+  ===================================================== */
 
   if (loading) {
     return (
@@ -1228,11 +1042,8 @@ export default function SalesOrdersPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
             <div className="animate-pulse space-y-5">
               <div className="h-8 w-56 rounded bg-slate-200" />
-
               <div className="h-12 w-full rounded-xl bg-slate-100" />
-
               <div className="h-12 w-full rounded-xl bg-slate-100" />
-
               <div className="h-64 w-full rounded-xl bg-slate-100" />
             </div>
           </div>
@@ -1241,11 +1052,9 @@ export default function SalesOrdersPage() {
     );
   }
 
-  /*
-   * --------------------------------------------------
-   * MAIN PAGE
-   * --------------------------------------------------
-   */
+  /* =====================================================
+     MAIN PAGE
+  ===================================================== */
 
   return (
     <AppShell
@@ -1262,18 +1071,14 @@ export default function SalesOrdersPage() {
       ]}
       actions={[
         {
-          label: showCreateForm
-            ? "New Order"
-            : "New Order",
+          label: "New Order",
           href: "#create-order",
         },
       ]}
     >
       <div className="space-y-6">
 
-        {/* -------------------------------------------
-            SUMMARY CARDS
-        -------------------------------------------- */}
+        {/* SUMMARY */}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
 
@@ -1283,8 +1088,7 @@ export default function SalesOrdersPage() {
               setStatusFilter("All")
             }
             className={`rounded-2xl border p-4 text-left transition ${
-              statusFilter ===
-              "All"
+              statusFilter === "All"
                 ? "border-indigo-300 bg-indigo-50"
                 : "border-slate-200 bg-white hover:border-slate-300"
             }`}
@@ -1301,13 +1105,10 @@ export default function SalesOrdersPage() {
           <button
             type="button"
             onClick={() =>
-              setStatusFilter(
-                "Pending"
-              )
+              setStatusFilter("Pending")
             }
             className={`rounded-2xl border p-4 text-left transition ${
-              statusFilter ===
-              "Pending"
+              statusFilter === "Pending"
                 ? "border-amber-300 bg-amber-50"
                 : "border-slate-200 bg-white hover:border-slate-300"
             }`}
@@ -1340,9 +1141,7 @@ export default function SalesOrdersPage() {
             </p>
 
             <p className="mt-2 text-2xl font-bold text-slate-900">
-              {
-                statusCounts.salesHeadApproved
-              }
+              {statusCounts.salesHeadApproved}
             </p>
           </button>
 
@@ -1365,22 +1164,17 @@ export default function SalesOrdersPage() {
             </p>
 
             <p className="mt-2 text-2xl font-bold text-slate-900">
-              {
-                statusCounts.managerApproved
-              }
+              {statusCounts.managerApproved}
             </p>
           </button>
 
           <button
             type="button"
             onClick={() =>
-              setStatusFilter(
-                "Invoiced"
-              )
+              setStatusFilter("Invoiced")
             }
             className={`rounded-2xl border p-4 text-left transition ${
-              statusFilter ===
-              "Invoiced"
+              statusFilter === "Invoiced"
                 ? "border-blue-300 bg-blue-50"
                 : "border-slate-200 bg-white hover:border-slate-300"
             }`}
@@ -1396,18 +1190,14 @@ export default function SalesOrdersPage() {
 
         </div>
 
-        {/* -------------------------------------------
-            CREATE / EDIT ORDER FORM
-        -------------------------------------------- */}
+        {/* CREATE / EDIT FORM */}
 
         {showCreateForm && (
           <section
             id="create-order"
             className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white shadow-sm"
           >
-
             <div className="border-b border-slate-200 px-6 py-5">
-
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                 <div>
@@ -1435,21 +1225,16 @@ export default function SalesOrdersPage() {
                 </div>
 
                 <div className="rounded-xl bg-slate-50 px-4 py-3 text-right">
-
                   <p className="text-xs text-slate-500">
                     Order Total
                   </p>
 
                   <p className="text-lg font-bold text-slate-900">
-                    {formatNaira(
-                      grandTotal
-                    )}
+                    {formatNaira(grandTotal)}
                   </p>
-
                 </div>
 
               </div>
-
             </div>
 
             <form
@@ -1469,47 +1254,58 @@ export default function SalesOrdersPage() {
                 </label>
 
                 <select
-                  value={
-                    formData.customer
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setFormData(
-                      (current) => ({
-                        ...current,
-                        customer:
-                          event.target
-                            .value,
-                      })
-                    )
+                  value={formData.customer}
+                  onChange={(event) =>
+                    setFormData((current) => ({
+                      ...current,
+                      customer:
+                        event.target.value,
+                    }))
                   }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                   required
                 >
-
                   <option value="">
                     Select customer
                   </option>
 
-                  {customers.map(
-                    (customer) => (
+                  {/* Existing archived customer */}
+                  {editingOrder &&
+                    selectedCustomer &&
+                    !selectedCustomer.is_active && (
                       <option
-                        key={
-                          customer.id
-                        }
                         value={
-                          customer.id
+                          selectedCustomer.id
                         }
                       >
-                        {
-                          customer.name
-                        }
+                        {selectedCustomer.name}{" "}
+                        (Archived)
+                      </option>
+                    )}
+
+                  {/* Active customers only */}
+                  {activeCustomers.map(
+                    (customer) => (
+                      <option
+                        key={customer.id}
+                        value={customer.id}
+                      >
+                        {customer.name}
                       </option>
                     )
                   )}
-
                 </select>
+
+                {editingOrder &&
+                  selectedCustomer &&
+                  !selectedCustomer.is_active && (
+                    <p className="mt-2 text-xs font-medium text-amber-600">
+                      This order belongs to an archived
+                      customer. You may keep the customer,
+                      but you cannot change this order to
+                      another archived customer.
+                    </p>
+                  )}
               </div>
 
               {/* ORDER ITEMS */}
@@ -1525,14 +1321,11 @@ export default function SalesOrdersPage() {
 
                     <p className="mt-1 text-xs text-slate-500">
                       {items.length} product
-                      {items.length !==
-                      1
+                      {items.length !== 1
                         ? "s"
                         : ""}{" "}
-                      ·{" "}
-                      {totalQuantity} unit
-                      {totalQuantity !==
-                      1
+                      · {totalQuantity} unit
+                      {totalQuantity !== 1
                         ? "s"
                         : ""}
                     </p>
@@ -1540,9 +1333,7 @@ export default function SalesOrdersPage() {
 
                   <button
                     type="button"
-                    onClick={
-                      addItem
-                    }
+                    onClick={addItem}
                     className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
                   >
                     + Add Product
@@ -1551,53 +1342,35 @@ export default function SalesOrdersPage() {
                 </div>
 
                 {items.map(
-                  (
-                    item,
-                    index
-                  ) => {
+                  (item, index) => {
                     const selectedProduct =
                       products.find(
-                        (
-                          product
-                        ) =>
+                        (product) =>
                           product.id ===
-                          Number(
-                            item.product
-                          )
+                          Number(item.product)
                       );
 
                     const lineTotal =
-                      Number(
-                        item.quantity
-                      ) *
-                      Number(
-                        item.retail_price
-                      );
+                      Number(item.quantity) *
+                      Number(item.retail_price);
 
                     return (
                       <div
-                        key={
-                          index
-                        }
+                        key={index}
                         className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
                       >
-
-                        {/* ITEM HEADER */}
 
                         <div className="mb-4 flex items-center justify-between">
 
                           <div className="flex items-center gap-3">
 
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold text-slate-700 shadow-sm">
-                              {index +
-                                1}
+                              {index + 1}
                             </div>
 
                             <div>
                               <p className="text-sm font-semibold text-slate-900">
-                                Product{" "}
-                                {index +
-                                  1}
+                                Product {index + 1}
                               </p>
 
                               {selectedProduct && (
@@ -1614,14 +1387,11 @@ export default function SalesOrdersPage() {
 
                           </div>
 
-                          {items.length >
-                            1 && (
+                          {items.length > 1 && (
                             <button
                               type="button"
                               onClick={() =>
-                                removeItem(
-                                  index
-                                )
+                                removeItem(index)
                               }
                               className="text-sm font-medium text-red-600 hover:text-red-700"
                             >
@@ -1631,71 +1401,43 @@ export default function SalesOrdersPage() {
 
                         </div>
 
-                        {/* ITEM FIELDS */}
-
                         <div className="grid gap-4 md:grid-cols-12">
 
-                          {/* PRODUCT */}
-
                           <div className="md:col-span-5">
-
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                               Product
                             </label>
 
                             <select
-                              value={
-                                item.product
-                              }
-                              onChange={(
-                                event
-                              ) =>
+                              value={item.product}
+                              onChange={(event) =>
                                 handleProductChange(
                                   index,
-                                  event
-                                    .target
-                                    .value
+                                  event.target.value
                                 )
                               }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                               required
                             >
-
                               <option value="">
                                 Select product
                               </option>
 
                               {products.map(
-                                (
-                                  product
-                                ) => (
+                                (product) => (
                                   <option
-                                    key={
-                                      product.id
-                                    }
-                                    value={
-                                      product.id
-                                    }
+                                    key={product.id}
+                                    value={product.id}
                                   >
-                                    {
-                                      product.name
-                                    }{" "}
-                                    —{" "}
-                                    {
-                                      product.sku
-                                    }
+                                    {product.name} —{" "}
+                                    {product.sku}
                                   </option>
                                 )
                               )}
-
                             </select>
-
                           </div>
 
-                          {/* PRICE TYPE */}
-
                           <div className="md:col-span-3">
-
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                               Price Type
                             </label>
@@ -1704,21 +1446,16 @@ export default function SalesOrdersPage() {
                               value={
                                 item.price_type
                               }
-                              onChange={(
-                                event
-                              ) =>
+                              onChange={(event) =>
                                 handlePriceTypeChange(
                                   index,
-                                  event
-                                    .target
-                                    .value as
+                                  event.target.value as
                                     | "Retail"
                                     | "Wholesale"
                                 )
                               }
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                             >
-
                               <option value="Retail">
                                 Retail
                               </option>
@@ -1726,15 +1463,10 @@ export default function SalesOrdersPage() {
                               <option value="Wholesale">
                                 Wholesale
                               </option>
-
                             </select>
-
                           </div>
 
-                          {/* QUANTITY */}
-
                           <div className="md:col-span-2">
-
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                               Quantity
                             </label>
@@ -1742,12 +1474,8 @@ export default function SalesOrdersPage() {
                             <input
                               type="number"
                               min="1"
-                              value={
-                                item.quantity
-                              }
-                              onChange={(
-                                event
-                              ) =>
+                              value={item.quantity}
+                              onChange={(event) =>
                                 updateItem(
                                   index,
                                   {
@@ -1755,11 +1483,9 @@ export default function SalesOrdersPage() {
                                       Math.max(
                                         1,
                                         Number(
-                                          event
-                                            .target
+                                          event.target
                                             .value
-                                        ) ||
-                                          1
+                                        ) || 1
                                       ),
                                   }
                                 )
@@ -1767,13 +1493,9 @@ export default function SalesOrdersPage() {
                               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                               required
                             />
-
                           </div>
 
-                          {/* LINE TOTAL */}
-
                           <div className="md:col-span-2">
-
                             <label className="mb-2 block text-xs font-medium text-slate-600">
                               Line Total
                             </label>
@@ -1783,12 +1505,9 @@ export default function SalesOrdersPage() {
                                 lineTotal
                               )}
                             </div>
-
                           </div>
 
                         </div>
-
-                        {/* PRODUCT INFORMATION */}
 
                         {selectedProduct && (
                           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-slate-200 pt-4 text-xs">
@@ -1840,7 +1559,6 @@ export default function SalesOrdersPage() {
               {/* REMARKS */}
 
               <div>
-
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Remarks
                   <span className="ml-1 font-normal text-slate-400">
@@ -1849,58 +1567,45 @@ export default function SalesOrdersPage() {
                 </label>
 
                 <textarea
-                  value={
-                    formData.remarks
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setFormData(
-                      (current) => ({
-                        ...current,
-                        remarks:
-                          event.target
-                            .value,
-                      })
-                    )
+                  value={formData.remarks}
+                  onChange={(event) =>
+                    setFormData((current) => ({
+                      ...current,
+                      remarks:
+                        event.target.value,
+                    }))
                   }
                   rows={3}
                   placeholder="Add any relevant order notes..."
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 />
-
               </div>
 
-              {/* ORDER SUMMARY */}
+              {/* SUMMARY */}
 
               <div className="rounded-2xl bg-slate-900 p-5 text-white">
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                   <div>
-
                     <p className="text-sm text-slate-300">
                       Order Summary
                     </p>
 
                     <p className="mt-1 text-sm text-slate-400">
                       {items.length} product
-                      {items.length !==
-                      1
+                      {items.length !== 1
                         ? "s"
                         : ""}{" "}
-                      ·{" "}
-                      {totalQuantity} total unit
-                      {totalQuantity !==
-                      1
+                      · {totalQuantity} total
+                      unit
+                      {totalQuantity !== 1
                         ? "s"
                         : ""}
                     </p>
-
                   </div>
 
                   <div className="text-left sm:text-right">
-
                     <p className="text-xs text-slate-400">
                       Grand Total
                     </p>
@@ -1910,23 +1615,20 @@ export default function SalesOrdersPage() {
                         grandTotal
                       )}
                     </p>
-
                   </div>
 
                 </div>
 
               </div>
 
-              {/* FORM ACTIONS */}
+              {/* ACTIONS */}
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
 
                 {editingOrder && (
                   <button
                     type="button"
-                    onClick={() => {
-                      resetForm();
-                    }}
+                    onClick={resetForm}
                     className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     Cancel Edit
@@ -1935,9 +1637,7 @@ export default function SalesOrdersPage() {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    resetForm();
-                  }}
+                  onClick={resetForm}
                   className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Clear
@@ -1945,9 +1645,7 @@ export default function SalesOrdersPage() {
 
                 <button
                   type="submit"
-                  disabled={
-                    saving
-                  }
+                  disabled={saving}
                   className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving
@@ -1962,52 +1660,39 @@ export default function SalesOrdersPage() {
               </div>
 
             </form>
-
           </section>
         )}
 
-        {/* -------------------------------------------
-            SALES ORDER REGISTER
-        -------------------------------------------- */}
+        {/* SALES ORDER REGISTER */}
 
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-          {/* REGISTER HEADER */}
 
           <div className="border-b border-slate-200 p-5">
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
               <div>
-
                 <h2 className="text-lg font-semibold text-slate-900">
                   Sales Order Register
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {filteredOrders.length} order
-                  {filteredOrders.length !==
-                  1
+                  {filteredOrders.length !== 1
                     ? "s"
                     : ""}{" "}
                   displayed
                 </p>
-
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
 
                 <input
                   type="text"
-                  value={
-                    search
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={search}
+                  onChange={(event) =>
                     setSearch(
-                      event.target
-                        .value
+                      event.target.value
                     )
                   }
                   placeholder="Search order, customer, product..."
@@ -2015,20 +1700,14 @@ export default function SalesOrdersPage() {
                 />
 
                 <select
-                  value={
-                    statusFilter
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={statusFilter}
+                  onChange={(event) =>
                     setStatusFilter(
-                      event.target
-                        .value
+                      event.target.value
                     )
                   }
                   className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 >
-
                   <option value="All">
                     All Statuses
                   </option>
@@ -2060,23 +1739,18 @@ export default function SalesOrdersPage() {
                   <option value="Cancelled">
                     Cancelled
                   </option>
-
                 </select>
 
               </div>
-
             </div>
-
           </div>
 
-          {/* EMPTY STATE */}
+          {/* EMPTY */}
 
-          {filteredOrders.length ===
-          0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="p-12 text-center">
 
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-
                 <svg
                   className="h-6 w-6 text-slate-400"
                   viewBox="0 0 24 24"
@@ -2090,7 +1764,6 @@ export default function SalesOrdersPage() {
                     d="M9 12h6m-6 4h4m5-9-3-3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"
                   />
                 </svg>
-
               </div>
 
               <h3 className="mt-4 text-sm font-semibold text-slate-900">
@@ -2103,17 +1776,11 @@ export default function SalesOrdersPage() {
 
             </div>
           ) : (
-
-            /* ---------------------------------------
-               TABLE
-            ---------------------------------------- */
-
             <div className="overflow-x-auto">
 
               <table className="min-w-[1200px] w-full">
 
                 <thead>
-
                   <tr className="border-b border-slate-200 bg-slate-50">
 
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -2153,7 +1820,6 @@ export default function SalesOrdersPage() {
                     </th>
 
                   </tr>
-
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
@@ -2206,43 +1872,26 @@ export default function SalesOrdersPage() {
 
                       return (
                         <tr
-                          key={
-                            order.id
-                          }
+                          key={order.id}
                           className="transition hover:bg-slate-50"
                         >
 
-                          {/* ORDER */}
-
                           <td className="px-5 py-4 align-top">
-
                             <p className="font-semibold text-slate-900">
                               {order.order_number ||
                                 `#${order.id}`}
                             </p>
 
                             <p className="mt-1 text-xs text-slate-400">
-                              ID #
-                              {
-                                order.id
-                              }
+                              ID #{order.id}
                             </p>
-
                           </td>
-
-                          {/* CUSTOMER */}
 
                           <td className="px-5 py-4 align-top">
-
                             <p className="font-medium text-slate-900">
-                              {
-                                order.customer_name
-                              }
+                              {order.customer_name}
                             </p>
-
                           </td>
-
-                          {/* COLLAPSIBLE ITEMS */}
 
                           <td className="px-5 py-4 align-top">
 
@@ -2264,39 +1913,27 @@ export default function SalesOrdersPage() {
 
                               <span>
                                 <span className="block text-sm font-semibold text-slate-800">
-                                  {
-                                    order.items
-                                      ?.length
-                                  }{" "}
+                                  {order.items?.length}{" "}
                                   product
-                                  {
-                                    order
-                                      .items
-                                      ?.length !==
-                                    1
-                                      ? "s"
-                                      : ""}
+                                  {order.items?.length !==
+                                  1
+                                    ? "s"
+                                    : ""}
                                 </span>
 
                                 {!isExpanded &&
-                                  order.items
-                                    ?.length >
+                                  order.items?.length >
                                     0 && (
                                     <span className="mt-1 block max-w-[260px] truncate text-xs text-slate-500">
                                       {
-                                        order
-                                          .items[0]
+                                        order.items[0]
                                           ?.product_name
                                       }
 
-                                      {order
-                                        .items
-                                        .length >
+                                      {order.items.length >
                                         1 &&
                                         ` + ${
-                                          order
-                                            .items
-                                            .length -
+                                          order.items.length -
                                           1
                                         } more`}
                                     </span>
@@ -2311,9 +1948,7 @@ export default function SalesOrdersPage() {
                                 <div className="space-y-2">
 
                                   {order.items?.map(
-                                    (
-                                      item
-                                    ) => (
+                                    (item) => (
                                       <div
                                         key={
                                           item.id ??
@@ -2353,89 +1988,60 @@ export default function SalesOrdersPage() {
                                   )}
 
                                 </div>
-
                               </div>
                             )}
 
                           </td>
 
-                          {/* TOTAL */}
-
                           <td className="px-5 py-4 text-right align-top">
-
                             <p className="font-semibold text-slate-900">
                               {formatNaira(
                                 order.total_amount
                               )}
                             </p>
-
                           </td>
 
-                          {/* STATUS */}
-
                           <td className="px-5 py-4 align-top">
-
                             <span
                               className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusClass(
                                 order.status
                               )}`}
                             >
-                              {
-                                order.status
-                              }
+                              {order.status}
                             </span>
-
                           </td>
 
-                          {/* WAREHOUSE */}
-
                           <td className="px-5 py-4 align-top">
-
                             <span
                               className={`text-sm font-medium ${getWarehouseClass(
                                 order.warehouse_status ||
                                   "Pending"
                               )}`}
                             >
-                              {
-                                order.warehouse_status ||
-                                "Pending"
-                              }
+                              {order.warehouse_status ||
+                                "Pending"}
                             </span>
-
                           </td>
 
-                          {/* SALES REP */}
-
                           <td className="px-5 py-4 align-top">
-
                             <span className="text-sm text-slate-700">
                               {
                                 order.sales_rep_name
                               }
                             </span>
-
                           </td>
 
-                          {/* DATE */}
-
                           <td className="px-5 py-4 align-top">
-
                             <span className="text-sm text-slate-600">
                               {formatDate(
                                 order.created_at
                               )}
                             </span>
-
                           </td>
-
-                          {/* ACTIONS */}
 
                           <td className="px-5 py-4 align-top">
 
                             <div className="flex flex-wrap justify-end gap-2">
-
-                              {/* EDIT */}
 
                               {canEdit && (
                                 <button
@@ -2451,8 +2057,6 @@ export default function SalesOrdersPage() {
                                 </button>
                               )}
 
-                              {/* SALES HEAD / FIRST APPROVAL */}
-
                               {canSalesHeadApprove && (
                                 <button
                                   type="button"
@@ -2466,8 +2070,6 @@ export default function SalesOrdersPage() {
                                   Approve
                                 </button>
                               )}
-
-                              {/* MANAGER / SECOND APPROVAL */}
 
                               {canManagerApprove && (
                                 <button
@@ -2483,8 +2085,6 @@ export default function SalesOrdersPage() {
                                 </button>
                               )}
 
-                              {/* INVOICE */}
-
                               {canInvoice && (
                                 <button
                                   type="button"
@@ -2499,8 +2099,6 @@ export default function SalesOrdersPage() {
                                 </button>
                               )}
 
-                              {/* DELETE */}
-
                               {canDelete && (
                                 <button
                                   type="button"
@@ -2514,8 +2112,6 @@ export default function SalesOrdersPage() {
                                   Delete
                                 </button>
                               )}
-
-                              {/* NO ACTION */}
 
                               {!canEdit &&
                                 !canSalesHeadApprove &&
@@ -2539,12 +2135,10 @@ export default function SalesOrdersPage() {
                 </tbody>
 
               </table>
-
             </div>
           )}
 
         </section>
-
       </div>
     </AppShell>
   );
