@@ -1,1621 +1,1237 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-
-import {
-  ArrowUpDown,
-  Download,
-  ExternalLink,
-  FileSpreadsheet,
-  Filter,
-  RefreshCw,
-  Search,
-  TrendingDown,
-  TrendingUp,
-  X,
-} from "lucide-react";
-
 import AppShell from "@/components/layout/AppShell";
 
 import {
   getTransactionTrackerData,
   TrackerTransaction,
+  TransactionType,
+  calculateTotalSales,
+  calculateTotalExpenses,
+  calculateNetMovement,
+  calculateTotalPaid,
+  calculateTotalOutstanding,
+  calculateRegisterTotal,
 } from "@/services/transactionTrackerService";
 
-// ============================================================
-// TYPES
-// ============================================================
+import {
+  Search,
+  RefreshCw,
+  Download,
+  X,
+  Eye,
+  ChevronDown,
+  Filter,
+  FileSpreadsheet,
+} from "lucide-react";
 
-type TrackerTab =
-  | "All"
-  | "Sale"
-  | "Expense";
+export const dynamic = "force-dynamic";
 
-type SortField =
-  | "date"
-  | "reference"
-  | "party"
-  | "amount"
-  | "status";
+const currency = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  minimumFractionDigits: 2,
+});
 
-type SortDirection =
-  | "asc"
-  | "desc";
-
-// ============================================================
-// HELPERS
-// ============================================================
-
-function formatCurrency(
-  value: number
-) {
-  return `₦${value.toLocaleString(
-    "en-NG",
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }
-  )}`;
+function formatCurrency(value: number) {
+  return currency.format(Number(value || 0));
 }
 
-function formatDate(
-  value: string
-) {
-  if (!value) {
-    return "—";
-  }
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
 
   const date = new Date(value);
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return value;
   }
 
-  return date.toLocaleDateString(
-    "en-NG",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  );
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-function getStatusClass(
-  status: string
-) {
-  const normalized =
-    status
-      ?.toLowerCase()
-      .replace(/_/g, " ");
+function escapeCsv(value: unknown) {
+  const text = String(value ?? "");
 
   if (
-    normalized === "posted" ||
-    normalized === "paid" ||
-    normalized === "completed"
+    text.includes(",") ||
+    text.includes('"') ||
+    text.includes("\n")
   ) {
-    return "bg-emerald-50 text-emerald-700 ring-emerald-600/20";
+    return `"${text.replace(/"/g, '""')}"`;
   }
 
-  if (
-    normalized.includes("partial") ||
-    normalized === "pending"
-  ) {
-    return "bg-amber-50 text-amber-700 ring-amber-600/20";
-  }
-
-  if (
-    normalized === "cancelled" ||
-    normalized === "canceled"
-  ) {
-    return "bg-red-50 text-red-700 ring-red-600/20";
-  }
-
-  if (
-    normalized === "draft"
-  ) {
-    return "bg-slate-100 text-slate-600 ring-slate-500/20";
-  }
-
-  return "bg-blue-50 text-blue-700 ring-blue-600/20";
+  return text;
 }
 
-// ============================================================
-// PAGE
-// ============================================================
+export default function TransactionTrackerPage() {
+  const [transactions, setTransactions] = useState<TrackerTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function TransactionTracker() {
-  const [
-    transactions,
-    setTransactions,
-  ] = useState<TrackerTransaction[]>(
-    []
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"All" | TransactionType>(
+    "All"
   );
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [salespersonFilter, setSalespersonFilter] = useState("All");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("All");
 
-  const [loading, setLoading] =
-    useState(true);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
-  const [tab, setTab] =
-    useState<TrackerTab>("All");
-
-  const [search, setSearch] =
-    useState("");
-
-  const [statusFilter, setStatusFilter] =
-    useState("All");
-
-  const [startDate, setStartDate] =
-    useState("");
-
-  const [endDate, setEndDate] =
-    useState("");
-
-  const [sortField, setSortField] =
-    useState<SortField>("date");
-
-  const [sortDirection, setSortDirection] =
-    useState<SortDirection>("desc");
-
-  // ==========================================================
-  // LOAD TRANSACTIONS
-  // ==========================================================
-
-  const loadTransactions = async (
-    isRefresh = false
-  ) => {
+  async function loadTransactions() {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
-      const data =
-        await getTransactionTrackerData();
+      const data = await getTransactionTrackerData();
 
       setTransactions(data);
-
     } catch (error) {
-      console.error(
-        "Error loading transaction tracker:",
-        error
-      );
-
+      console.error("Transaction Tracker Error:", error);
       setTransactions([]);
-
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  };
+  }
 
   useEffect(() => {
     loadTransactions();
   }, []);
 
-  // ==========================================================
-  // FILTER + SORT
-  // ==========================================================
+  /*
+  ============================================================
+  FILTER OPTIONS
+  ============================================================
+  */
 
-  const filteredTransactions =
-    useMemo(() => {
-      let result = [
-        ...transactions,
-      ];
+  const statuses = useMemo(() => {
+    const values = transactions
+      .map((transaction) => transaction.status)
+      .filter(Boolean);
 
-      // --------------------------------------------------------
-      // TAB
-      // --------------------------------------------------------
+    return ["All", ...Array.from(new Set(values))];
+  }, [transactions]);
 
-      if (tab !== "All") {
-        result =
-          result.filter(
-            (transaction) =>
-              transaction.type ===
-              tab
-          );
-      }
+  const salespeople = useMemo(() => {
+    const values = transactions
+      .map((transaction) => transaction.salesperson)
+      .filter(Boolean);
 
-      // --------------------------------------------------------
-      // SEARCH
-      // --------------------------------------------------------
+    return ["All", ...Array.from(new Set(values))];
+  }, [transactions]);
 
-      const query =
-        search
-          .trim()
-          .toLowerCase();
+  const paymentMethods = useMemo(() => {
+    const values = transactions
+      .map((transaction) => transaction.paymentMethod)
+      .filter(Boolean)
+      .filter((value) => value !== "—");
 
-      if (query) {
-        result =
-          result.filter(
-            (transaction) =>
-              transaction.reference
-                .toLowerCase()
-                .includes(query) ||
-              transaction.party
-                .toLowerCase()
-                .includes(query) ||
-              transaction.description
-                .toLowerCase()
-                .includes(query) ||
-              transaction.account
-                .toLowerCase()
-                .includes(query) ||
-              transaction.paymentMethod
-                .toLowerCase()
-                .includes(query)
-          );
-      }
+    return ["All", ...Array.from(new Set(values))];
+  }, [transactions]);
 
-      // --------------------------------------------------------
-      // STATUS
-      // --------------------------------------------------------
+  /*
+  ============================================================
+  FILTER TRANSACTIONS
+  ============================================================
+  */
 
-      if (
-        statusFilter !== "All"
-      ) {
-        result =
-          result.filter(
-            (transaction) =>
-              transaction.status
-                .toLowerCase() ===
-              statusFilter.toLowerCase()
-          );
-      }
+  const filteredTransactions = useMemo(() => {
+    const searchText = search.trim().toLowerCase();
 
-      // --------------------------------------------------------
-      // DATE RANGE
-      // --------------------------------------------------------
+    return transactions.filter((transaction) => {
+      const matchesSearch =
+        !searchText ||
+        [
+          transaction.reference,
+          transaction.party,
+          transaction.salesperson,
+          transaction.description,
+          transaction.account,
+          transaction.paymentAccount,
+          transaction.paymentMethod,
+          transaction.status,
+          transaction.journalReference,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText);
 
-      if (startDate) {
-        result =
-          result.filter(
-            (transaction) =>
-              transaction.date >=
-              startDate
-          );
-      }
+      const matchesType =
+        typeFilter === "All" || transaction.type === typeFilter;
 
-      if (endDate) {
-        result =
-          result.filter(
-            (transaction) =>
-              transaction.date <=
-              endDate
-          );
-      }
+      const matchesStatus =
+        statusFilter === "All" ||
+        transaction.status === statusFilter;
 
-      // --------------------------------------------------------
-      // SORT
-      // --------------------------------------------------------
+      const matchesSalesperson =
+        salespersonFilter === "All" ||
+        transaction.salesperson === salespersonFilter;
 
-      result.sort((a, b) => {
-        let comparison = 0;
+      const matchesPaymentMethod =
+        paymentMethodFilter === "All" ||
+        transaction.paymentMethod === paymentMethodFilter;
 
-        if (
-          sortField === "amount"
-        ) {
-          comparison =
-            a.amount - b.amount;
+      const transactionDate =
+        transaction.date?.slice(0, 10) || "";
 
-        } else if (
-          sortField === "date"
-        ) {
-          comparison =
-            new Date(
-              a.date || 0
-            ).getTime() -
-            new Date(
-              b.date || 0
-            ).getTime();
+      const matchesFrom =
+        !dateFrom || transactionDate >= dateFrom;
 
-        } else {
-          comparison =
-            String(
-              a[sortField]
-            ).localeCompare(
-              String(
-                b[sortField]
-              )
-            );
-        }
+      const matchesTo =
+        !dateTo || transactionDate <= dateTo;
 
-        return sortDirection ===
-          "asc"
-          ? comparison
-          : -comparison;
-      });
-
-      return result;
-    }, [
-      transactions,
-      tab,
-      search,
-      statusFilter,
-      startDate,
-      endDate,
-      sortField,
-      sortDirection,
-    ]);
-
-  // ==========================================================
-  // STATUS OPTIONS
-  // ==========================================================
-
-  const statusOptions =
-    useMemo(() => {
-      const statuses =
-        new Set<string>();
-
-      transactions.forEach(
-        (transaction) => {
-          if (
-            transaction.status
-          ) {
-            statuses.add(
-              transaction.status
-            );
-          }
-        }
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesStatus &&
+        matchesSalesperson &&
+        matchesPaymentMethod &&
+        matchesFrom &&
+        matchesTo
       );
+    });
+  }, [
+    transactions,
+    search,
+    typeFilter,
+    statusFilter,
+    salespersonFilter,
+    paymentMethodFilter,
+    dateFrom,
+    dateTo,
+  ]);
 
-      return Array.from(
-        statuses
-      ).sort();
+  /*
+  ============================================================
+  EXCEL-STYLE CALCULATIONS
+  ============================================================
+  */
 
-    }, [transactions]);
+  const totalSales = calculateTotalSales(filteredTransactions);
 
-  // ==========================================================
-  // SUMMARY
-  // ==========================================================
+  const totalExpenses =
+    calculateTotalExpenses(filteredTransactions);
 
-  const invoiceValue =
-    filteredTransactions
-      .filter(
-        (transaction) =>
-          transaction.type ===
-          "Sale"
-      )
-      .reduce(
-        (sum, transaction) =>
-          sum + transaction.amount,
-        0
-      );
+  const netMovement =
+    calculateNetMovement(filteredTransactions);
 
-  const recordedExpenses =
-    filteredTransactions
-      .filter(
-        (transaction) =>
-          transaction.type ===
-          "Expense"
-      )
-      .reduce(
-        (sum, transaction) =>
-          sum + transaction.amount,
-        0
-      );
+  const totalPaid =
+    calculateTotalPaid(filteredTransactions);
 
-  // ==========================================================
-  // SORT
-  // ==========================================================
+  const totalOutstanding =
+    calculateTotalOutstanding(filteredTransactions);
 
-  const handleSort = (
-    field: SortField
-  ) => {
-    if (
-      sortField === field
-    ) {
-      setSortDirection(
-        (current) =>
-          current === "asc"
-            ? "desc"
-            : "asc"
-      );
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
+  const registerTotal =
+    calculateRegisterTotal(filteredTransactions);
 
-  // ==========================================================
-  // RESET FILTERS
-  // ==========================================================
+  const salesRows = filteredTransactions.filter(
+    (transaction) => transaction.type === "Sale"
+  ).length;
 
-  const clearFilters = () => {
+  const expenseRows = filteredTransactions.filter(
+    (transaction) => transaction.type === "Expense"
+  ).length;
+
+  /*
+  ============================================================
+  CLEAR FILTERS
+  ============================================================
+  */
+
+  function clearFilters() {
     setSearch("");
+    setTypeFilter("All");
     setStatusFilter("All");
-    setStartDate("");
-    setEndDate("");
-    setTab("All");
-  };
+    setSalespersonFilter("All");
+    setPaymentMethodFilter("All");
+    setDateFrom("");
+    setDateTo("");
+  }
 
-  // ==========================================================
-  // CSV EXPORT
-  // ==========================================================
+  /*
+  ============================================================
+  CSV EXPORT
+  ============================================================
+  */
 
-  const exportCSV = () => {
-    if (
-      filteredTransactions.length ===
-      0
-    ) {
-      return;
-    }
-
+  function exportCsv() {
     const headers = [
+      "No",
       "Date",
       "Type",
       "Reference",
-      "Party",
+      "Customer / Supplier",
+      "Salesperson",
       "Description",
       "Account",
+      "Payment Account",
       "Payment Method",
       "Amount",
+      "Total Paid",
+      "Balance Due",
+      "Payment Date",
       "Status",
       "Journal Reference",
     ];
 
-    const rows =
-      filteredTransactions.map(
-        (transaction) => [
-          transaction.date,
-          transaction.type,
-          transaction.reference,
-          transaction.party,
-          transaction.description,
-          transaction.account,
-          transaction.paymentMethod,
-          transaction.amount.toFixed(
-            2
-          ),
-          transaction.status,
-          transaction.journalReference ||
-            "",
-        ]
-      );
+    const rows = filteredTransactions.map(
+      (transaction, index) => [
+        index + 1,
+        formatDate(transaction.date),
+        transaction.type,
+        transaction.reference,
+        transaction.party,
+        transaction.salesperson,
+        transaction.description,
+        transaction.account,
+        transaction.paymentAccount,
+        transaction.paymentMethod,
+        transaction.amount,
+        transaction.totalPaid,
+        transaction.balanceDue,
+        formatDate(transaction.paymentDate),
+        transaction.status,
+        transaction.journalReference || "",
+      ]
+    );
 
     const csv = [
       headers,
       ...rows,
     ]
       .map((row) =>
-        row
-          .map((value) => {
-            const text =
-              String(value);
-
-            return `"${text.replace(
-              /"/g,
-              '""'
-            )}"`;
-          })
-          .join(",")
+        row.map(escapeCsv).join(",")
       )
       .join("\n");
 
-    const blob =
-      new Blob(
-        [csv],
-        {
-          type:
-            "text/csv;charset=utf-8;",
-        }
-      );
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
 
-    const url =
-      URL.createObjectURL(
-        blob
-      );
+    const url = URL.createObjectURL(blob);
 
-    const link =
-      document.createElement(
-        "a"
-      );
+    const link = document.createElement("a");
 
     link.href = url;
+    link.download = `tochams_transaction_tracker_${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
 
-    link.download =
-      `tochams-transaction-tracker-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv`;
-
-    document.body.appendChild(
-      link
-    );
-
+    document.body.appendChild(link);
     link.click();
-
     link.remove();
 
-    URL.revokeObjectURL(
-      url
-    );
-  };
+    URL.revokeObjectURL(url);
+  }
 
-  // ==========================================================
-  // LOADING STATE
-  // ==========================================================
+  /*
+  ============================================================
+  OPEN TRANSACTION
+  ============================================================
+  */
+
+  function openTransaction(
+    transaction: TrackerTransaction
+  ) {
+    window.location.href = transaction.sourcePath;
+  }
+
+  /*
+  ============================================================
+  LOADING
+  ============================================================
+  */
 
   if (loading) {
     return (
       <AppShell
         title="Transaction Tracker"
-        subtitle="Sales and expense activity across the ERP"
-        breadcrumbs={[
-          {
-            label: "Dashboard",
-            href: "/dashboard",
-          },
-          {
-            label: "Finance",
-          },
-          {
-            label: "Transaction Tracker",
-          },
-        ]}
+        subtitle="Excel-style sales, expenses and transaction register"
       >
-        <div className="space-y-6">
+        <div className="flex min-h-[520px] items-center justify-center rounded-xl border border-slate-200 bg-white">
+          <div className="text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <p className="mt-4 text-sm font-semibold text-slate-700">
+              Loading Transaction Tracker
+            </p>
 
-            <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-
-            <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-
-            <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-
+            <p className="mt-1 text-xs text-slate-400">
+              Reading sales, payments and expenses from the ERP...
+            </p>
           </div>
-
-          <div className="h-[500px] animate-pulse rounded-2xl bg-slate-100" />
-
         </div>
       </AppShell>
     );
   }
 
-  // ==========================================================
-  // RENDER
-  // ==========================================================
+  /*
+  ============================================================
+  PAGE
+  ============================================================
+  */
 
   return (
     <AppShell
       title="Transaction Tracker"
-      subtitle="Excel-style operational tracking for sales and expenses"
-      breadcrumbs={[
-        {
-          label: "Dashboard",
-          href: "/dashboard",
-        },
-        {
-          label: "Finance",
-        },
-        {
-          label: "Transaction Tracker",
-        },
-      ]}
+      subtitle="Excel-style sales, expenses and transaction register"
     >
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-4">
 
-        {/* ================================================== */}
-        {/* SUMMARY CARDS */}
-        {/* ================================================== */}
+        {/* =====================================================
+            EXCEL TOOLBAR
+        ====================================================== */}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
 
-          {/* ================================================= */}
-          {/* INVOICE VALUE */}
-          {/* ================================================= */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-100 px-3 py-2">
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2">
 
-            <div className="flex items-start justify-between">
+              <div className="flex h-8 w-8 items-center justify-center rounded bg-emerald-600 text-white">
+                <FileSpreadsheet size={17} />
+              </div>
 
               <div>
+                <h1 className="text-sm font-bold text-slate-800">
+                  Transaction Register
+                </h1>
 
-                <p className="text-sm font-medium text-slate-500">
-                  Invoice Value
+                <p className="text-[10px] text-slate-500">
+                  ERP transaction worksheet
                 </p>
-
-                <p className="mt-2 text-2xl font-bold text-slate-900">
-                  {formatCurrency(
-                    invoiceValue
-                  )}
-                </p>
-
-                <p className="mt-1 text-xs text-slate-400">
-                  Operational invoice register total
-                </p>
-
               </div>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <TrendingUp size={21} />
-              </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+
+              <button
+                onClick={loadTransactions}
+                className="inline-flex h-8 items-center gap-1 rounded border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                <RefreshCw size={13} />
+                Refresh
+              </button>
+
+              <button
+                onClick={exportCsv}
+                className="inline-flex h-8 items-center gap-1 rounded border border-emerald-700 bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700"
+              >
+                <Download size={13} />
+                Export CSV
+              </button>
 
             </div>
 
           </div>
 
-          {/* ================================================= */}
-          {/* RECORDED EXPENSES */}
-          {/* ================================================= */}
+          {/* ===================================================
+              SUMMARY FORMULAS
+          ==================================================== */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="grid grid-cols-2 border-b border-slate-300 sm:grid-cols-3 lg:grid-cols-6">
 
-            <div className="flex items-start justify-between">
+            <FormulaCell
+              label="TOTAL SALES"
+              formula="=SUM(Sale Amount)"
+              value={formatCurrency(totalSales)}
+              valueClass="text-emerald-700"
+            />
 
-              <div>
+            <FormulaCell
+              label="TOTAL EXPENSES"
+              formula="=SUM(Expense Amount)"
+              value={formatCurrency(totalExpenses)}
+              valueClass="text-red-600"
+            />
 
-                <p className="text-sm font-medium text-slate-500">
-                  Recorded Expenses
-                </p>
+            <FormulaCell
+              label="NET MOVEMENT"
+              formula="=Sales - Expenses"
+              value={formatCurrency(netMovement)}
+              valueClass="text-blue-700"
+            />
 
-                <p className="mt-2 text-2xl font-bold text-slate-900">
-                  {formatCurrency(
-                    recordedExpenses
-                  )}
-                </p>
+            <FormulaCell
+              label="TOTAL PAID"
+              formula="=SUM(Paid Amount)"
+              value={formatCurrency(totalPaid)}
+              valueClass="text-emerald-700"
+            />
 
-                <p className="mt-1 text-xs text-slate-400">
-                  Expense register total
-                </p>
+            <FormulaCell
+              label="OUTSTANDING"
+              formula="=SUM(Balance Due)"
+              value={formatCurrency(totalOutstanding)}
+              valueClass="text-orange-600"
+            />
 
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                <TrendingDown size={21} />
-              </div>
-
-            </div>
+            <FormulaCell
+              label="TRANSACTIONS"
+              formula="=COUNTA(Reference)"
+              value={String(filteredTransactions.length)}
+              valueClass="text-slate-800"
+            />
 
           </div>
 
-          {/* ================================================= */}
-          {/* RECORDS */}
-          {/* ================================================= */}
+          {/* ===================================================
+              FILTER BAR
+          ==================================================== */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="border-b border-slate-300 bg-slate-50">
 
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2">
 
-              <div>
+              <div className="flex items-center gap-2">
+                <Filter size={14} className="text-slate-500" />
 
-                <p className="text-sm font-medium text-slate-500">
-                  Records
-                </p>
+                <span className="text-xs font-bold text-slate-700">
+                  Filters
+                </span>
 
-                <p className="mt-2 text-2xl font-bold text-slate-900">
-                  {
-                    filteredTransactions.length
+                <span className="text-[10px] text-slate-400">
+                  {filteredTransactions.length} of{" "}
+                  {transactions.length} records
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+
+                <button
+                  onClick={() =>
+                    setShowFilters(!showFilters)
                   }
-                </p>
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600"
+                >
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </button>
 
-                <p className="mt-1 text-xs text-slate-400">
-                  Matching records
-                </p>
+                <button
+                  onClick={clearFilters}
+                  className="inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  <X size={11} />
+                  Clear
+                </button>
 
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <FileSpreadsheet size={21} />
               </div>
 
             </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 gap-px bg-slate-300 sm:grid-cols-2 lg:grid-cols-7">
+
+                <FilterField label="SEARCH">
+
+                  <div className="relative">
+
+                    <Search
+                      size={13}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+
+                    <input
+                      value={search}
+                      onChange={(e) =>
+                        setSearch(e.target.value)
+                      }
+                      placeholder="Search..."
+                      className="h-8 w-full border-0 bg-white pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                  </div>
+
+                </FilterField>
+
+                <FilterField label="TYPE">
+
+                  <select
+                    value={typeFilter}
+                    onChange={(e) =>
+                      setTypeFilter(
+                        e.target.value as
+                          | "All"
+                          | TransactionType
+                      )
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="All">
+                      All Types
+                    </option>
+                    <option value="Sale">
+                      Sale
+                    </option>
+                    <option value="Expense">
+                      Expense
+                    </option>
+                  </select>
+
+                </FilterField>
+
+                <FilterField label="STATUS">
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) =>
+                      setStatusFilter(e.target.value)
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {statuses.map((status) => (
+                      <option
+                        key={status}
+                        value={status}
+                      >
+                        {status === "All"
+                          ? "All Statuses"
+                          : status}
+                      </option>
+                    ))}
+                  </select>
+
+                </FilterField>
+
+                <FilterField label="SALESPERSON">
+
+                  <select
+                    value={salespersonFilter}
+                    onChange={(e) =>
+                      setSalespersonFilter(e.target.value)
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {salespeople.map((person) => (
+                      <option
+                        key={person}
+                        value={person}
+                      >
+                        {person === "All"
+                          ? "All Salespeople"
+                          : person}
+                      </option>
+                    ))}
+                  </select>
+
+                </FilterField>
+
+                <FilterField label="PAYMENT METHOD">
+
+                  <select
+                    value={paymentMethodFilter}
+                    onChange={(e) =>
+                      setPaymentMethodFilter(e.target.value)
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {paymentMethods.map((method) => (
+                      <option
+                        key={method}
+                        value={method}
+                      >
+                        {method === "All"
+                          ? "All Methods"
+                          : method}
+                      </option>
+                    ))}
+                  </select>
+
+                </FilterField>
+
+                <FilterField label="DATE FROM">
+
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) =>
+                      setDateFrom(e.target.value)
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+
+                </FilterField>
+
+                <FilterField label="DATE TO">
+
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) =>
+                      setDateTo(e.target.value)
+                    }
+                    className="h-8 w-full border-0 bg-white px-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+
+                </FilterField>
+
+              </div>
+            )}
 
           </div>
 
         </div>
 
-        {/* ================================================== */}
-        {/* TRANSACTION REGISTER */}
-        {/* ================================================== */}
+        {/* =====================================================
+            REGISTER INFORMATION
+        ====================================================== */}
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-slate-300 bg-white px-3 py-2 text-[10px]">
 
-          {/* ================================================= */}
-          {/* HEADER */}
-          {/* ================================================= */}
+          <div className="flex flex-wrap items-center gap-4">
 
-          <div className="border-b border-slate-100 px-5 py-5">
+            <span>
+              <strong className="text-slate-700">
+                SALES ROWS:
+              </strong>{" "}
+              <span className="text-emerald-700">
+                {salesRows}
+              </span>
+            </span>
 
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <span>
+              <strong className="text-slate-700">
+                EXPENSE ROWS:
+              </strong>{" "}
+              <span className="text-red-600">
+                {expenseRows}
+              </span>
+            </span>
 
-              <div>
-
-                <h2 className="text-lg font-bold text-slate-900">
-                  Transaction Register
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Track operational transactions without altering the accounting records.
-                </p>
-
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-
-                {/* Refresh */}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    loadTransactions(
-                      true
-                    )
-                  }
-                  disabled={refreshing}
-                  className="
-                    inline-flex
-                    h-10
-                    items-center
-                    gap-2
-                    rounded-lg
-                    border
-                    border-slate-200
-                    bg-white
-                    px-3
-                    text-sm
-                    font-medium
-                    text-slate-700
-                    hover:bg-slate-50
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60
-                  "
-                >
-                  <RefreshCw
-                    size={16}
-                    className={
-                      refreshing
-                        ? "animate-spin"
-                        : ""
-                    }
-                  />
-
-                  Refresh
-                </button>
-
-                {/* Export */}
-
-                <button
-                  type="button"
-                  onClick={exportCSV}
-                  disabled={
-                    filteredTransactions.length ===
-                    0
-                  }
-                  className="
-                    inline-flex
-                    h-10
-                    items-center
-                    gap-2
-                    rounded-lg
-                    bg-emerald-600
-                    px-4
-                    text-sm
-                    font-semibold
-                    text-white
-                    hover:bg-emerald-700
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                  "
-                >
-                  <Download size={16} />
-                  Export CSV
-                </button>
-
-              </div>
-
-            </div>
+            <span>
+              <strong className="text-slate-700">
+                RECORDS:
+              </strong>{" "}
+              {filteredTransactions.length}
+            </span>
 
           </div>
 
-          {/* ================================================= */}
-          {/* TABS */}
-          {/* ================================================= */}
-
-          <div className="border-b border-slate-100 px-5">
-
-            <div className="flex gap-6">
-
-              {(
-                [
-                  "All",
-                  "Sale",
-                  "Expense",
-                ] as TrackerTab[]
-              ).map(
-                (item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() =>
-                      setTab(item)
-                    }
-                    className={`
-                      border-b-2
-                      px-1
-                      py-3
-                      text-sm
-                      font-semibold
-                      transition
-                      ${
-                        tab === item
-                          ? "border-blue-600 text-blue-600"
-                          : "border-transparent text-slate-500 hover:text-slate-800"
-                      }
-                    `}
-                  >
-                    {item ===
-                    "All"
-                      ? "All Transactions"
-                      : item ===
-                        "Sale"
-                      ? "Sales"
-                      : "Expenses"}
-                  </button>
-                )
-              )}
-
-            </div>
-
+          <div>
+            <strong className="text-slate-700">
+              REGISTER TOTAL:
+            </strong>{" "}
+            <span className="font-bold text-blue-700">
+              {formatCurrency(registerTotal)}
+            </span>
           </div>
 
-          {/* ================================================= */}
-          {/* FILTER BAR */}
-          {/* ================================================= */}
+        </div>
 
-          <div className="border-b border-slate-100 bg-slate-50/70 p-4">
+        {/* =====================================================
+            EXCEL TABLE
+        ====================================================== */}
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="overflow-hidden rounded border border-slate-400 bg-white shadow-sm">
 
-              {/* Search */}
+          <div className="overflow-x-auto">
 
-              <div className="relative xl:col-span-2">
+            <table className="w-full min-w-[1800px] border-collapse text-[10px]">
 
-                <Search
-                  size={17}
-                  className="
-                    pointer-events-none
-                    absolute
-                    left-3
-                    top-1/2
-                    -translate-y-1/2
-                    text-slate-400
-                  "
-                />
+              <thead className="sticky top-0 z-20">
 
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Search reference, customer, supplier, description..."
-                  className="
-                    h-10
-                    w-full
-                    rounded-lg
-                    border
-                    border-slate-200
-                    bg-white
-                    pl-10
-                    pr-4
-                    text-sm
-                    outline-none
-                    placeholder:text-slate-400
-                    focus:border-blue-500
-                    focus:ring-2
-                    focus:ring-blue-100
-                  "
-                />
+                <tr className="bg-[#D9EAF7] text-slate-700">
 
-              </div>
+                  <th className="w-10 border border-slate-400 px-2 py-2 text-center font-bold">
+                    #
+                  </th>
 
-              {/* Status */}
+                  <th className="w-24 border border-slate-400 px-2 py-2 text-left font-bold">
+                    DATE
+                  </th>
 
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value
-                  )
-                }
-                className="
-                  h-10
-                  rounded-lg
-                  border
-                  border-slate-200
-                  bg-white
-                  px-3
-                  text-sm
-                  text-slate-700
-                  outline-none
-                  focus:border-blue-500
-                  focus:ring-2
-                  focus:ring-blue-100
-                "
-              >
+                  <th className="w-20 border border-slate-400 px-2 py-2 text-left font-bold">
+                    TYPE
+                  </th>
 
-                <option value="All">
-                  All Statuses
-                </option>
+                  <th className="w-36 border border-slate-400 px-2 py-2 text-left font-bold">
+                    REFERENCE
+                  </th>
 
-                {statusOptions.map(
-                  (status) => (
-                    <option
-                      key={status}
-                      value={status}
+                  <th className="w-44 border border-slate-400 px-2 py-2 text-left font-bold">
+                    CUSTOMER / SUPPLIER
+                  </th>
+
+                  <th className="w-28 border border-slate-400 px-2 py-2 text-left font-bold">
+                    SALESPERSON
+                  </th>
+
+                  <th className="w-64 border border-slate-400 px-2 py-2 text-left font-bold">
+                    DESCRIPTION
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-left font-bold">
+                    ACCOUNT
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-left font-bold">
+                    PAYMENT ACCOUNT
+                  </th>
+
+                  <th className="w-28 border border-slate-400 px-2 py-2 text-left font-bold">
+                    PAYMENT METHOD
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-right font-bold">
+                    AMOUNT
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-right font-bold">
+                    TOTAL PAID
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-right font-bold">
+                    BALANCE DUE
+                  </th>
+
+                  <th className="w-28 border border-slate-400 px-2 py-2 text-left font-bold">
+                    PAYMENT DATE
+                  </th>
+
+                  <th className="w-28 border border-slate-400 px-2 py-2 text-left font-bold">
+                    STATUS
+                  </th>
+
+                  <th className="w-32 border border-slate-400 px-2 py-2 text-left font-bold">
+                    JOURNAL
+                  </th>
+
+                  <th className="w-20 border border-slate-400 px-2 py-2 text-center font-bold">
+                    VIEW
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+
+                    <td
+                      colSpan={17}
+                      className="border border-slate-300 px-4 py-16 text-center"
                     >
-                      {status}
-                    </option>
+                      <div className="text-sm font-semibold text-slate-500">
+                        No transactions found
+                      </div>
+
+                      <div className="mt-1 text-xs text-slate-400">
+                        Try changing or clearing the filters.
+                      </div>
+                    </td>
+
+                  </tr>
+                ) : (
+                  filteredTransactions.map(
+                    (transaction, index) => {
+
+                      const isSale =
+                        transaction.type === "Sale";
+
+                      const isPaid =
+                        transaction.status
+                          ?.toLowerCase()
+                          .includes("paid");
+
+                      return (
+                        <tr
+                          key={transaction.id}
+                          className={
+                            index % 2 === 0
+                              ? "bg-white hover:bg-blue-50"
+                              : "bg-slate-50 hover:bg-blue-50"
+                          }
+                        >
+
+                          {/* ROW NUMBER */}
+
+                          <td className="border border-slate-300 bg-slate-100 px-2 py-2 text-center font-semibold text-slate-500">
+                            {index + 1}
+                          </td>
+
+                          {/* DATE */}
+
+                          <td className="border border-slate-300 px-2 py-2 whitespace-nowrap">
+                            {formatDate(transaction.date)}
+                          </td>
+
+                          {/* TYPE */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+
+                            <span
+                              className={
+                                isSale
+                                  ? "font-bold text-emerald-700"
+                                  : "font-bold text-red-600"
+                              }
+                            >
+                              {transaction.type}
+                            </span>
+
+                          </td>
+
+                          {/* REFERENCE */}
+
+                          <td className="border border-slate-300 px-2 py-2 font-semibold text-blue-700">
+                            {transaction.reference}
+                          </td>
+
+                          {/* PARTY */}
+
+                          <td
+                            className="max-w-[220px] truncate border border-slate-300 px-2 py-2 font-semibold text-slate-700"
+                            title={transaction.party}
+                          >
+                            {transaction.party}
+                          </td>
+
+                          {/* SALESPERSON */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+                            {transaction.salesperson || "—"}
+                          </td>
+
+                          {/* DESCRIPTION */}
+
+                          <td
+                            className="max-w-[280px] truncate border border-slate-300 px-2 py-2"
+                            title={transaction.description}
+                          >
+                            {transaction.description || "—"}
+                          </td>
+
+                          {/* ACCOUNT */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+                            {transaction.account || "—"}
+                          </td>
+
+                          {/* PAYMENT ACCOUNT */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+                            {transaction.paymentAccount || "—"}
+                          </td>
+
+                          {/* PAYMENT METHOD */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+                            {transaction.paymentMethod || "—"}
+                          </td>
+
+                          {/* AMOUNT */}
+
+                          <td
+                            className={
+                              isSale
+                                ? "border border-slate-300 px-2 py-2 text-right font-bold text-emerald-700"
+                                : "border border-slate-300 px-2 py-2 text-right font-bold text-red-600"
+                            }
+                          >
+                            {formatCurrency(transaction.amount)}
+                          </td>
+
+                          {/* TOTAL PAID */}
+
+                          <td className="border border-slate-300 px-2 py-2 text-right font-semibold text-emerald-700">
+                            {formatCurrency(
+                              transaction.totalPaid
+                            )}
+                          </td>
+
+                          {/* BALANCE */}
+
+                          <td
+                            className={
+                              transaction.balanceDue > 0
+                                ? "border border-slate-300 px-2 py-2 text-right font-bold text-orange-600"
+                                : "border border-slate-300 px-2 py-2 text-right font-semibold text-slate-500"
+                            }
+                          >
+                            {formatCurrency(
+                              transaction.balanceDue
+                            )}
+                          </td>
+
+                          {/* PAYMENT DATE */}
+
+                          <td className="border border-slate-300 px-2 py-2 whitespace-nowrap">
+                            {formatDate(
+                              transaction.paymentDate
+                            )}
+                          </td>
+
+                          {/* STATUS */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+
+                            <span
+                              className={
+                                isPaid
+                                  ? "font-bold text-emerald-700"
+                                  : "font-semibold text-orange-600"
+                              }
+                            >
+                              {transaction.status || "—"}
+                            </span>
+
+                          </td>
+
+                          {/* JOURNAL */}
+
+                          <td className="border border-slate-300 px-2 py-2">
+                            {transaction.journalReference ||
+                              "—"}
+                          </td>
+
+                          {/* VIEW */}
+
+                          <td className="border border-slate-300 px-2 py-2 text-center">
+
+                            <button
+                              onClick={() =>
+                                openTransaction(
+                                  transaction
+                                )
+                              }
+                              className="inline-flex items-center gap-1 rounded border border-blue-300 bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-100"
+                            >
+                              <Eye size={11} />
+                              View
+                            </button>
+
+                          </td>
+
+                        </tr>
+                      );
+                    }
                   )
                 )}
 
-              </select>
+              </tbody>
 
-              {/* Start Date */}
+              {/* =================================================
+                  EXCEL TOTAL ROW
+              ================================================== */}
 
-              <input
-                type="date"
-                value={startDate}
-                onChange={(event) =>
-                  setStartDate(
-                    event.target.value
-                  )
-                }
-                className="
-                  h-10
-                  rounded-lg
-                  border
-                  border-slate-200
-                  bg-white
-                  px-3
-                  text-sm
-                  text-slate-700
-                  outline-none
-                  focus:border-blue-500
-                  focus:ring-2
-                  focus:ring-blue-100
-                "
-              />
+              <tfoot>
 
-              {/* End Date */}
+                <tr className="bg-[#FFF2CC] font-bold">
 
-              <input
-                type="date"
-                value={endDate}
-                onChange={(event) =>
-                  setEndDate(
-                    event.target.value
-                  )
-                }
-                className="
-                  h-10
-                  rounded-lg
-                  border
-                  border-slate-200
-                  bg-white
-                  px-3
-                  text-sm
-                  text-slate-700
-                  outline-none
-                  focus:border-blue-500
-                  focus:ring-2
-                  focus:ring-blue-100
-                "
-              />
+                  <td
+                    colSpan={10}
+                    className="border border-slate-400 px-2 py-2 text-right"
+                  >
+                    REGISTER TOTAL
+                  </td>
 
-            </div>
+                  <td className="border border-slate-400 px-2 py-2 text-right text-blue-700">
+                    {formatCurrency(registerTotal)}
+                  </td>
 
-            {/* Filter Summary */}
+                  <td className="border border-slate-400 px-2 py-2 text-right text-emerald-700">
+                    {formatCurrency(totalPaid)}
+                  </td>
 
-            <div className="mt-3 flex items-center justify-between">
+                  <td className="border border-slate-400 px-2 py-2 text-right text-orange-600">
+                    {formatCurrency(totalOutstanding)}
+                  </td>
 
-              <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <td
+                    colSpan={4}
+                    className="border border-slate-400 px-2 py-2"
+                  />
 
-                <Filter size={14} />
+                </tr>
 
-                <span>
-                  {filteredTransactions.length}{" "}
-                  matching records
-                </span>
+              </tfoot>
 
-              </div>
-
-              {(search ||
-                statusFilter !==
-                  "All" ||
-                startDate ||
-                endDate ||
-                tab !== "All") && (
-                <button
-                  type="button"
-                  onClick={
-                    clearFilters
-                  }
-                  className="
-                    inline-flex
-                    items-center
-                    gap-1.5
-                    text-xs
-                    font-semibold
-                    text-blue-600
-                    hover:text-blue-700
-                  "
-                >
-                  <X size={14} />
-                  Clear filters
-                </button>
-              )}
-
-            </div>
+            </table>
 
           </div>
 
-          {/* ================================================= */}
-          {/* TABLE */}
-          {/* ================================================= */}
+        </div>
 
-          {filteredTransactions.length ===
-          0 ? (
-            <div className="px-6 py-20 text-center">
+        {/* =====================================================
+            ACCOUNTING FORMULAS
+        ====================================================== */}
 
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                <FileSpreadsheet size={25} />
-              </div>
+        <div className="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
 
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                No transactions found
-              </h3>
+          <div className="border-b border-slate-300 bg-slate-100 px-3 py-2">
 
-              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-                No transactions match your current
-                search, status or date filters.
-              </p>
+            <h2 className="text-xs font-bold text-slate-800">
+              Accounting Control
+            </h2>
 
-              <button
-                type="button"
-                onClick={
-                  clearFilters
-                }
-                className="
-                  mt-5
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-lg
-                  bg-blue-600
-                  px-4
-                  py-2.5
-                  text-sm
-                  font-semibold
-                  text-white
-                  hover:bg-blue-700
-                "
-              >
-                Clear Filters
-              </button>
-
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-
-              <table className="min-w-[1100px] w-full">
-
-                {/* ================================================= */}
-                {/* TABLE HEADER */}
-                {/* ================================================= */}
-
-                <thead>
-
-                  <tr className="border-b border-slate-200 bg-slate-50">
-
-                    {/* DATE */}
-
-                    <th className="px-5 py-3 text-left">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSort(
-                            "date"
-                          )
-                        }
-                        className="
-                          inline-flex
-                          items-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          uppercase
-                          tracking-wide
-                          text-slate-500
-                          hover:text-slate-800
-                        "
-                      >
-                        Date
-                        <ArrowUpDown size={13} />
-                      </button>
-
-                    </th>
-
-                    {/* TYPE */}
-
-                    <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                      Type
-                    </th>
-
-                    {/* REFERENCE */}
-
-                    <th className="px-5 py-3 text-left">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSort(
-                            "reference"
-                          )
-                        }
-                        className="
-                          inline-flex
-                          items-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          uppercase
-                          tracking-wide
-                          text-slate-500
-                          hover:text-slate-800
-                        "
-                      >
-                        Reference
-                        <ArrowUpDown size={13} />
-                      </button>
-
-                    </th>
-
-                    {/* PARTY */}
-
-                    <th className="px-5 py-3 text-left">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSort(
-                            "party"
-                          )
-                        }
-                        className="
-                          inline-flex
-                          items-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          uppercase
-                          tracking-wide
-                          text-slate-500
-                          hover:text-slate-800
-                        "
-                      >
-                        Customer / Supplier
-                        <ArrowUpDown size={13} />
-                      </button>
-
-                    </th>
-
-                    {/* DESCRIPTION */}
-
-                    <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                      Description
-                    </th>
-
-                    {/* ACCOUNT */}
-
-                    <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                      Account
-                    </th>
-
-                    {/* AMOUNT */}
-
-                    <th className="px-5 py-3 text-right">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSort(
-                            "amount"
-                          )
-                        }
-                        className="
-                          ml-auto
-                          inline-flex
-                          items-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          uppercase
-                          tracking-wide
-                          text-slate-500
-                          hover:text-slate-800
-                        "
-                      >
-                        Amount
-                        <ArrowUpDown size={13} />
-                      </button>
-
-                    </th>
-
-                    {/* STATUS */}
-
-                    <th className="px-5 py-3 text-center">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSort(
-                            "status"
-                          )
-                        }
-                        className="
-                          mx-auto
-                          inline-flex
-                          items-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          uppercase
-                          tracking-wide
-                          text-slate-500
-                          hover:text-slate-800
-                        "
-                      >
-                        Status
-                        <ArrowUpDown size={13} />
-                      </button>
-
-                    </th>
-
-                    {/* ACTION */}
-
-                    <th className="px-5 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
-                      Action
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                {/* ================================================= */}
-                {/* TABLE BODY */}
-                {/* ================================================= */}
-
-                <tbody className="divide-y divide-slate-100">
-
-                  {filteredTransactions.map(
-                    (
-                      transaction
-                    ) => (
-                      <tr
-                        key={
-                          transaction.id
-                        }
-                        className="transition hover:bg-slate-50"
-                      >
-
-                        {/* DATE */}
-
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
-
-                          {formatDate(
-                            transaction.date
-                          )}
-
-                        </td>
-
-                        {/* TYPE */}
-
-                        <td className="px-5 py-4">
-
-                          <span
-                            className={`
-                              inline-flex
-                              items-center
-                              gap-1.5
-                              rounded-full
-                              px-2.5
-                              py-1
-                              text-xs
-                              font-semibold
-                              ${
-                                transaction.type ===
-                                "Sale"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-red-50 text-red-700"
-                              }
-                            `}
-                          >
-
-                            {transaction.type ===
-                            "Sale" ? (
-                              <TrendingUp
-                                size={13}
-                              />
-                            ) : (
-                              <TrendingDown
-                                size={13}
-                              />
-                            )}
-
-                            {transaction.type}
-
-                          </span>
-
-                        </td>
-
-                        {/* REFERENCE */}
-
-                        <td className="px-5 py-4">
-
-                          <Link
-                            href={
-                              transaction.sourcePath
-                            }
-                            className="
-                              font-semibold
-                              text-blue-600
-                              hover:text-blue-700
-                              hover:underline
-                            "
-                          >
-                            {
-                              transaction.reference
-                            }
-                          </Link>
-
-                          {transaction.journalReference && (
-                            <p className="mt-0.5 text-[11px] text-slate-400">
-                              Journal:{" "}
-                              {
-                                transaction.journalReference
-                              }
-                            </p>
-                          )}
-
-                        </td>
-
-                        {/* PARTY */}
-
-                        <td className="px-5 py-4">
-
-                          <p className="font-medium text-slate-800">
-                            {
-                              transaction.party
-                            }
-                          </p>
-
-                        </td>
-
-                        {/* DESCRIPTION */}
-
-                        <td className="max-w-[240px] px-5 py-4">
-
-                          <p className="truncate text-sm text-slate-600">
-                            {
-                              transaction.description
-                            }
-                          </p>
-
-                          {transaction.paymentMethod !==
-                            "—" && (
-                            <p className="mt-0.5 text-xs capitalize text-slate-400">
-                              {
-                                transaction.paymentMethod
-                              }
-                            </p>
-                          )}
-
-                        </td>
-
-                        {/* ACCOUNT */}
-
-                        <td className="px-5 py-4">
-
-                          <span className="text-sm text-slate-600">
-                            {
-                              transaction.account
-                            }
-                          </span>
-
-                        </td>
-
-                        {/* AMOUNT */}
-
-                        <td className="px-5 py-4 text-right">
-
-                          <span
-                            className={`
-                              font-bold
-                              ${
-                                transaction.type ===
-                                "Sale"
-                                  ? "text-emerald-600"
-                                  : "text-red-600"
-                              }
-                            `}
-                          >
-
-                            {transaction.type ===
-                            "Sale"
-                              ? "+"
-                              : "-"}
-
-                            {formatCurrency(
-                              transaction.amount
-                            )}
-
-                          </span>
-
-                        </td>
-
-                        {/* STATUS */}
-
-                        <td className="px-5 py-4 text-center">
-
-                          <span
-                            className={`
-                              inline-flex
-                              rounded-full
-                              px-2.5
-                              py-1
-                              text-xs
-                              font-semibold
-                              ring-1
-                              ring-inset
-                              ${getStatusClass(
-                                transaction.status
-                              )}
-                            `}
-                          >
-                            {
-                              transaction.status
-                            }
-                          </span>
-
-                        </td>
-
-                        {/* ACTION */}
-
-                        <td className="px-5 py-4 text-center">
-
-                          <Link
-                            href={
-                              transaction.sourcePath
-                            }
-                            className="
-                              inline-flex
-                              items-center
-                              gap-1.5
-                              rounded-lg
-                              border
-                              border-slate-200
-                              bg-white
-                              px-3
-                              py-2
-                              text-xs
-                              font-semibold
-                              text-slate-700
-                              hover:border-blue-200
-                              hover:bg-blue-50
-                              hover:text-blue-600
-                            "
-                          >
-
-                            <ExternalLink
-                              size={14}
-                            />
-
-                            View
-
-                          </Link>
-
-                        </td>
-
-                      </tr>
-                    )
-                  )}
-
-                </tbody>
-
-                {/* ================================================= */}
-                {/* TOTAL */}
-                {/* ================================================= */}
-
-                <tfoot>
-
-                  <tr className="border-t-2 border-slate-200 bg-slate-50">
-
-                    <td
-                      colSpan={6}
-                      className="px-5 py-4 text-right text-sm font-bold text-slate-700"
-                    >
-                      Register Total
-                    </td>
-
-                    <td className="px-5 py-4 text-right">
-
-                      <span className="font-bold text-slate-900">
-                        {formatCurrency(
-                          filteredTransactions.reduce(
-                            (
-                              sum,
-                              transaction
-                            ) =>
-                              sum +
-                              transaction.amount,
-                            0
-                          )
-                        )}
-                      </span>
-
-                    </td>
-
-                    <td
-                      colSpan={2}
-                    />
-
-                  </tr>
-
-                </tfoot>
-
-              </table>
-
-            </div>
-          )}
-
-        </section>
-
-        {/* ================================================== */}
-        {/* ACCOUNTING CONTROL */}
-        {/* ================================================== */}
-
-        <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4">
-
-          <div className="flex gap-3">
-
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-              <FileSpreadsheet size={17} />
-            </div>
-
-            <div>
-
-              <p className="text-sm font-semibold text-blue-900">
-                Accounting control
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-blue-700">
-                This tracker is a management view of
-                ERP transactions. It does not create
-                independent accounting records. Invoices
-                and expenses remain controlled by their
-                respective modules and accounting journals.
-              </p>
-
-            </div>
+            <p className="text-[10px] text-slate-500">
+              Calculations generated directly from the filtered ERP transaction records.
+            </p>
 
           </div>
+
+          <div className="grid grid-cols-1 gap-px bg-slate-300 sm:grid-cols-2 lg:grid-cols-4">
+
+            <FormulaBox
+              title="TOTAL SALES"
+              formula="SUM(Sale Amount)"
+              value={formatCurrency(totalSales)}
+            />
+
+            <FormulaBox
+              title="TOTAL EXPENSES"
+              formula="SUM(Expense Amount)"
+              value={formatCurrency(totalExpenses)}
+              valueClass="text-red-600"
+            />
+
+            <FormulaBox
+              title="NET MOVEMENT"
+              formula="Sales - Expenses"
+              value={formatCurrency(netMovement)}
+              valueClass="text-blue-700"
+            />
+
+            <FormulaBox
+              title="TOTAL OUTSTANDING"
+              formula="SUM(Balance Due)"
+              value={formatCurrency(totalOutstanding)}
+              valueClass="text-orange-600"
+            />
+
+          </div>
+
+        </div>
+
+        {/* =====================================================
+            FOOTER
+        ====================================================== */}
+
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[10px] text-slate-400">
+
+          <span>
+            Showing {filteredTransactions.length} of{" "}
+            {transactions.length} transaction records
+          </span>
+
+          <span>
+            Excel-style calculations are generated from ERP records.
+          </span>
 
         </div>
 
       </div>
     </AppShell>
+  );
+}
+
+/*
+============================================================
+FORMULA CELL
+============================================================
+*/
+
+function FormulaCell({
+  label,
+  formula,
+  value,
+  valueClass = "text-slate-800",
+}: {
+  label: string;
+  formula: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="border-r border-slate-300 px-3 py-2 last:border-r-0">
+
+      <div className="text-[9px] font-bold text-slate-500">
+        {label}
+      </div>
+
+      <div className="mt-0.5 text-[9px] text-slate-400">
+        {formula}
+      </div>
+
+      <div
+        className={`mt-1 text-sm font-black ${valueClass}`}
+      >
+        {value}
+      </div>
+
+    </div>
+  );
+}
+
+/*
+============================================================
+FILTER FIELD
+============================================================
+*/
+
+function FilterField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-slate-100 p-1">
+
+      <label className="mb-1 block px-1 text-[9px] font-bold text-slate-500">
+        {label}
+      </label>
+
+      {children}
+
+    </div>
+  );
+}
+
+/*
+============================================================
+FORMULA BOX
+============================================================
+*/
+
+function FormulaBox({
+  title,
+  formula,
+  value,
+  valueClass = "text-emerald-700",
+}: {
+  title: string;
+  formula: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="bg-slate-50 px-4 py-3">
+
+      <div className="text-[9px] font-bold text-slate-500">
+        {title}
+      </div>
+
+      <div className="mt-1 font-mono text-[10px] text-slate-400">
+        {formula}
+      </div>
+
+      <div
+        className={`mt-1 text-sm font-black ${valueClass}`}
+      >
+        {value}
+      </div>
+
+    </div>
   );
 }
