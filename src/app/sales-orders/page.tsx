@@ -292,8 +292,8 @@ export default function SalesOrdersPage() {
 
   const addItem = () => {
     setItems((current) => [
-      ...current,
       createEmptyItem(),
+      ...current,
     ]);
   };
 

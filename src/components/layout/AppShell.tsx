@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ChevronRight,
   Home,
+  ArrowUpRight,
 } from "lucide-react";
 
 import Sidebar from "./Sidebar";
@@ -35,74 +36,104 @@ export default function AppShell({
   actions = [],
 }: AppShellProps) {
   return (
-    <div
-      className="
-        flex
-        h-screen
-        overflow-hidden
-        bg-[#f6f7fb]
-        text-slate-900
-      "
-    >
-      {/* =====================================================
+    <div className="flex h-screen overflow-hidden bg-[#f4f7fb] text-slate-900">
+
+      {/* =========================================================
+          ACCESSIBILITY
+      ========================================================== */}
+
+      <a
+        href="#main-content"
+        className="
+          sr-only
+          focus:not-sr-only
+          focus:fixed
+          focus:left-4
+          focus:top-4
+          focus:z-[9999]
+          focus:rounded-lg
+          focus:bg-slate-950
+          focus:px-4
+          focus:py-2
+          focus:text-sm
+          focus:font-semibold
+          focus:text-white
+          focus:shadow-xl
+        "
+      >
+        Skip to main content
+      </a>
+
+      {/* =========================================================
           SIDEBAR
-      ====================================================== */}
+      ========================================================== */}
 
       <Sidebar />
 
-      {/* =====================================================
+      {/* =========================================================
           APPLICATION AREA
-      ====================================================== */}
+      ========================================================== */}
 
-      <div
-        className="
-          flex
-          min-w-0
-          flex-1
-          flex-col
-          overflow-hidden
-        "
-      >
-        {/* Topbar */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+        {/* =======================================================
+            TOPBAR
+        ======================================================== */}
 
         <Topbar />
 
-        {/* =================================================
-            MAIN CONTENT
-        ================================================== */}
+        {/* =======================================================
+            MAIN WORKSPACE
+        ======================================================== */}
 
         <main
+          id="main-content"
           className="
             min-h-0
             flex-1
             overflow-y-auto
             scroll-smooth
+            bg-[#f4f7fb]
           "
         >
+
+          {/* =====================================================
+              WORKSPACE CONTAINER
+          ====================================================== */}
+
           <div
             className="
               mx-auto
               w-full
-              max-w-[1680px]
+              max-w-[1800px]
               px-4
               py-5
+
               sm:px-6
-              lg:px-8
-              lg:py-6
-              xl:px-9
+              sm:py-6
+
+              lg:px-7
+              lg:py-7
+
+              xl:px-8
+              xl:py-8
             "
           >
-            {/* =================================================
-                PAGE HEADER
-            ================================================== */}
+
+            {/* ===================================================
+                PAGE CONTEXT
+            ==================================================== */}
 
             <header className="mb-6">
-              {/* Breadcrumbs */}
+
+              {/* =================================================
+                  BREADCRUMBS
+              ================================================== */}
 
               {breadcrumbs.length > 0 && (
                 <nav
                   aria-label="Breadcrumb"
-                  className="mb-3"
+                  className="mb-4"
                 >
                   <ol
                     className="
@@ -112,23 +143,37 @@ export default function AppShell({
                       gap-1.5
                       text-[11px]
                       font-medium
+                      text-slate-400
                     "
                   >
-                    {/* Home */}
+
+                    {/* HOME */}
 
                     <li>
                       <Link
                         href="/dashboard"
                         className="
-                          flex
+                          group
+                          inline-flex
                           items-center
-                          gap-1
-                          text-slate-400
-                          transition
+                          gap-1.5
+                          rounded-md
+                          px-1.5
+                          py-1
+                          transition-colors
+                          hover:bg-white
                           hover:text-blue-600
                         "
                       >
-                        <Home size={12} />
+                        <Home
+                          size={12}
+                          strokeWidth={2}
+                          className="
+                            text-slate-400
+                            transition-colors
+                            group-hover:text-blue-600
+                          "
+                        />
 
                         <span className="hidden sm:inline">
                           Home
@@ -136,8 +181,11 @@ export default function AppShell({
                       </Link>
                     </li>
 
-                    {breadcrumbs.map(
-                      (item, index) => (
+                    {breadcrumbs.map((item, index) => {
+                      const isLast =
+                        index === breadcrumbs.length - 1;
+
+                      return (
                         <li
                           key={`${item.label}-${index}`}
                           className="
@@ -146,158 +194,299 @@ export default function AppShell({
                             gap-1.5
                           "
                         >
+
                           <ChevronRight
                             size={12}
+                            strokeWidth={2}
                             className="text-slate-300"
                           />
 
-                          {item.href ? (
+                          {item.href && !isLast ? (
                             <Link
                               href={item.href}
                               className="
-                                text-slate-400
-                                transition
+                                rounded-md
+                                px-1.5
+                                py-1
+                                transition-colors
+                                hover:bg-white
                                 hover:text-blue-600
                               "
                             >
                               {item.label}
                             </Link>
                           ) : (
-                            <span className="text-slate-500">
+                            <span
+                              className="
+                                rounded-md
+                                px-1.5
+                                py-1
+                                font-semibold
+                                text-slate-500
+                              "
+                              aria-current={
+                                isLast
+                                  ? "page"
+                                  : undefined
+                              }
+                            >
                               {item.label}
                             </span>
                           )}
+
                         </li>
-                      )
-                    )}
+                      );
+                    })}
+
                   </ol>
                 </nav>
               )}
 
-              {/* Page heading */}
+              {/* =================================================
+                  PAGE HEADER CARD
+              ================================================== */}
 
               <div
                 className="
-                  flex
-                  flex-col
-                  gap-4
+                  relative
+                  overflow-hidden
                   rounded-2xl
                   border
                   border-slate-200/80
                   bg-white
-                  px-5
-                  py-4
-                  shadow-[0_4px_18px_rgba(15,23,42,0.035)]
-                  sm:px-6
-                  sm:py-5
-                  lg:flex-row
-                  lg:items-center
-                  lg:justify-between
+                  shadow-[0_2px_10px_rgba(15,23,42,0.025)]
                 "
               >
-                {/* Title */}
 
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="
-                        h-6
-                        w-1
-                        rounded-full
-                        bg-gradient-to-b
-                        from-blue-500
-                        to-cyan-400
-                      "
-                    />
+                {/* =================================================
+                    SUBTLE BRAND ACCENT
+                ================================================== */}
 
-                    <h1
-                      className="
-                        truncate
-                        text-xl
-                        font-black
-                        tracking-[-0.025em]
-                        text-slate-950
-                        sm:text-2xl
-                      "
-                    >
-                      {title}
-                    </h1>
+                <div
+                  className="
+                    absolute
+                    left-0
+                    top-0
+                    h-full
+                    w-[3px]
+                    bg-gradient-to-b
+                    from-blue-600
+                    via-indigo-500
+                    to-cyan-400
+                  "
+                />
+
+                {/* =================================================
+                    HEADER CONTENT
+                ================================================== */}
+
+                <div
+                  className="
+                    flex
+                    flex-col
+                    gap-5
+                    px-5
+                    py-5
+
+                    sm:px-6
+                    sm:py-6
+
+                    lg:flex-row
+                    lg:items-center
+                    lg:justify-between
+                    lg:px-7
+                  "
+                >
+
+                  {/* =================================================
+                      TITLE AREA
+                  ================================================== */}
+
+                  <div className="min-w-0">
+
+                    <div className="flex items-start gap-3">
+
+                      {/* TITLE MARK */}
+
+                      <div
+                        className="
+                          mt-1
+                          hidden
+                          h-8
+                          w-8
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-lg
+                          bg-blue-50
+                          text-blue-600
+                          sm:flex
+                        "
+                        aria-hidden="true"
+                      >
+                        <ArrowUpRight
+                          size={16}
+                          strokeWidth={2.2}
+                        />
+                      </div>
+
+                      {/* TEXT */}
+
+                      <div className="min-w-0">
+
+                        <h1
+                          className="
+                            truncate
+                            text-xl
+                            font-bold
+                            tracking-[-0.02em]
+                            text-slate-950
+
+                            sm:text-2xl
+
+                            lg:text-[26px]
+                          "
+                        >
+                          {title}
+                        </h1>
+
+                        {subtitle && (
+                          <p
+                            className="
+                              mt-1.5
+                              max-w-3xl
+                              text-xs
+                              leading-5
+                              text-slate-500
+
+                              sm:text-sm
+                              sm:leading-6
+                            "
+                          >
+                            {subtitle}
+                          </p>
+                        )}
+
+                      </div>
+
+                    </div>
+
                   </div>
 
-                  {subtitle && (
-                    <p
+                  {/* =================================================
+                      ACTION AREA
+                  ================================================== */}
+
+                  {actions.length > 0 && (
+                    <div
                       className="
-                        mt-1.5
-                        max-w-3xl
-                        pl-3
-                        text-xs
-                        leading-5
-                        text-slate-500
-                        sm:text-sm
+                        flex
+                        shrink-0
+                        flex-wrap
+                        items-center
+                        gap-2
+
+                        lg:justify-end
                       "
                     >
-                      {subtitle}
-                    </p>
+                      <QuickActions
+                        actions={actions}
+                      />
+                    </div>
                   )}
+
                 </div>
 
-                {/* Actions */}
-
-                {actions.length > 0 && (
-                  <div className="shrink-0">
-                    <QuickActions
-                      actions={actions}
-                    />
-                  </div>
-                )}
               </div>
+
             </header>
 
-            {/* =================================================
-                PAGE CONTENT
-            ================================================== */}
+            {/* =====================================================
+                MAIN PAGE CONTENT
+            ====================================================== */}
 
-            <section className="space-y-7">
+            <section
+              className="
+                min-w-0
+                space-y-6
+
+                sm:space-y-7
+
+                lg:space-y-8
+              "
+            >
               {children}
             </section>
 
-            {/* =================================================
+            {/* =====================================================
                 FOOTER
-            ================================================== */}
+            ====================================================== */}
 
             <footer
               className="
-                mt-8
+                mt-10
                 border-t
                 border-slate-200/80
-                py-4
+                pt-5
               "
             >
+
               <div
                 className="
                   flex
                   flex-col
-                  gap-1
+                  gap-2
+
                   text-[10px]
+                  font-medium
                   text-slate-400
+
                   sm:flex-row
                   sm:items-center
                   sm:justify-between
                 "
               >
-                <span>
-                  TOCHAMS ERP • Enterprise Resource
-                  Planning Platform
-                </span>
 
-                <span>
-                  Operational workspace
-                </span>
+                <div className="flex items-center gap-2">
+
+                  <span>
+                    TOCHAMS ERP
+                  </span>
+
+                  <span className="text-slate-300">
+                    •
+                  </span>
+
+                  <span>
+                    Enterprise Resource Planning Platform
+                  </span>
+
+                </div>
+
+                <div className="flex items-center gap-2">
+
+                  <span>
+                    Operational Workspace
+                  </span>
+
+                  <span className="h-1 w-1 rounded-full bg-emerald-500" />
+
+                  <span>
+                    System Operational
+                  </span>
+
+                </div>
+
               </div>
+
             </footer>
+
           </div>
+
         </main>
+
       </div>
+
     </div>
   );
 }

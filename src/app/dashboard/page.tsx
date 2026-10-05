@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Activity,
+  ArrowUpRight,
+  CalendarDays,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardData } from "@/services/dashboardService";
 
 import AppShell from "@/components/layout/AppShell";
 
-import DashboardSection from "@/components/dashboard/DashboardSection";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import InvoiceStatusChart from "@/components/dashboard/InvoiceStatusChart";
@@ -15,6 +22,7 @@ import OrdersOverviewChart from "@/components/dashboard/OrdersOverviewChart";
 import LowStockCard from "@/components/dashboard/LowStockCard";
 import RecentOrders from "@/components/dashboard/RecentOrders";
 import RecentCustomers from "@/components/dashboard/RecentCustomers";
+import ManagementAttention from "@/components/dashboard/ManagementAttention";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +37,6 @@ export default function Dashboard() {
   // =========================================================
 
   const [stats, setStats] = useState({
-    // Operational metrics
     customers: 0,
     products: 0,
     orders: 0,
@@ -39,12 +46,10 @@ export default function Dashboard() {
     pendingOrders: 0,
     lowStock: 0,
 
-    // Inventory / projection metrics
     storeValue: 0,
     potentialSalesValue: 0,
     potentialProfit: 0,
 
-    // Accounting / financial metrics
     revenue: 0,
     expenses: 0,
     netProfit: 0,
@@ -54,23 +59,16 @@ export default function Dashboard() {
   // DASHBOARD DATA
   // =========================================================
 
-  const [invoiceChart, setInvoiceChart] =
-    useState<any[]>([]);
+  const [invoiceChart, setInvoiceChart] = useState<any[]>([]);
+  const [lowStock, setLowStock] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
 
-  const [lowStock, setLowStock] =
-    useState<any[]>([]);
-
-  const [orders, setOrders] =
-    useState<any[]>([]);
-
-  const [customers, setCustomers] =
-    useState<any[]>([]);
-
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // =========================================================
-  // LOAD DASHBOARD AFTER AUTHENTICATION
+  // LOAD DASHBOARD
   // =========================================================
 
   useEffect(() => {
@@ -83,68 +81,38 @@ export default function Dashboard() {
       return;
     }
 
-    console.log("================================");
-    console.log("TOCHAMS ERP Dashboard Mounted");
-    console.log("Authenticated User:", user);
-    console.log("================================");
-
     loadDashboard();
   }, [user, authLoading]);
 
   // =========================================================
-  // LOAD DASHBOARD DATA
+  // FETCH DATA
   // =========================================================
 
-  async function loadDashboard() {
+  async function loadDashboard(showRefreshState = false) {
     try {
-      console.log("Loading TOCHAMS ERP dashboard...");
+      if (showRefreshState) {
+        setRefreshing(true);
+      }
 
-      const dashboard =
-        await getDashboardData();
-
-      console.log(
-        "Dashboard Data:",
-        dashboard
-      );
-
-      // -----------------------------------------------------
-      // FINANCIAL + OPERATIONAL STATS
-      // -----------------------------------------------------
+      const dashboard = await getDashboardData();
 
       setStats(dashboard.stats);
-
-      // -----------------------------------------------------
-      // INVOICE CHART
-      // -----------------------------------------------------
 
       setInvoiceChart(
         dashboard.invoiceChart
       );
 
-      // -----------------------------------------------------
-      // LOW STOCK
-      // -----------------------------------------------------
-
       setLowStock(
         dashboard.lowStock
       );
-
-      // -----------------------------------------------------
-      // RECENT ORDERS
-      // -----------------------------------------------------
 
       setOrders(
         dashboard.orders
       );
 
-      // -----------------------------------------------------
-      // RECENT CUSTOMERS
-      // -----------------------------------------------------
-
       setCustomers(
         dashboard.customers
       );
-
     } catch (error) {
       console.error(
         "TOCHAMS ERP Dashboard Error:",
@@ -152,6 +120,7 @@ export default function Dashboard() {
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -171,17 +140,17 @@ export default function Dashboard() {
             min-h-[520px]
             items-center
             justify-center
-            rounded-[22px]
+            rounded-2xl
             border
             border-slate-200
             bg-white
-            shadow-[0_8px_30px_rgba(15,23,42,0.045)]
+            shadow-[0_8px_30px_rgba(15,23,42,0.035)]
           "
         >
-          <div className="flex flex-col items-center">
-
+          <div className="text-center">
             <div
               className="
+                mx-auto
                 flex
                 h-12
                 w-12
@@ -189,42 +158,22 @@ export default function Dashboard() {
                 justify-center
                 rounded-2xl
                 bg-blue-50
+                text-blue-600
               "
             >
-              <div
-                className="
-                  h-6
-                  w-6
-                  animate-spin
-                  rounded-full
-                  border-2
-                  border-blue-200
-                  border-t-blue-600
-                "
+              <Activity
+                size={22}
+                className="animate-pulse"
               />
             </div>
 
-            <p
-              className="
-                mt-4
-                text-sm
-                font-bold
-                text-slate-800
-              "
-            >
-              Loading Dashboard
+            <p className="mt-4 text-sm font-bold text-slate-900">
+              Loading dashboard
             </p>
 
-            <p
-              className="
-                mt-1
-                text-xs
-                text-slate-400
-              "
-            >
+            <p className="mt-1 text-xs text-slate-400">
               Preparing your enterprise overview...
             </p>
-
           </div>
         </div>
       </AppShell>
@@ -240,44 +189,43 @@ export default function Dashboard() {
       title="Dashboard"
       subtitle="Enterprise Resource Planning Overview"
     >
-
       <div className="space-y-7">
 
-        {/* =================================================
-            EXECUTIVE INTRO
-        ================================================== */}
+        {/* =====================================================
+            EXECUTIVE HERO
+        ====================================================== */}
 
         <section
           className="
             relative
             overflow-hidden
-            rounded-[22px]
+            rounded-[24px]
             border
-            border-blue-100
-            bg-gradient-to-r
-            from-[#08245F]
-            via-[#0D3FAF]
+            border-blue-200/60
+            bg-gradient-to-br
+            from-[#071A46]
+            via-[#0B328F]
             to-[#155EEF]
             px-6
-            py-6
+            py-7
             text-white
-            shadow-[0_12px_35px_rgba(15,23,42,0.10)]
-            sm:px-7
+            shadow-[0_18px_45px_rgba(15,23,42,0.12)]
+            sm:px-8
+            sm:py-8
           "
         >
-
           {/* Background decoration */}
 
           <div
             className="
               pointer-events-none
               absolute
-              -right-20
-              -top-28
-              h-64
-              w-64
+              -right-24
+              -top-32
+              h-80
+              w-80
               rounded-full
-              bg-cyan-300/15
+              bg-cyan-300/10
               blur-3xl
             "
           />
@@ -286,17 +234,15 @@ export default function Dashboard() {
             className="
               pointer-events-none
               absolute
-              -bottom-28
+              -bottom-32
               left-1/3
-              h-52
-              w-52
+              h-72
+              w-72
               rounded-full
               bg-blue-300/10
               blur-3xl
             "
           />
-
-          {/* Content */}
 
           <div
             className="
@@ -304,18 +250,19 @@ export default function Dashboard() {
               z-10
               flex
               flex-col
-              gap-5
+              gap-7
               lg:flex-row
-              lg:items-center
+              lg:items-end
               lg:justify-between
             "
           >
+            {/* Main message */}
 
-            <div>
+            <div className="max-w-3xl">
 
               <div
                 className="
-                  mb-2
+                  mb-3
                   flex
                   items-center
                   gap-2
@@ -326,7 +273,6 @@ export default function Dashboard() {
                   text-cyan-200
                 "
               >
-
                 <span
                   className="
                     h-1.5
@@ -339,27 +285,33 @@ export default function Dashboard() {
                 TOCHAMS ERP
 
                 <span className="text-blue-200">
-                  •
+                  /
                 </span>
 
                 Executive Command Center
-
               </div>
 
-              <h1
-                className="
-                  text-2xl
-                  font-black
-                  tracking-[-0.035em]
-                  sm:text-3xl
-                "
-              >
-                Business Overview
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1
+                  className="
+                    text-2xl
+                    font-black
+                    tracking-[-0.04em]
+                    sm:text-3xl
+                  "
+                >
+                  Business Overview
+                </h1>
+
+                <Sparkles
+                  size={20}
+                  className="hidden text-cyan-200 sm:block"
+                />
+              </div>
 
               <p
                 className="
-                  mt-2
+                  mt-3
                   max-w-2xl
                   text-sm
                   leading-6
@@ -373,26 +325,110 @@ export default function Dashboard() {
 
             </div>
 
-            {/* System status */}
+            {/* Right side controls */}
 
             <div
               className="
                 flex
-                w-fit
+                flex-wrap
                 items-center
                 gap-2
-                rounded-full
-                border
-                border-white/15
-                bg-white/10
-                px-4
-                py-2
-                backdrop-blur-md
               "
             >
+              {/* Date */}
 
-              <span className="relative flex h-2 w-2">
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/10
+                  px-3
+                  py-2.5
+                  backdrop-blur-md
+                "
+              >
+                <CalendarDays
+                  size={14}
+                  className="text-blue-200"
+                />
 
+                <span className="text-xs font-semibold text-white">
+                  {new Date().toLocaleDateString(
+                    "en-NG",
+                    {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )}
+                </span>
+              </div>
+
+              {/* Refresh */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  loadDashboard(true)
+                }
+                disabled={refreshing}
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/10
+                  px-3
+                  py-2.5
+                  text-xs
+                  font-semibold
+                  text-white
+                  backdrop-blur-md
+                  transition
+                  hover:bg-white/15
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <RefreshCw
+                  size={14}
+                  className={
+                    refreshing
+                      ? "animate-spin"
+                      : ""
+                  }
+                />
+
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* System status */}
+
+          <div
+            className="
+              relative
+              z-10
+              mt-7
+              flex
+              flex-wrap
+              items-center
+              gap-4
+              border-t
+              border-white/10
+              pt-5
+            "
+          >
+            <div className="flex items-center gap-2">
+
+              <span className="relative flex h-2.5 w-2.5">
                 <span
                   className="
                     absolute
@@ -410,43 +446,90 @@ export default function Dashboard() {
                   className="
                     relative
                     inline-flex
-                    h-2
-                    w-2
+                    h-2.5
+                    w-2.5
                     rounded-full
                     bg-emerald-400
                   "
                 />
-
               </span>
 
-              <span
-                className="
-                  text-[10px]
-                  font-bold
-                  uppercase
-                  tracking-wider
-                  text-white
-                "
-              >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white">
                 ERP Services Operational
               </span>
 
             </div>
 
-          </div>
+            <div className="hidden h-4 w-px bg-white/15 sm:block" />
 
+            <div className="flex items-center gap-2 text-[10px] text-blue-100">
+              <ShieldCheck size={13} />
+              Enterprise control center active
+            </div>
+          </div>
         </section>
 
+        {/* =====================================================
+            FINANCIAL PERFORMANCE
+        ====================================================== */}
 
-        {/* =================================================
-            FINANCIAL OVERVIEW
-        ================================================== */}
+        <section>
 
-        <DashboardSection
-          title="Financial Overview"
-          description="Current accounting performance and customer receivables"
-          accent="blue"
-        >
+          <div className="mb-4 flex items-end justify-between">
+
+            <div>
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.16em]
+                  text-blue-600
+                "
+              >
+                Financial Performance
+              </p>
+
+              <h2
+                className="
+                  mt-1
+                  text-lg
+                  font-black
+                  tracking-[-0.025em]
+                  text-slate-950
+                "
+              >
+                Financial Overview
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Current accounting performance and customer receivables
+              </p>
+            </div>
+
+            <div
+              className="
+                hidden
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-slate-200
+                bg-white
+                px-3
+                py-1.5
+                text-[10px]
+                font-semibold
+                text-slate-500
+                shadow-sm
+                sm:flex
+              "
+            >
+              <Activity size={12} />
+              Live data
+            </div>
+
+          </div>
 
           <FinancialOverview
             stats={{
@@ -457,35 +540,89 @@ export default function Dashboard() {
             }}
           />
 
-        </DashboardSection>
+        </section>
 
+        {/* =====================================================
+            OPERATIONS
+        ====================================================== */}
 
-        {/* =================================================
-            OPERATIONS OVERVIEW
-        ================================================== */}
+        <section>
 
-        <DashboardSection
-          title="Operations Overview"
-          description="Live operational performance across the enterprise"
-          accent="cyan"
-        >
+          <div className="mb-4">
+
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-cyan-600
+              "
+            >
+              Operations
+            </p>
+
+            <h2
+              className="
+                mt-1
+                text-lg
+                font-black
+                tracking-[-0.025em]
+                text-slate-950
+              "
+            >
+              Operational Snapshot
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Live operational performance across the enterprise
+            </p>
+
+          </div>
 
           <StatsGrid
             stats={stats}
           />
 
-        </DashboardSection>
+        </section>
 
+        {/* =====================================================
+            ANALYTICS
+        ====================================================== */}
 
-        {/* =================================================
-            BUSINESS ANALYTICS
-        ================================================== */}
+        <section>
 
-        <DashboardSection
-          title="Business Analytics"
-          description="Sales, invoice and order fulfillment insights"
-          accent="violet"
-        >
+          <div className="mb-4">
+
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-violet-600
+              "
+            >
+              Intelligence
+            </p>
+
+            <h2
+              className="
+                mt-1
+                text-lg
+                font-black
+                tracking-[-0.025em]
+                text-slate-950
+              "
+            >
+              Business Analytics
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Invoice distribution and order fulfillment performance
+            </p>
+
+          </div>
 
           <div
             className="
@@ -495,7 +632,6 @@ export default function Dashboard() {
               xl:grid-cols-2
             "
           >
-
             <InvoiceStatusChart
               data={invoiceChart}
             />
@@ -504,41 +640,149 @@ export default function Dashboard() {
               totalOrders={stats.orders}
               pendingOrders={stats.pendingOrders}
             />
+          </div>
+
+        </section>
+
+        {/* =====================================================
+            INVENTORY ALERTS
+        ====================================================== */}
+
+        <section>
+
+          <div className="mb-4">
+
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-amber-600
+              "
+            >
+              Inventory Control
+            </p>
+
+            <h2
+              className="
+                mt-1
+                text-lg
+                font-black
+                tracking-[-0.025em]
+                text-slate-950
+              "
+            >
+              Inventory Health
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Products requiring attention or replenishment
+            </p>
 
           </div>
 
-        </DashboardSection>
+          <LowStockCard
+            products={lowStock}
+          />
 
+        </section>
 
-        {/* =================================================
-            INVENTORY ALERTS
-            -------------------------------------------------
-            IMPORTANT:
-            This is intentionally NOT wrapped inside
-            DashboardSection.
+        {/* =====================================================
+            MANAGEMENT ATTENTION
+        ====================================================== */}
 
-            LowStockCard owns its own:
-            - header
-            - collapse / expand state
-            - alert count
-            - inventory list
-            - empty state
-        ================================================== */}
+        <section>
 
-        <LowStockCard
-          products={lowStock}
-        />
+          <div className="mb-4">
 
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-red-600
+              "
+            >
+              Control Center
+            </p>
 
-        {/* =================================================
+            <h2
+              className="
+                mt-1
+                text-lg
+                font-black
+                tracking-[-0.025em]
+                text-slate-950
+              "
+            >
+              Management Attention
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Issues, exceptions and pending actions requiring management review
+            </p>
+
+          </div>
+
+          <ManagementAttention
+            overdueInvoices={0}
+            outstandingAmount={stats.outstanding}
+            lowStock={stats.lowStock}
+            pendingOrders={stats.pendingOrders}
+            pendingPayments={0}
+            pendingProcurement={0}
+          />
+
+        </section>
+
+        {/* =====================================================
             RECENT ACTIVITY
-        ================================================== */}
+        ====================================================== */}
 
-        <DashboardSection
-          title="Recent Activity"
-          description="Latest sales and customer activity across TOCHAMS ERP"
-          accent="emerald"
-        >
+        <section>
+
+          <div className="mb-4 flex items-end justify-between">
+
+            <div>
+
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.16em]
+                  text-emerald-600
+                "
+              >
+                Activity
+              </p>
+
+              <h2
+                className="
+                  mt-1
+                  text-lg
+                  font-black
+                  tracking-[-0.025em]
+                  text-slate-950
+                "
+              >
+                Recent Activity
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Latest sales and customer activity across TOCHAMS ERP
+              </p>
+
+            </div>
+
+            <ArrowUpRight
+              size={18}
+              className="hidden text-slate-300 sm:block"
+            />
+
+          </div>
 
           <div
             className="
@@ -548,7 +792,6 @@ export default function Dashboard() {
               xl:grid-cols-2
             "
           >
-
             <RecentOrders
               orders={orders}
             />
@@ -556,13 +799,11 @@ export default function Dashboard() {
             <RecentCustomers
               customers={customers}
             />
-
           </div>
 
-        </DashboardSection>
+        </section>
 
       </div>
-
     </AppShell>
   );
 }

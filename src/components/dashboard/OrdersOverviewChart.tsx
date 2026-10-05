@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock3,
   ShoppingCart,
+  TrendingUp,
 } from "lucide-react";
 
 interface OrdersOverviewChartProps {
@@ -33,15 +34,14 @@ export default function OrdersOverviewChart({
       className="
         relative
         overflow-hidden
-        rounded-[22px]
+        rounded-[20px]
         border
         border-slate-200
         bg-white
-        shadow-[0_8px_30px_rgba(15,23,42,0.05)]
+        shadow-[0_6px_24px_rgba(15,23,42,0.045)]
       "
     >
-
-      {/* Decorative gradient */}
+      {/* DECORATIVE GLOW */}
 
       <div
         className="
@@ -57,85 +57,144 @@ export default function OrdersOverviewChart({
         "
       />
 
-      {/* Header */}
+      {/* HEADER */}
 
-      <div className="relative z-10 flex items-center justify-between border-b border-slate-100 px-5 py-5">
-
+      <div
+        className="
+          relative
+          z-10
+          flex
+          items-center
+          justify-between
+          border-b
+          border-slate-100
+          px-5
+          py-4
+        "
+      >
         <div>
-
-          <div className="flex items-center gap-2">
-
+          <div className="flex items-center gap-2.5">
             <div className="h-6 w-1 rounded-full bg-violet-500" />
 
-            <h3 className="text-sm font-black text-slate-900">
+            <h3 className="text-sm font-black text-slate-950">
               Orders Overview
             </h3>
-
           </div>
 
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[10px] font-medium text-slate-400">
             Current order fulfillment performance
           </p>
-
         </div>
 
         <div
           className="
             flex
-            h-9
-            w-9
+            h-8
+            w-8
             items-center
             justify-center
-            rounded-xl
+            rounded-lg
             bg-violet-50
             text-violet-600
           "
         >
-          <ShoppingCart size={17} />
+          <ShoppingCart size={15} />
         </div>
-
       </div>
 
-      {/* Body */}
+      {/* BODY */}
 
-      <div className="relative z-10 p-6">
-
-        {/* Main KPI */}
+      <div className="relative z-10 px-5 py-5">
+        {/* MAIN KPI */}
 
         <div className="flex items-end justify-between">
-
           <div>
+            <div className="flex items-center gap-2">
+              <p
+                className="
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-[0.14em]
+                  text-slate-400
+                "
+              >
+                Completion rate
+              </p>
 
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Completion Rate
-            </p>
+              <span
+                className="
+                  inline-flex
+                  items-center
+                  gap-1
+                  rounded-full
+                  bg-emerald-50
+                  px-2
+                  py-0.5
+                  text-[8px]
+                  font-black
+                  text-emerald-600
+                "
+              >
+                <TrendingUp size={9} />
+                Healthy
+              </span>
+            </div>
 
-            <p className="mt-2 text-4xl font-black tracking-[-0.04em] text-slate-950">
+            <p
+              className="
+                mt-2
+                text-[2.25rem]
+                font-black
+                tracking-[-0.055em]
+                text-slate-950
+              "
+            >
               {completionRate}%
             </p>
-
           </div>
 
           <div className="text-right">
-
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Total Orders
+            <p
+              className="
+                text-[9px]
+                font-black
+                uppercase
+                tracking-[0.14em]
+                text-slate-400
+              "
+            >
+              Total orders
             </p>
 
-            <p className="mt-1 text-xl font-black text-slate-900">
+            <p
+              className="
+                mt-1
+                text-xl
+                font-black
+                tracking-tight
+                text-slate-900
+              "
+            >
               {totalOrders}
             </p>
-
           </div>
-
         </div>
 
-        {/* Progress */}
+        {/* PROGRESS */}
 
-        <div className="mt-6">
+        <div className="mt-5">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-semibold text-slate-400">
+              Fulfillment progress
+            </span>
 
-          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <span className="text-[9px] font-black text-blue-600">
+              {completedOrders} / {totalOrders}
+            </span>
+          </div>
 
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
             <div
               className="
                 h-full
@@ -150,101 +209,145 @@ export default function OrdersOverviewChart({
                 width: `${completionRate}%`,
               }}
             />
-
           </div>
-
         </div>
 
-        {/* Status cards */}
+        {/* STATUS */}
 
-        <div className="mt-7 grid grid-cols-2 gap-3">
-
+        <div className="mt-5 grid grid-cols-2 gap-3">
           <div
             className="
-              rounded-2xl
+              rounded-xl
               border
               border-emerald-100
               bg-emerald-50/60
-              p-4
+              px-4
+              py-3
             "
           >
-
             <div className="flex items-center gap-2">
-
               <CheckCircle2
-                size={16}
+                size={14}
                 className="text-emerald-600"
               />
 
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+              <span
+                className="
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-wider
+                  text-emerald-700
+                "
+              >
                 Processed
               </span>
-
             </div>
 
-            <p className="mt-3 text-2xl font-black text-slate-900">
+            <p
+              className="
+                mt-2
+                text-xl
+                font-black
+                text-slate-900
+              "
+            >
               {completedOrders}
             </p>
-
           </div>
 
           <div
             className="
-              rounded-2xl
+              rounded-xl
               border
               border-amber-100
               bg-amber-50/60
-              p-4
+              px-4
+              py-3
             "
           >
-
             <div className="flex items-center gap-2">
-
               <Clock3
-                size={16}
+                size={14}
                 className="text-amber-600"
               />
 
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+              <span
+                className="
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-wider
+                  text-amber-700
+                "
+              >
                 Pending
               </span>
-
             </div>
 
-            <p className="mt-3 text-2xl font-black text-slate-900">
+            <p
+              className="
+                mt-2
+                text-xl
+                font-black
+                text-slate-900
+              "
+            >
               {pendingOrders}
             </p>
-
           </div>
-
         </div>
 
-        {/* Pipeline */}
+        {/* PIPELINE */}
 
-        <div className="mt-6 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-
-          <span className="text-[10px] font-bold text-slate-500">
+        <div
+          className="
+            mt-4
+            flex
+            flex-wrap
+            items-center
+            justify-between
+            gap-2
+            rounded-xl
+            border
+            border-slate-100
+            bg-slate-50
+            px-3
+            py-2.5
+          "
+        >
+          <span
+            className="
+              text-[9px]
+              font-bold
+              text-slate-400
+            "
+          >
             Order pipeline
           </span>
 
-          <div className="flex items-center gap-2 text-[10px] font-bold text-blue-600">
+          <div
+            className="
+              flex
+              items-center
+              gap-1.5
+              text-[8px]
+              font-black
+              text-blue-600
+            "
+          >
+            <span>Received</span>
 
-            Received
+            <ArrowRight size={10} />
 
-            <ArrowRight size={12} />
+            <span>Fulfillment</span>
 
-            Fulfillment
+            <ArrowRight size={10} />
 
-            <ArrowRight size={12} />
-
-            Completed
-
+            <span>Completed</span>
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

@@ -3,75 +3,160 @@ import { twMerge } from "tailwind-merge";
 import { ReactNode } from "react";
 
 interface CardProps {
+
   children: ReactNode;
+
   title?: string;
+
   subtitle?: string;
+
   action?: ReactNode;
+
   footer?: ReactNode;
+
   className?: string;
-  padding?: "none" | "sm" | "md" | "lg";
+
+  padding?:
+    | "none"
+    | "sm"
+    | "md"
+    | "lg";
 }
 
 export default function Card({
+
   children,
+
   title,
+
   subtitle,
+
   action,
+
   footer,
+
   className,
+
   padding = "md",
+
 }: CardProps) {
+
   const paddingClasses = {
+
     none: "",
+
     sm: "p-4",
-    md: "p-6",
-    lg: "p-8",
+
+    md: "p-5",
+
+    lg: "p-6",
   };
 
   return (
-    <div
+
+    <section
       className={twMerge(
         clsx(
-          "bg-white rounded-[20px] border border-slate-200/90 shadow-[0_6px_20px_rgba(15,23,42,.035)]",
-          "transition-all duration-200 hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]",
+          `
+            overflow-hidden
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
+            shadow-[0_1px_2px_rgba(15,23,42,.04)]
+          `,
           paddingClasses[padding]
         ),
         className
       )}
     >
+
       {(title || subtitle || action) && (
-        <div className="flex items-start justify-between mb-6">
+
+        <div
+          className="
+            mb-5
+            flex
+            items-start
+            justify-between
+            gap-4
+          "
+        >
+
           <div>
+
             {title && (
-              <h2 className="text-xl font-semibold text-slate-900">
+
+              <h2
+                className="
+                  text-[15px]
+                  font-semibold
+                  text-slate-900
+                "
+              >
+
                 {title}
+
               </h2>
+
             )}
 
             {subtitle && (
-              <p className="mt-1 text-sm text-slate-500">
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-slate-500
+                "
+              >
+
                 {subtitle}
+
               </p>
+
             )}
+
           </div>
 
           {action && (
-            <div>
+
+            <div className="shrink-0">
+
               {action}
+
             </div>
+
           )}
+
         </div>
+
       )}
 
       <div>
+
         {children}
+
       </div>
 
       {footer && (
-        <div className="mt-6 pt-5 border-t border-slate-200">
+
+        <div
+          className="
+            mt-5
+            border-t
+            border-slate-100
+            pt-4
+          "
+        >
+
           {footer}
+
         </div>
+
       )}
-    </div>
+
+    </section>
+
   );
 }
