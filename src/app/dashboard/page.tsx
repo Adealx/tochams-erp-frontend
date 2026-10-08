@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import {
   Activity,
   ArrowUpRight,
@@ -26,23 +27,49 @@ import ManagementAttention from "@/components/dashboard/ManagementAttention";
 
 export const dynamic = "force-dynamic";
 
+type FinancialScope = "company" | "sales_rep";
+type FinancialRole = "management" | "sales_rep";
+
+interface DashboardStats {
+  customers: number;
+  products: number;
+  orders: number;
+  invoices: number;
+  payments: number;
+  outstanding: number;
+
+  pendingOrders: number;
+  lowStock: number;
+
+  storeValue: number;
+  potentialSalesValue: number;
+  potentialProfit: number;
+
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  expenses: number;
+  netProfit: number;
+
+  financialScope: FinancialScope;
+  financialRole: FinancialRole;
+}
+
 export default function Dashboard() {
-  const {
-    user,
-    loading: authLoading,
-  } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // =========================================================
   // DASHBOARD STATS
   // =========================================================
 
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     customers: 0,
     products: 0,
     orders: 0,
     invoices: 0,
     payments: 0,
     outstanding: 0,
+
     pendingOrders: 0,
     lowStock: 0,
 
@@ -51,8 +78,13 @@ export default function Dashboard() {
     potentialProfit: 0,
 
     revenue: 0,
+    cogs: 0,
+    grossProfit: 0,
     expenses: 0,
     netProfit: 0,
+
+    financialScope: "company",
+    financialRole: "management",
   });
 
   // =========================================================
@@ -85,7 +117,7 @@ export default function Dashboard() {
   }, [user, authLoading]);
 
   // =========================================================
-  // FETCH DATA
+  // FETCH DASHBOARD DATA
   // =========================================================
 
   async function loadDashboard(showRefreshState = false) {
@@ -98,21 +130,13 @@ export default function Dashboard() {
 
       setStats(dashboard.stats);
 
-      setInvoiceChart(
-        dashboard.invoiceChart
-      );
+      setInvoiceChart(dashboard.invoiceChart);
 
-      setLowStock(
-        dashboard.lowStock
-      );
+      setLowStock(dashboard.lowStock);
 
-      setOrders(
-        dashboard.orders
-      );
+      setOrders(dashboard.orders);
 
-      setCustomers(
-        dashboard.customers
-      );
+      setCustomers(dashboard.customers);
     } catch (error) {
       console.error(
         "TOCHAMS ERP Dashboard Error:",
@@ -179,6 +203,29 @@ export default function Dashboard() {
       </AppShell>
     );
   }
+
+  // =========================================================
+  // ROLE-AWARE FINANCIAL DISPLAY
+  // =========================================================
+
+  const isSalesRep =
+    stats.financialRole === "sales_rep";
+
+  const financialHeading = isSalesRep
+    ? "My Financial Performance"
+    : "Financial Overview";
+
+  const financialDescription = isSalesRep
+    ? "Your personal sales performance, cost of goods, gross profit and receivables"
+    : "Company-wide accounting performance and customer receivables";
+
+  const heroHeading = isSalesRep
+    ? "My Sales Command Center"
+    : "Business Overview";
+
+  const heroDescription = isSalesRep
+    ? "Track your sales performance, customers, orders, receivables and personal commercial results from one central control center."
+    : "Monitor financial performance, sales, inventory, customers and operational activity from one central control center.";
 
   // =========================================================
   // DASHBOARD
@@ -288,10 +335,13 @@ export default function Dashboard() {
                   /
                 </span>
 
-                Executive Command Center
+                {isSalesRep
+                  ? "Sales Command Center"
+                  : "Executive Command Center"}
               </div>
 
               <div className="flex items-center gap-3">
+
                 <h1
                   className="
                     text-2xl
@@ -300,13 +350,14 @@ export default function Dashboard() {
                     sm:text-3xl
                   "
                 >
-                  Business Overview
+                  {heroHeading}
                 </h1>
 
                 <Sparkles
                   size={20}
                   className="hidden text-cyan-200 sm:block"
                 />
+
               </div>
 
               <p
@@ -318,9 +369,7 @@ export default function Dashboard() {
                   text-blue-100
                 "
               >
-                Monitor financial performance, sales,
-                inventory, customers and operational
-                activity from one central control center.
+                {heroDescription}
               </p>
 
             </div>
@@ -335,6 +384,7 @@ export default function Dashboard() {
                 gap-2
               "
             >
+
               {/* Date */}
 
               <div
@@ -372,9 +422,7 @@ export default function Dashboard() {
 
               <button
                 type="button"
-                onClick={() =>
-                  loadDashboard(true)
-                }
+                onClick={() => loadDashboard(true)}
                 disabled={refreshing}
                 className="
                   inline-flex
@@ -407,6 +455,7 @@ export default function Dashboard() {
 
                 Refresh
               </button>
+
             </div>
           </div>
 
@@ -426,9 +475,11 @@ export default function Dashboard() {
               pt-5
             "
           >
+
             <div className="flex items-center gap-2">
 
               <span className="relative flex h-2.5 w-2.5">
+
                 <span
                   className="
                     absolute
@@ -452,6 +503,7 @@ export default function Dashboard() {
                     bg-emerald-400
                   "
                 />
+
               </span>
 
               <span className="text-[10px] font-bold uppercase tracking-wider text-white">
@@ -464,8 +516,11 @@ export default function Dashboard() {
 
             <div className="flex items-center gap-2 text-[10px] text-blue-100">
               <ShieldCheck size={13} />
-              Enterprise control center active
+              {isSalesRep
+                ? "Personal sales workspace active"
+                : "Enterprise control center active"}
             </div>
+
           </div>
         </section>
 
@@ -478,6 +533,7 @@ export default function Dashboard() {
           <div className="mb-4 flex items-end justify-between">
 
             <div>
+
               <p
                 className="
                   text-[10px]
@@ -487,7 +543,9 @@ export default function Dashboard() {
                   text-blue-600
                 "
               >
-                Financial Performance
+                {isSalesRep
+                  ? "My Financial Performance"
+                  : "Financial Performance"}
               </p>
 
               <h2
@@ -499,12 +557,13 @@ export default function Dashboard() {
                   text-slate-950
                 "
               >
-                Financial Overview
+                {financialHeading}
               </h2>
 
               <p className="mt-1 text-xs text-slate-500">
-                Current accounting performance and customer receivables
+                {financialDescription}
               </p>
+
             </div>
 
             <div
@@ -534,9 +593,13 @@ export default function Dashboard() {
           <FinancialOverview
             stats={{
               revenue: stats.revenue,
+              cogs: stats.cogs,
+              grossProfit: stats.grossProfit,
               expenses: stats.expenses,
               netProfit: stats.netProfit,
               outstanding: stats.outstanding,
+              financialScope: stats.financialScope,
+              financialRole: stats.financialRole,
             }}
           />
 
@@ -571,11 +634,15 @@ export default function Dashboard() {
                 text-slate-950
               "
             >
-              Operational Snapshot
+              {isSalesRep
+                ? "My Operational Snapshot"
+                : "Operational Snapshot"}
             </h2>
 
             <p className="mt-1 text-xs text-slate-500">
-              Live operational performance across the enterprise
+              {isSalesRep
+                ? "Your current sales and operational activity"
+                : "Live operational performance across the enterprise"}
             </p>
 
           </div>
@@ -632,6 +699,7 @@ export default function Dashboard() {
               xl:grid-cols-2
             "
           >
+
             <InvoiceStatusChart
               data={invoiceChart}
             />
@@ -640,6 +708,7 @@ export default function Dashboard() {
               totalOrders={stats.orders}
               pendingOrders={stats.pendingOrders}
             />
+
           </div>
 
         </section>
@@ -772,7 +841,9 @@ export default function Dashboard() {
               </h2>
 
               <p className="mt-1 text-xs text-slate-500">
-                Latest sales and customer activity across TOCHAMS ERP
+                {isSalesRep
+                  ? "Your latest sales and customer activity"
+                  : "Latest sales and customer activity across TOCHAMS ERP"}
               </p>
 
             </div>
@@ -792,6 +863,7 @@ export default function Dashboard() {
               xl:grid-cols-2
             "
           >
+
             <RecentOrders
               orders={orders}
             />
@@ -799,6 +871,7 @@ export default function Dashboard() {
             <RecentCustomers
               customers={customers}
             />
+
           </div>
 
         </section>

@@ -3,11 +3,22 @@ import api from "@/services/api";
 import { getCustomers } from "@/services/customerService";
 import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
-import { getProfitAndLoss } from "@/services/accountingService";
 
 // ============================================================
 // TYPES
 // ============================================================
+
+export interface FinancialOverview {
+  scope: "company" | "sales_rep";
+  role: "management" | "sales_rep";
+
+  revenue: number;
+  cogs: number;
+  gross_profit: number;
+  expenses: number;
+  net_profit: number;
+  outstanding: number;
+}
 
 export interface DashboardStats {
   customers: number;
@@ -24,8 +35,13 @@ export interface DashboardStats {
   potentialProfit: number;
 
   revenue: number;
+  cogs: number;
+  grossProfit: number;
   expenses: number;
   netProfit: number;
+
+  financialScope: "company" | "sales_rep";
+  financialRole: "management" | "sales_rep";
 }
 
 export interface InvoiceChartItem {
@@ -52,7 +68,14 @@ export async function getDashboardData(): Promise<DashboardData> {
     getPayments(),
     api.get("/products/"),
     api.get("/orders/"),
-    getProfitAndLoss(),
+
+    // Dashboard financial overview
+    // This is role-aware:
+    // Management → company-wide
+    // Sales Rep → personal
+    api.get<FinancialOverview>(
+      "/dashboard/financial-overview/"
+    ),
   ]);
 
   // ==========================================================
@@ -136,17 +159,17 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   // ==========================================================
-  // PROFIT & LOSS
+  // FINANCIAL OVERVIEW
   // ==========================================================
 
-  const pnl =
+  const financial =
     results[5].status === "fulfilled"
-      ? results[5].value
+      ? results[5].value.data
       : null;
 
   if (results[5].status === "rejected") {
     console.error(
-      "Profit & Loss API failed:",
+      "Financial Overview API failed:",
       results[5].reason
     );
   }
@@ -183,11 +206,13 @@ export async function getDashboardData(): Promise<DashboardData> {
     0
   );
 
-  const outstanding = invoices.reduce(
-    (sum: number, invoice: any) =>
-      sum + Number(invoice.balance_due || 0),
-    0
-  );
+  const outstanding = financial
+    ? Number(financial.outstanding || 0)
+    : invoices.reduce(
+        (sum: number, invoice: any) =>
+          sum + Number(invoice.balance_due || 0),
+        0
+      );
 
   // ==========================================================
   // LOW STOCK
@@ -243,44 +268,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   ];
 
   // ==========================================================
-  // ACCOUNTING SOURCE OF TRUTH
-  // ==========================================================
-  //
-  // Financial values come from the backend P&L.
-  //
-  // Dashboard does NOT calculate:
-  //
-  // Revenue
-  // Expenses
-  // Net Profit
-  //
-  // from invoices/payments/expenses.
-  //
-  // Accounting remains:
-  //
-  // Journal
-  //    ↓
-  // Ledger
-  //    ↓
-  // P&L
-  //    ↓
-  // Dashboard
-  //
-  // ==========================================================
-
-  const revenue = pnl
-    ? Number(pnl.total_revenue || 0)
-    : 0;
-
-  const expenses = pnl
-    ? Number(pnl.total_expenses || 0)
-    : 0;
-
-  const netProfit = pnl
-    ? Number(pnl.net_profit || 0)
-    : 0;
-
-  // ==========================================================
   // RETURN
   // ==========================================================
 
@@ -308,11 +295,35 @@ export async function getDashboardData(): Promise<DashboardData> {
 
       potentialProfit,
 
-      revenue,
+      // ------------------------------------------------------
+      // ACCOUNTING SOURCE OF TRUTH
+      // ------------------------------------------------------
 
-      expenses,
+      revenue: financial
+        ? Number(financial.revenue || 0)
+        : 0,
 
-      netProfit,
+      cogs: financial
+        ? Number(financial.cogs || 0)
+        : 0,
+
+      grossProfit: financial
+        ? Number(financial.gross_profit || 0)
+        : 0,
+
+      expenses: financial
+        ? Number(financial.expenses || 0)
+        : 0,
+
+      netProfit: financial
+        ? Number(financial.net_profit || 0)
+        : 0,
+
+      financialScope:
+        financial?.scope || "company",
+
+      financialRole:
+        financial?.role || "management",
     },
 
     invoiceChart,

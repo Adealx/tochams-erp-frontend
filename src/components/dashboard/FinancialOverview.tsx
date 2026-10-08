@@ -7,14 +7,20 @@ import {
   CircleDollarSign,
   TrendingDown,
   TrendingUp,
+  WalletCards,
 } from "lucide-react";
 
 interface FinancialOverviewProps {
   stats: {
     revenue: number;
+    cogs: number;
+    grossProfit: number;
     expenses: number;
     netProfit: number;
     outstanding: number;
+
+    financialScope: "company" | "sales_rep";
+    financialRole: "management" | "sales_rep";
   };
 }
 
@@ -34,7 +40,7 @@ function FinancialCard({
   value: string;
   description: string;
   icon: React.ReactNode;
-  tone: "green" | "red" | "amber" | "blue";
+  tone: "green" | "red" | "amber" | "blue" | "purple";
   indicator: React.ReactNode;
 }) {
   const styles = {
@@ -64,6 +70,13 @@ function FinancialCard({
       border: "border-blue-100",
       glow: "from-blue-500/10",
       label: "text-blue-600",
+    },
+
+    purple: {
+      icon: "bg-purple-50 text-purple-600",
+      border: "border-purple-100",
+      glow: "from-purple-500/10",
+      label: "text-purple-600",
     },
   };
 
@@ -220,51 +233,195 @@ function FinancialCard({
 export default function FinancialOverview({
   stats,
 }: FinancialOverviewProps) {
+
+  const isSalesRep =
+    stats.financialRole === "sales_rep";
+
+  /*
+   * ==========================================================
+   * SALES REP VIEW
+   * ==========================================================
+   *
+   * Sales reps see their own commercial performance.
+   *
+   * Revenue
+   * COGS
+   * Gross Profit
+   * Receivables
+   *
+   * We intentionally do NOT show company expenses or
+   * company net profit here.
+   *
+   * ==========================================================
+   */
+
+  if (isSalesRep) {
+    return (
+      <div>
+
+        {/* Section heading */}
+
+        <div className="mb-4">
+
+          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">
+            My Financial Performance
+          </h2>
+
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            Your sales revenue, cost of goods, gross profit and
+            customer receivables.
+          </p>
+
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-4
+            sm:grid-cols-2
+            xl:grid-cols-4
+          "
+        >
+
+          <FinancialCard
+            title="My Revenue"
+            value={formatCurrency(stats.revenue)}
+            icon={<TrendingUp size={18} />}
+            tone="green"
+            description="Your posted sales revenue"
+            indicator={<ArrowUpRight size={17} />}
+          />
+
+          <FinancialCard
+            title="My COGS"
+            value={formatCurrency(stats.cogs)}
+            icon={<TrendingDown size={18} />}
+            tone="red"
+            description="Cost of goods sold"
+            indicator={<ArrowDownRight size={17} />}
+          />
+
+          <FinancialCard
+            title="My Gross Profit"
+            value={formatCurrency(stats.grossProfit)}
+            icon={<BadgeDollarSign size={18} />}
+            tone="amber"
+            description="Revenue less COGS"
+            indicator={<ArrowUpRight size={17} />}
+          />
+
+          <FinancialCard
+            title="My Receivables"
+            value={formatCurrency(stats.outstanding)}
+            icon={<CircleDollarSign size={18} />}
+            tone="blue"
+            description="Customer balances on your invoices"
+            indicator={<ArrowUpRight size={17} />}
+          />
+
+        </div>
+
+      </div>
+    );
+  }
+
+  /*
+   * ==========================================================
+   * MANAGEMENT VIEW
+   * ==========================================================
+   *
+   * Management roles see the official company-wide
+   * financial overview.
+   *
+   * ==========================================================
+   */
+
   return (
-    <div
-      className="
-        grid
-        grid-cols-1
-        gap-4
-        sm:grid-cols-2
-        xl:grid-cols-4
-      "
-    >
-      <FinancialCard
-        title="Revenue"
-        value={formatCurrency(stats.revenue)}
-        icon={<TrendingUp size={18} />}
-        tone="green"
-        description="Posted sales revenue"
-        indicator={<ArrowUpRight size={17} />}
-      />
+    <div>
 
-      <FinancialCard
-        title="Expenses"
-        value={formatCurrency(stats.expenses)}
-        icon={<TrendingDown size={18} />}
-        tone="red"
-        description="Posted and reversed accounting activity"
-        indicator={<ArrowDownRight size={17} />}
-      />
+      {/* Section heading */}
 
-      <FinancialCard
-        title="Net Profit"
-        value={formatCurrency(stats.netProfit)}
-        icon={<BadgeDollarSign size={18} />}
-        tone="amber"
-        description="Revenue less expenses"
-        indicator={<ArrowUpRight size={17} />}
-      />
+      <div className="mb-4">
 
-      <FinancialCard
-        title="Receivables"
-        value={formatCurrency(stats.outstanding)}
-        icon={<CircleDollarSign size={18} />}
-        tone="blue"
-        description="Customer receivable balances"
-        indicator={<ArrowUpRight size={17} />}
-      />
+        <h2 className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">
+          Company Financial Overview
+        </h2>
+
+        <p className="mt-1 text-xs font-medium text-slate-500">
+          Company-wide financial performance from posted
+          accounting entries.
+        </p>
+
+      </div>
+
+      <div
+        className="
+          grid
+          grid-cols-1
+          gap-4
+          sm:grid-cols-2
+          xl:grid-cols-3
+          2xl:grid-cols-6
+        "
+      >
+
+        <FinancialCard
+          title="Revenue"
+          value={formatCurrency(stats.revenue)}
+          icon={<TrendingUp size={18} />}
+          tone="green"
+          description="Posted company sales revenue"
+          indicator={<ArrowUpRight size={17} />}
+        />
+
+        <FinancialCard
+          title="COGS"
+          value={formatCurrency(stats.cogs)}
+          icon={<TrendingDown size={18} />}
+          tone="red"
+          description="Cost of goods sold"
+          indicator={<ArrowDownRight size={17} />}
+        />
+
+        <FinancialCard
+          title="Gross Profit"
+          value={formatCurrency(stats.grossProfit)}
+          icon={<BadgeDollarSign size={18} />}
+          tone="amber"
+          description="Revenue less COGS"
+          indicator={<ArrowUpRight size={17} />}
+        />
+
+        <FinancialCard
+          title="Expenses"
+          value={formatCurrency(stats.expenses)}
+          icon={<TrendingDown size={18} />}
+          tone="red"
+          description="Posted operating expenses"
+          indicator={<ArrowDownRight size={17} />}
+        />
+
+        <FinancialCard
+          title="Net Profit"
+          value={formatCurrency(stats.netProfit)}
+          icon={<WalletCards size={18} />}
+          tone="purple"
+          description="Gross profit less expenses"
+          indicator={<ArrowUpRight size={17} />}
+        />
+
+        <FinancialCard
+          title="Receivables"
+          value={formatCurrency(stats.outstanding)}
+          icon={<CircleDollarSign size={18} />}
+          tone="blue"
+          description="Company customer balances"
+          indicator={<ArrowUpRight size={17} />}
+        />
+
+      </div>
+
     </div>
   );
 }
