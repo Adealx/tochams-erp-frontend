@@ -4,21 +4,25 @@ import { getCustomers } from "@/services/customerService";
 import { getInvoices } from "@/services/invoiceService";
 import { getPayments } from "@/services/paymentService";
 
+
 // ============================================================
 // TYPES
 // ============================================================
+
 
 export interface FinancialOverview {
   scope: "company" | "sales_rep";
   role: "management" | "sales_rep";
 
   revenue: number;
+  paid: number;
   cogs: number;
   gross_profit: number;
   expenses: number;
   net_profit: number;
   outstanding: number;
 }
+
 
 export interface DashboardStats {
   customers: number;
@@ -27,6 +31,7 @@ export interface DashboardStats {
   invoices: number;
   payments: number;
   outstanding: number;
+
   pendingOrders: number;
   lowStock: number;
 
@@ -35,6 +40,7 @@ export interface DashboardStats {
   potentialProfit: number;
 
   revenue: number;
+  paid: number;
   cogs: number;
   grossProfit: number;
   expenses: number;
@@ -44,39 +50,61 @@ export interface DashboardStats {
   financialRole: "management" | "sales_rep";
 }
 
+
 export interface InvoiceChartItem {
   name: string;
   value: number;
 }
 
+
 export interface DashboardData {
   stats: DashboardStats;
+
   invoiceChart: InvoiceChartItem[];
+
   lowStock: any[];
+
   orders: any[];
+
   customers: any[];
 }
+
 
 // ============================================================
 // DASHBOARD SERVICE
 // ============================================================
 
+
 export async function getDashboardData(): Promise<DashboardData> {
+
   const results = await Promise.allSettled([
+
     getCustomers(),
+
     getInvoices(),
+
     getPayments(),
+
     api.get("/products/"),
+
     api.get("/orders/"),
 
-    // Dashboard financial overview
-    // This is role-aware:
-    // Management → company-wide
-    // Sales Rep → personal
+    // --------------------------------------------------------
+    // ROLE-AWARE FINANCIAL OVERVIEW
+    //
+    // Management:
+    //     Company-wide financial information
+    //
+    // Sales Representative:
+    //     Personal revenue, payments and receivables
+    // --------------------------------------------------------
+
     api.get<FinancialOverview>(
       "/dashboard/financial-overview/"
     ),
+
   ]);
+
 
   // ==========================================================
   // CUSTOMERS
@@ -87,12 +115,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[0].value
       : [];
 
+
   if (results[0].status === "rejected") {
     console.error(
       "Customers API failed:",
       results[0].reason
     );
   }
+
 
   // ==========================================================
   // INVOICES
@@ -103,12 +133,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[1].value
       : [];
 
+
   if (results[1].status === "rejected") {
     console.error(
       "Invoices API failed:",
       results[1].reason
     );
   }
+
 
   // ==========================================================
   // PAYMENTS
@@ -119,12 +151,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[2].value
       : [];
 
+
   if (results[2].status === "rejected") {
     console.error(
       "Payments API failed:",
       results[2].reason
     );
   }
+
 
   // ==========================================================
   // PRODUCTS
@@ -135,12 +169,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[3].value.data
       : [];
 
+
   if (results[3].status === "rejected") {
     console.error(
       "Products API failed:",
       results[3].reason
     );
   }
+
 
   // ==========================================================
   // ORDERS
@@ -151,12 +187,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[4].value.data
       : [];
 
+
   if (results[4].status === "rejected") {
     console.error(
       "Orders API failed:",
       results[4].reason
     );
   }
+
 
   // ==========================================================
   // FINANCIAL OVERVIEW
@@ -167,12 +205,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       ? results[5].value.data
       : null;
 
+
   if (results[5].status === "rejected") {
     console.error(
       "Financial Overview API failed:",
       results[5].reason
     );
   }
+
 
   // ==========================================================
   // INVENTORY VALUES
@@ -184,17 +224,20 @@ export async function getDashboardData(): Promise<DashboardData> {
     0
   );
 
+
   const potentialSalesValue = products.reduce(
     (sum: number, product: any) =>
       sum + Number(product.potential_sales_value || 0),
     0
   );
 
+
   const potentialProfit = products.reduce(
     (sum: number, product: any) =>
       sum + Number(product.potential_profit || 0),
     0
   );
+
 
   // ==========================================================
   // PAYMENTS / RECEIVABLES
@@ -206,6 +249,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     0
   );
 
+
   const outstanding = financial
     ? Number(financial.outstanding || 0)
     : invoices.reduce(
@@ -213,6 +257,21 @@ export async function getDashboardData(): Promise<DashboardData> {
           sum + Number(invoice.balance_due || 0),
         0
       );
+
+
+  // ==========================================================
+  // PAID
+  //
+  // Financial endpoint is now the source of truth.
+  //
+  // Fallback to payment API if the financial endpoint
+  // is unavailable.
+  // ==========================================================
+
+  const paid = financial
+    ? Number(financial.paid || 0)
+    : totalPayments;
+
 
   // ==========================================================
   // LOW STOCK
@@ -223,6 +282,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       Number(product.stock_quantity) <= 10
   );
 
+
   // ==========================================================
   // PENDING ORDERS
   // ==========================================================
@@ -232,62 +292,81 @@ export async function getDashboardData(): Promise<DashboardData> {
       order.status === "Pending"
   ).length;
 
+
   // ==========================================================
   // INVOICE STATUS
   // ==========================================================
 
   const invoiceChart: InvoiceChartItem[] = [
+
     {
       name: "Paid",
+
       value: invoices.filter(
         (invoice: any) =>
           invoice.invoice_status === "Paid"
       ).length,
     },
+
     {
       name: "Pending",
+
       value: invoices.filter(
         (invoice: any) =>
           invoice.invoice_status === "Pending"
       ).length,
     },
+
     {
       name: "Partially Paid",
+
       value: invoices.filter(
         (invoice: any) =>
           invoice.invoice_status === "Partially Paid"
       ).length,
     },
+
     {
       name: "Overdue",
+
       value: invoices.filter(
         (invoice: any) =>
           invoice.invoice_status === "Overdue"
       ).length,
     },
+
   ];
+
 
   // ==========================================================
   // RETURN
   // ==========================================================
 
   return {
+
     stats: {
-      customers: customers.length,
 
-      products: products.length,
+      customers:
+        customers.length,
 
-      orders: orders.length,
+      products:
+        products.length,
 
-      invoices: invoices.length,
+      orders:
+        orders.length,
 
-      payments: totalPayments,
+      invoices:
+        invoices.length,
+
+      payments:
+        totalPayments,
 
       outstanding,
 
       pendingOrders,
 
-      lowStock: alerts.length,
+      lowStock:
+        alerts.length,
 
       storeValue,
 
@@ -299,39 +378,49 @@ export async function getDashboardData(): Promise<DashboardData> {
       // ACCOUNTING SOURCE OF TRUTH
       // ------------------------------------------------------
 
-      revenue: financial
-        ? Number(financial.revenue || 0)
-        : 0,
+      revenue:
+        financial
+          ? Number(financial.revenue || 0)
+          : 0,
 
-      cogs: financial
-        ? Number(financial.cogs || 0)
-        : 0,
+      paid,
 
-      grossProfit: financial
-        ? Number(financial.gross_profit || 0)
-        : 0,
+      cogs:
+        financial
+          ? Number(financial.cogs || 0)
+          : 0,
 
-      expenses: financial
-        ? Number(financial.expenses || 0)
-        : 0,
+      grossProfit:
+        financial
+          ? Number(financial.gross_profit || 0)
+          : 0,
 
-      netProfit: financial
-        ? Number(financial.net_profit || 0)
-        : 0,
+      expenses:
+        financial
+          ? Number(financial.expenses || 0)
+          : 0,
+
+      netProfit:
+        financial
+          ? Number(financial.net_profit || 0)
+          : 0,
 
       financialScope:
         financial?.scope || "company",
 
       financialRole:
         financial?.role || "management",
+
     },
 
     invoiceChart,
 
-    lowStock: alerts,
+    lowStock:
+      alerts,
 
     orders,
 
     customers,
+
   };
 }

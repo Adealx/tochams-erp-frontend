@@ -3,30 +3,54 @@
 import {
   ArrowDownRight,
   ArrowUpRight,
-  BadgeDollarSign,
   CircleDollarSign,
-  TrendingDown,
+  Users,
   TrendingUp,
-  WalletCards,
 } from "lucide-react";
+
 
 interface FinancialOverviewProps {
   stats: {
+
     revenue: number;
+
+    paid: number;
+
     cogs: number;
+
     grossProfit: number;
+
     expenses: number;
+
     netProfit: number;
+
     outstanding: number;
 
-    financialScope: "company" | "sales_rep";
-    financialRole: "management" | "sales_rep";
+    customers: number;
+
+    financialScope:
+      | "company"
+      | "sales_rep";
+
+    financialRole:
+      | "management"
+      | "sales_rep";
   };
 }
+
+
+// ============================================================
+// CURRENCY
+// ============================================================
 
 function formatCurrency(value: number) {
   return `₦${Number(value || 0).toLocaleString("en-NG")}`;
 }
+
+
+// ============================================================
+// FINANCIAL CARD
+// ============================================================
 
 function FinancialCard({
   title,
@@ -37,52 +61,103 @@ function FinancialCard({
   indicator,
 }: {
   title: string;
+
   value: string;
+
   description: string;
+
   icon: React.ReactNode;
-  tone: "green" | "red" | "amber" | "blue" | "purple";
+
+  tone:
+    | "green"
+    | "red"
+    | "amber"
+    | "blue"
+    | "purple";
+
   indicator: React.ReactNode;
 }) {
+
   const styles = {
+
     green: {
-      icon: "bg-emerald-50 text-emerald-600",
-      border: "border-emerald-100",
-      glow: "from-emerald-500/10",
-      label: "text-emerald-600",
+      icon:
+        "bg-emerald-50 text-emerald-600",
+
+      border:
+        "border-emerald-100",
+
+      glow:
+        "from-emerald-500/10",
+
+      label:
+        "text-emerald-600",
     },
 
     red: {
-      icon: "bg-red-50 text-red-600",
-      border: "border-red-100",
-      glow: "from-red-500/10",
-      label: "text-red-600",
+      icon:
+        "bg-red-50 text-red-600",
+
+      border:
+        "border-red-100",
+
+      glow:
+        "from-red-500/10",
+
+      label:
+        "text-red-600",
     },
 
     amber: {
-      icon: "bg-amber-50 text-amber-600",
-      border: "border-amber-100",
-      glow: "from-amber-500/10",
-      label: "text-amber-600",
+      icon:
+        "bg-amber-50 text-amber-600",
+
+      border:
+        "border-amber-100",
+
+      glow:
+        "from-amber-500/10",
+
+      label:
+        "text-amber-600",
     },
 
     blue: {
-      icon: "bg-blue-50 text-blue-600",
-      border: "border-blue-100",
-      glow: "from-blue-500/10",
-      label: "text-blue-600",
+      icon:
+        "bg-blue-50 text-blue-600",
+
+      border:
+        "border-blue-100",
+
+      glow:
+        "from-blue-500/10",
+
+      label:
+        "text-blue-600",
     },
 
     purple: {
-      icon: "bg-purple-50 text-purple-600",
-      border: "border-purple-100",
-      glow: "from-purple-500/10",
-      label: "text-purple-600",
+      icon:
+        "bg-purple-50 text-purple-600",
+
+      border:
+        "border-purple-100",
+
+      glow:
+        "from-purple-500/10",
+
+      label:
+        "text-purple-600",
     },
+
   };
+
 
   const style = styles[tone];
 
+
   return (
+
     <div
       className={`
         group
@@ -101,7 +176,8 @@ function FinancialCard({
         hover:shadow-[0_14px_35px_rgba(15,23,42,0.08)]
       `}
     >
-      {/* Soft background glow */}
+
+      {/* Background glow */}
 
       <div
         className={`
@@ -118,6 +194,7 @@ function FinancialCard({
           blur-2xl
         `}
       />
+
 
       <div className="relative z-10">
 
@@ -141,6 +218,7 @@ function FinancialCard({
               {icon}
             </div>
 
+
             <span
               className={`
                 text-[10px]
@@ -155,11 +233,13 @@ function FinancialCard({
 
           </div>
 
+
           <div className="text-slate-300">
             {indicator}
           </div>
 
         </div>
+
 
         {/* Value */}
 
@@ -176,6 +256,7 @@ function FinancialCard({
             {value}
           </p>
 
+
           <p
             className="
               mt-2
@@ -188,6 +269,7 @@ function FinancialCard({
           </p>
 
         </div>
+
 
         {/* Bottom status */}
 
@@ -202,6 +284,7 @@ function FinancialCard({
             pt-3
           "
         >
+
           <span
             className={`
               flex
@@ -213,22 +296,32 @@ function FinancialCard({
               ${style.icon}
             `}
           >
+
             {tone === "red" ? (
               <ArrowDownRight size={11} />
             ) : (
               <ArrowUpRight size={11} />
             )}
+
           </span>
+
 
           <span className="text-[10px] font-semibold text-slate-500">
             Live accounting figure
           </span>
+
         </div>
 
       </div>
+
     </div>
   );
 }
+
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 export default function FinancialOverview({
   stats,
@@ -237,42 +330,46 @@ export default function FinancialOverview({
   const isSalesRep =
     stats.financialRole === "sales_rep";
 
-  /*
-   * ==========================================================
-   * SALES REP VIEW
-   * ==========================================================
-   *
-   * Sales reps see their own commercial performance.
-   *
-   * Revenue
-   * COGS
-   * Gross Profit
-   * Receivables
-   *
-   * We intentionally do NOT show company expenses or
-   * company net profit here.
-   *
-   * ==========================================================
-   */
+
+  // ==========================================================
+  // SALES REPRESENTATIVE VIEW
+  // ==========================================================
 
   if (isSalesRep) {
-    return (
-      <div>
 
-        {/* Section heading */}
+    return (
+
+      <div>
 
         <div className="mb-4">
 
-          <h2 className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">
+          <h2
+            className="
+              text-sm
+              font-black
+              uppercase
+              tracking-[0.12em]
+              text-slate-900
+            "
+          >
             My Financial Performance
           </h2>
 
-          <p className="mt-1 text-xs font-medium text-slate-500">
-            Your sales revenue, cost of goods, gross profit and
-            customer receivables.
+
+          <p
+            className="
+              mt-1
+              text-xs
+              font-medium
+              text-slate-500
+            "
+          >
+            Your sales revenue, customer payments,
+            outstanding balances and customer portfolio.
           </p>
 
         </div>
+
 
         <div
           className="
@@ -284,40 +381,67 @@ export default function FinancialOverview({
           "
         >
 
+          {/* REVENUE */}
+
           <FinancialCard
             title="My Revenue"
             value={formatCurrency(stats.revenue)}
             icon={<TrendingUp size={18} />}
             tone="green"
             description="Your posted sales revenue"
-            indicator={<ArrowUpRight size={17} />}
+            indicator={
+              <ArrowUpRight size={17} />
+            }
           />
 
-          <FinancialCard
-            title="My COGS"
-            value={formatCurrency(stats.cogs)}
-            icon={<TrendingDown size={18} />}
-            tone="red"
-            description="Cost of goods sold"
-            indicator={<ArrowDownRight size={17} />}
-          />
+
+          {/* PAID */}
 
           <FinancialCard
-            title="My Gross Profit"
-            value={formatCurrency(stats.grossProfit)}
-            icon={<BadgeDollarSign size={18} />}
-            tone="amber"
-            description="Revenue less COGS"
-            indicator={<ArrowUpRight size={17} />}
-          />
-
-          <FinancialCard
-            title="My Receivables"
-            value={formatCurrency(stats.outstanding)}
-            icon={<CircleDollarSign size={18} />}
+            title="Customers Paid"
+            value={formatCurrency(stats.paid)}
+            icon={
+              <CircleDollarSign size={18} />
+            }
             tone="blue"
-            description="Customer balances on your invoices"
-            indicator={<ArrowUpRight size={17} />}
+            description="Payments received from your customers"
+            indicator={
+              <ArrowUpRight size={17} />
+            }
+          />
+
+
+          {/* OUTSTANDING */}
+
+          <FinancialCard
+            title="Customer Outstanding"
+            value={formatCurrency(stats.outstanding)}
+            icon={
+              <CircleDollarSign size={18} />
+            }
+            tone="amber"
+            description="Outstanding balances on your invoices"
+            indicator={
+              <ArrowUpRight size={17} />
+            }
+          />
+
+
+          {/* CUSTOMERS */}
+
+          <FinancialCard
+            title="My Customers"
+            value={Number(
+              stats.customers || 0
+            ).toLocaleString("en-NG")}
+            icon={
+              <Users size={18} />
+            }
+            tone="purple"
+            description="Customers in your sales portfolio"
+            indicator={
+              <ArrowUpRight size={17} />
+            }
           />
 
         </div>
@@ -326,34 +450,44 @@ export default function FinancialOverview({
     );
   }
 
-  /*
-   * ==========================================================
-   * MANAGEMENT VIEW
-   * ==========================================================
-   *
-   * Management roles see the official company-wide
-   * financial overview.
-   *
-   * ==========================================================
-   */
+
+  // ==========================================================
+  // MANAGEMENT VIEW
+  // ==========================================================
 
   return (
-    <div>
 
-      {/* Section heading */}
+    <div>
 
       <div className="mb-4">
 
-        <h2 className="text-sm font-black uppercase tracking-[0.12em] text-slate-900">
+        <h2
+          className="
+            text-sm
+            font-black
+            uppercase
+            tracking-[0.12em]
+            text-slate-900
+          "
+        >
           Company Financial Overview
         </h2>
 
-        <p className="mt-1 text-xs font-medium text-slate-500">
+
+        <p
+          className="
+            mt-1
+            text-xs
+            font-medium
+            text-slate-500
+          "
+        >
           Company-wide financial performance from posted
           accounting entries.
         </p>
 
       </div>
+
 
       <div
         className="
@@ -366,58 +500,99 @@ export default function FinancialOverview({
         "
       >
 
+        {/* REVENUE */}
+
         <FinancialCard
           title="Revenue"
           value={formatCurrency(stats.revenue)}
-          icon={<TrendingUp size={18} />}
+          icon={
+            <TrendingUp size={18} />
+          }
           tone="green"
           description="Posted company sales revenue"
-          indicator={<ArrowUpRight size={17} />}
+          indicator={
+            <ArrowUpRight size={17} />
+          }
         />
+
+
+        {/* COGS */}
 
         <FinancialCard
           title="COGS"
           value={formatCurrency(stats.cogs)}
-          icon={<TrendingDown size={18} />}
+          icon={
+            <ArrowDownRight size={18} />
+          }
           tone="red"
           description="Cost of goods sold"
-          indicator={<ArrowDownRight size={17} />}
+          indicator={
+            <ArrowDownRight size={17} />
+          }
         />
+
+
+        {/* GROSS PROFIT */}
 
         <FinancialCard
           title="Gross Profit"
           value={formatCurrency(stats.grossProfit)}
-          icon={<BadgeDollarSign size={18} />}
+          icon={
+            <TrendingUp size={18} />
+          }
           tone="amber"
           description="Revenue less COGS"
-          indicator={<ArrowUpRight size={17} />}
+          indicator={
+            <ArrowUpRight size={17} />
+          }
         />
+
+
+        {/* EXPENSES */}
 
         <FinancialCard
           title="Expenses"
           value={formatCurrency(stats.expenses)}
-          icon={<TrendingDown size={18} />}
+          icon={
+            <ArrowDownRight size={18} />
+          }
           tone="red"
           description="Posted operating expenses"
-          indicator={<ArrowDownRight size={17} />}
+          indicator={
+            <ArrowDownRight size={17} />
+          }
         />
+
+
+        {/* NET PROFIT */}
 
         <FinancialCard
           title="Net Profit"
           value={formatCurrency(stats.netProfit)}
-          icon={<WalletCards size={18} />}
+          icon={
+            <TrendingUp size={18} />
+          }
           tone="purple"
           description="Gross profit less expenses"
-          indicator={<ArrowUpRight size={17} />}
+          indicator={
+            <ArrowUpRight size={17} />
+          }
         />
+
+
+        {/* RECEIVABLES */}
 
         <FinancialCard
           title="Receivables"
           value={formatCurrency(stats.outstanding)}
-          icon={<CircleDollarSign size={18} />}
+          icon={
+            <CircleDollarSign size={18} />
+          }
           tone="blue"
           description="Company customer balances"
-          indicator={<ArrowUpRight size={17} />}
+          indicator={
+            <ArrowUpRight size={17} />
+          }
         />
 
       </div>
