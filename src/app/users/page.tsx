@@ -796,10 +796,17 @@ export default function UsersPage() {
                             text-slate-600
                           ">
 
-                            {user.role ===
-                            "sales_head"
-                              ? "Sales Head"
-                              : user.role}
+                            {({
+                              admin: "Administrator",
+                              manager: "Manager",
+                              sales_head: "Sales Head",
+                              sales: "Sales Representative",
+                              accountant: "Accountant",
+                              inventory: "Inventory Officer",
+                              warehouse: "Warehouse Officer",
+                              pending: "Pending",
+                            } as Record<string, string>)[user.role] ??
+                              user.role}
 
                           </span>
 
@@ -921,7 +928,7 @@ export default function UsersPage() {
                             </option>
 
                             <option value="sales">
-                              Sales
+                              Sales Representative
                             </option>
 
                             <option value="sales_head">
@@ -932,12 +939,20 @@ export default function UsersPage() {
                               Accountant
                             </option>
 
+                            <option value="inventory">
+                              Inventory Officer
+                            </option>
+
+                            <option value="warehouse">
+                              Warehouse Officer
+                            </option>
+
                             <option value="manager">
                               Manager
                             </option>
 
                             <option value="admin">
-                              Admin
+                              Administrator
                             </option>
 
                           </select>

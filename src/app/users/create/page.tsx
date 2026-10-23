@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -20,16 +21,20 @@ export default function CreateUserPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (
-    e: React.FormEvent
+    e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
+
+    if (loading) return;
 
     setLoading(true);
 
@@ -39,113 +44,168 @@ export default function CreateUserPage() {
         formData
       );
 
-      console.log("Success:", response.data);
-
+      console.log("User created:", response.data);
       toast.success("User created successfully");
-
       router.push("/users");
-
-    } catch (error: any) {
-
+    } catch (error: unknown) {
       console.error("Create User Error:", error);
 
-      console.log("Response:", error.response?.data);
+      const apiError = error as {
+        response?: {
+          data?: {
+            detail?: string;
+            error?: string;
+            message?: string;
+          };
+        };
+        message?: string;
+      };
 
-      alert(
-        JSON.stringify(
-          error.response?.data || error.message
-        )
-      );
+      const errorMessage =
+        apiError.response?.data?.detail ||
+        apiError.response?.data?.error ||
+        apiError.response?.data?.message ||
+        apiError.message ||
+        "Unable to create user. Please try again.";
 
+      toast.error(String(errorMessage));
     } finally {
-
       setLoading(false);
-
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="mx-auto max-w-xl px-4 py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Create User
+        </h1>
 
-      <h1 className="text-3xl font-bold mb-6">
-        Create User
-      </h1>
+        <p className="mt-2 text-sm text-gray-500">
+          Create an account and assign the appropriate Tochams ERP role.
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow"
+        className="space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
       >
+        <div>
+          <label
+            htmlFor="username"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Username
+          </label>
 
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-4"
-          required
-        />
+          <input
+            id="username"
+            type="text"
+            name="username"
+            placeholder="Enter username"
+            value={formData.username}
+            onChange={handleChange}
+            autoComplete="username"
+            className="w-full rounded-lg border border-gray-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            required
+            disabled={loading}
+          />
+        </div>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-4"
-          required
-        />
+        <div>
+          <label
+            htmlFor="email"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Email Address
+          </label>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full border p-3 rounded mb-4"
-          required
-        />
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Enter email address"
+            value={formData.email}
+            onChange={handleChange}
+            autoComplete="email"
+            className="w-full rounded-lg border border-gray-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            required
+            disabled={loading}
+          />
+        </div>
 
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          className="w-full border p-3 rounded"
-        >
-          <option value="admin">
-            Admin
-          </option>
+        <div>
+          <label
+            htmlFor="password"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Password
+          </label>
 
-          <option value="manager">
-            Manager
-          </option>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Create a password"
+            value={formData.password}
+            onChange={handleChange}
+            autoComplete="new-password"
+            className="w-full rounded-lg border border-gray-300 p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            required
+            disabled={loading}
+          />
+        </div>
 
-          <option value="sales_head">
-            Sales Head
-          </option>
+        <div>
+          <label
+            htmlFor="role"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Assign Role
+          </label>
 
-          <option value="accountant">
-            Accountant
-          </option>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-gray-300 bg-white p-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            required
+            disabled={loading}
+          >
+            <option value="sales">Sales Representative</option>
+            <option value="sales_head">Sales Head</option>
+            <option value="accountant">Accountant</option>
+            <option value="inventory">Inventory Officer</option>
+            <option value="warehouse">Warehouse Officer</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Administrator</option>
+          </select>
 
-          <option value="sales">
-            Sales Head
-          </option>
+          <p className="mt-2 text-xs text-gray-500">
+            Assign only the permissions required for the user's job.
+          </p>
+        </div>
 
-        </select>
+        <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-5">
+          <button
+            type="button"
+            onClick={() => router.push("/users")}
+            disabled={loading}
+            className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
-        >
-          {loading
-            ? "Creating..."
-            : "Create User"}
-        </button>
-
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Creating User..." : "Create User"}
+          </button>
+        </div>
       </form>
-
     </div>
   );
 }

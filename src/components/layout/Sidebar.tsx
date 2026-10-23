@@ -1,4 +1,5 @@
-﻿"use client";
+﻿
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -27,10 +28,14 @@ import {
   Menu,
 } from "lucide-react";
 
+import { useAuth } from "@/context/AuthContext";
+import { hasPermission } from "@/lib/permissions";
+
 interface NavigationItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  permission: string;
   badge?: string;
 }
 
@@ -42,159 +47,149 @@ interface NavigationGroup {
 /* =========================================================
    NAVIGATION CONFIGURATION
 
-   IMPORTANT:
-   Keep routes consistent with the existing ERP.
+   Visibility is controlled by the shared permission map.
+   Backend permissions remain the security enforcement layer.
 ========================================================= */
 
 const navigationGroups: NavigationGroup[] = [
   {
     title: "Overview",
-
     items: [
       {
         label: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
+        permission: "dashboard",
       },
     ],
   },
-
   {
     title: "Sales & Distribution",
-
     items: [
       {
         label: "Customers",
         href: "/customers",
         icon: Users,
+        permission: "customers",
       },
-
       {
         label: "Sales Orders",
         href: "/sales-orders",
         icon: ShoppingCart,
+        permission: "orders",
       },
-
       {
         label: "Invoices",
         href: "/invoices",
         icon: FileText,
+        permission: "invoices",
       },
-
       {
         label: "Payments",
         href: "/payments",
         icon: CreditCard,
+        permission: "payments",
       },
     ],
   },
-
   {
     title: "Inventory",
-
     items: [
       {
         label: "Inventory",
         href: "/inventory",
         icon: Package,
+        permission: "inventory",
       },
-
       {
         label: "Procurement",
         href: "/procurement",
         icon: ShoppingCart,
+        permission: "procurement",
       },
-
       {
         label: "Vendors",
         href: "/vendors",
         icon: Building2,
+        permission: "vendors",
       },
     ],
   },
-
   {
     title: "Operations",
-
     items: [
       {
         label: "Warehouse",
         href: "/warehouse",
         icon: Warehouse,
+        permission: "warehouse",
       },
     ],
   },
-
   {
     title: "Finance",
-
     items: [
       {
         label: "Accounting",
         href: "/accounting",
         icon: Calculator,
+        permission: "accounting",
       },
-
       {
         label: "Expenses",
         href: "/expenses",
         icon: Receipt,
+        permission: "expenses",
       },
-
       {
         label: "Transaction Tracker",
         href: "/transaction-tracker",
         icon: ClipboardList,
+        permission: "transaction-tracker",
       },
     ],
   },
-
   {
     title: "Analytics",
-
     items: [
       {
         label: "Reports",
         href: "/reports",
         icon: BarChart3,
+        permission: "reports",
       },
     ],
   },
-
   {
     title: "Administration",
-
     items: [
       {
         label: "Users",
         href: "/users",
         icon: UserCog,
+        permission: "users",
       },
-
       {
         label: "Attendance",
         href: "/attendance",
         icon: Clock3,
+        permission: "attendance",
       },
-
       {
         label: "Settings",
         href: "/settings",
         icon: Settings,
+        permission: "settings",
       },
     ],
   },
 ];
 
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
 
   const [collapsed, setCollapsed] = useState(false);
-
   const [mobileOpen, setMobileOpen] = useState(false);
 
   /* =======================================================
@@ -244,10 +239,7 @@ export default function Sidebar() {
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -283,6 +275,25 @@ export default function Sidebar() {
   }
 
   /* =======================================================
+     ROLE-BASED NAVIGATION
+
+     During authentication loading, show no operational links.
+     Unknown and pending roles receive no permissions by default.
+  ======================================================= */
+
+  const visibleNavigationGroups: NavigationGroup[] =
+    loading || !user
+      ? []
+      : navigationGroups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter((item) =>
+              hasPermission(user.role, item.permission)
+            ),
+          }))
+          .filter((group) => group.items.length > 0);
+
+  /* =======================================================
      DESKTOP COLLAPSE
   ======================================================= */
 
@@ -306,188 +317,195 @@ export default function Sidebar() {
         py-4
       "
     >
-      <div className="space-y-6">
-        {navigationGroups.map((group) => (
-          <div key={group.title}>
-            {/* Section heading */}
+      {loading ? (
+        <div
+          className="px-3 py-4 text-xs text-slate-500"
+          role="status"
+        >
+          Loading navigation...
+        </div>
+      ) : !user ? (
+        <div className="px-3 py-4 text-xs text-slate-500">
+          Sign in to access the ERP.
+        </div>
+      ) : visibleNavigationGroups.length === 0 ? (
+        <div className="px-3 py-4 text-xs text-slate-500">
+          No navigation items are assigned to this role.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {visibleNavigationGroups.map((group) => (
+            <div key={group.title}>
+              {/* Section heading */}
 
-            <div
-              className={`
-                mb-2
-                overflow-hidden
-                whitespace-nowrap
-                px-3
-                text-[9px]
-                font-black
-                uppercase
-                tracking-[0.18em]
-                text-slate-500
-                transition-all
-                duration-300
-                ${
-                  collapsed
-                    ? "h-0 opacity-0"
-                    : "h-auto opacity-100"
-                }
-              `}
-            >
-              {group.title}
-            </div>
+              <div
+                className={`
+                  mb-2
+                  overflow-hidden
+                  whitespace-nowrap
+                  px-3
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-[0.18em]
+                  text-slate-500
+                  transition-all
+                  duration-300
+                  ${
+                    collapsed
+                      ? "h-0 opacity-0"
+                      : "h-auto opacity-100"
+                  }
+                `}
+              >
+                {group.title}
+              </div>
 
-            {/* Items */}
+              {/* Navigation items */}
 
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
 
-                const active = isActive(item.href);
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={
-                      collapsed
-                        ? item.label
-                        : undefined
-                    }
-                    onClick={() =>
-                      setMobileOpen(false)
-                    }
-                    className={`
-                      group
-                      relative
-                      flex
-                      min-w-0
-                      items-center
-                      rounded-xl
-                      transition-all
-                      duration-200
-
-                      ${
-                        collapsed
-                          ? "justify-center px-2.5 py-2.5"
-                          : "gap-3 px-3 py-2.5"
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={
+                        collapsed ? item.label : undefined
                       }
-
-                      ${
-                        active
-                          ? `
-                            bg-blue-600/[0.14]
-                            text-white
-                            shadow-[inset_0_0_0_1px_rgba(96,165,250,0.10)]
-                          `
-                          : `
-                            text-slate-400
-                            hover:bg-white/[0.05]
-                            hover:text-white
-                          `
-                      }
-                    `}
-                  >
-                    {/* Active indicator */}
-
-                    {active && (
-                      <span
-                        className="
-                          absolute
-                          left-0
-                          top-1/2
-                          h-6
-                          w-[3px]
-                          -translate-y-1/2
-                          rounded-r-full
-                          bg-gradient-to-b
-                          from-cyan-300
-                          to-blue-500
-                        "
-                      />
-                    )}
-
-                    {/* Icon */}
-
-                    <span
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => setMobileOpen(false)}
                       className={`
+                        group
+                        relative
                         flex
-                        h-8
-                        w-8
-                        shrink-0
+                        min-w-0
                         items-center
-                        justify-center
-                        rounded-lg
+                        rounded-xl
                         transition-all
                         duration-200
-
-                        ${
-                          active
-                            ? "bg-blue-500/15 text-cyan-300"
-                            : "text-slate-500 group-hover:bg-white/[0.05] group-hover:text-slate-200"
-                        }
-                      `}
-                    >
-                      <Icon
-                        size={17}
-                        strokeWidth={
-                          active ? 2.2 : 1.9
-                        }
-                      />
-                    </span>
-
-                    {/* Label */}
-
-                    <span
-                      className={`
-                        min-w-0
-                        flex-1
-                        truncate
-                        text-[13px]
-                        font-medium
-                        transition-all
-                        duration-300
-
                         ${
                           collapsed
-                            ? "w-0 opacity-0"
-                            : "w-auto opacity-100"
+                            ? "justify-center px-2.5 py-2.5"
+                            : "gap-3 px-3 py-2.5"
+                        }
+                        ${
+                          active
+                            ? `
+                              bg-blue-600/[0.14]
+                              text-white
+                              shadow-[inset_0_0_0_1px_rgba(96,165,250,0.10)]
+                            `
+                            : `
+                              text-slate-400
+                              hover:bg-white/[0.05]
+                              hover:text-white
+                            `
                         }
                       `}
                     >
-                      {item.label}
-                    </span>
+                      {/* Active indicator */}
 
-                    {/* Optional badge */}
+                      {active && (
+                        <span
+                          className="
+                            absolute
+                            left-0
+                            top-1/2
+                            h-6
+                            w-[3px]
+                            -translate-y-1/2
+                            rounded-r-full
+                            bg-gradient-to-b
+                            from-cyan-300
+                            to-blue-500
+                          "
+                        />
+                      )}
 
-                    {!collapsed && item.badge && (
+                      {/* Icon */}
+
                       <span
-                        className="
-                          rounded-full
-                          bg-blue-500/15
-                          px-2
-                          py-0.5
-                          text-[9px]
-                          font-bold
-                          text-blue-300
-                        "
+                        className={`
+                          flex
+                          h-8
+                          w-8
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-lg
+                          transition-all
+                          duration-200
+                          ${
+                            active
+                              ? "bg-blue-500/15 text-cyan-300"
+                              : "text-slate-500 group-hover:bg-white/[0.05] group-hover:text-slate-200"
+                          }
+                        `}
                       >
-                        {item.badge}
+                        <Icon
+                          size={17}
+                          strokeWidth={active ? 2.2 : 1.9}
+                        />
                       </span>
-                    )}
 
-                    {/* Active arrow */}
+                      {/* Label */}
 
-                    {!collapsed && active && (
-                      <ChevronRight
-                        size={14}
-                        className="text-blue-300"
-                      />
-                    )}
-                  </Link>
-                );
-              })}
+                      <span
+                        className={`
+                          min-w-0
+                          flex-1
+                          truncate
+                          text-[13px]
+                          font-medium
+                          transition-all
+                          duration-300
+                          ${
+                            collapsed
+                              ? "w-0 opacity-0"
+                              : "w-auto opacity-100"
+                          }
+                        `}
+                      >
+                        {item.label}
+                      </span>
+
+                      {/* Optional badge */}
+
+                      {!collapsed && item.badge && (
+                        <span
+                          className="
+                            rounded-full
+                            bg-blue-500/15
+                            px-2
+                            py-0.5
+                            text-[9px]
+                            font-bold
+                            text-blue-300
+                          "
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+
+                      {/* Active arrow */}
+
+                      {!collapsed && active && (
+                        <ChevronRight
+                          size={14}
+                          className="text-blue-300"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 
@@ -497,9 +515,7 @@ export default function Sidebar() {
 
   const sidebarContent = (
     <>
-      {/* ===================================================
-          BRAND
-      =================================================== */}
+      {/* BRAND */}
 
       <div
         className={`
@@ -509,12 +525,7 @@ export default function Sidebar() {
           border-white/[0.07]
           transition-all
           duration-300
-
-          ${
-            collapsed
-              ? "px-3 py-5"
-              : "px-5 py-5"
-          }
+          ${collapsed ? "px-3 py-5" : "px-5 py-5"}
         `}
       >
         {/* Decorative glow */}
@@ -535,11 +546,7 @@ export default function Sidebar() {
 
         <Link
           href="/dashboard"
-          title={
-            collapsed
-              ? "TOCHAMS ERP"
-              : undefined
-          }
+          title={collapsed ? "TOCHAMS ERP" : undefined}
           className={`
             relative
             flex
@@ -547,12 +554,7 @@ export default function Sidebar() {
             items-center
             transition-all
             duration-300
-
-            ${
-              collapsed
-                ? "justify-center"
-                : "gap-3"
-            }
+            ${collapsed ? "justify-center" : "gap-3"}
           `}
         >
           {/* Logo */}
@@ -582,7 +584,7 @@ export default function Sidebar() {
             />
           </div>
 
-          {/* Brand */}
+          {/* Brand text */}
 
           <div
             className={`
@@ -591,7 +593,6 @@ export default function Sidebar() {
               whitespace-nowrap
               transition-all
               duration-300
-
               ${
                 collapsed
                   ? "w-0 opacity-0"
@@ -599,15 +600,7 @@ export default function Sidebar() {
               }
             `}
           >
-            <p
-              className="
-                truncate
-                text-sm
-                font-black
-                tracking-tight
-                text-white
-              "
-            >
+            <p className="truncate text-sm font-black tracking-tight text-white">
               TOCHAMS ERP
             </p>
 
@@ -633,14 +626,10 @@ export default function Sidebar() {
           type="button"
           onClick={toggleCollapsed}
           aria-label={
-            collapsed
-              ? "Expand sidebar"
-              : "Collapse sidebar"
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
           }
           title={
-            collapsed
-              ? "Expand sidebar"
-              : "Collapse sidebar"
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
           }
           className="
             absolute
@@ -671,15 +660,9 @@ export default function Sidebar() {
           "
         >
           {collapsed ? (
-            <ChevronRight
-              size={14}
-              strokeWidth={2.5}
-            />
+            <ChevronRight size={14} strokeWidth={2.5} />
           ) : (
-            <ChevronLeft
-              size={14}
-              strokeWidth={2.5}
-            />
+            <ChevronLeft size={14} strokeWidth={2.5} />
           )}
         </button>
 
@@ -712,15 +695,11 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* ===================================================
-          NAVIGATION
-      =================================================== */}
+      {/* ROLE-FILTERED NAVIGATION */}
 
       {navigation}
 
-      {/* ===================================================
-          SIDEBAR FOOTER
-      =================================================== */}
+      {/* SIDEBAR FOOTER */}
 
       <div
         className={`
@@ -730,11 +709,7 @@ export default function Sidebar() {
           p-3
           transition-all
           duration-300
-          ${
-            collapsed
-              ? "flex justify-center"
-              : ""
-          }
+          ${collapsed ? "flex justify-center" : ""}
         `}
       >
         {collapsed ? (
@@ -772,6 +747,12 @@ export default function Sidebar() {
             <p className="mt-0.5 text-[9px] text-slate-600">
               Enterprise operational workspace
             </p>
+
+            {user && (
+              <p className="mt-1 truncate text-[9px] capitalize text-blue-300/70">
+                {user.role.replace(/_/g, " ")} access
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -784,16 +765,13 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ===================================================
-          MOBILE MENU BUTTON
-      =================================================== */}
+      {/* MOBILE MENU BUTTON */}
 
       <button
         type="button"
-        onClick={() =>
-          setMobileOpen(true)
-        }
+        onClick={() => setMobileOpen(true)}
         aria-label="Open navigation"
+        aria-expanded={mobileOpen}
         className="
           fixed
           left-4
@@ -820,17 +798,13 @@ export default function Sidebar() {
         <Menu size={19} />
       </button>
 
-      {/* ===================================================
-          MOBILE BACKDROP
-      =================================================== */}
+      {/* MOBILE BACKDROP */}
 
       {mobileOpen && (
         <button
           type="button"
           aria-label="Close navigation"
-          onClick={() =>
-            setMobileOpen(false)
-          }
+          onClick={() => setMobileOpen(false)}
           className="
             fixed
             inset-0
@@ -842,11 +816,10 @@ export default function Sidebar() {
         />
       )}
 
-      {/* ===================================================
-          MOBILE SIDEBAR
-      =================================================== */}
+      {/* MOBILE SIDEBAR */}
 
       <aside
+        aria-label="Mobile sidebar"
         className={`
           fixed
           inset-y-0
@@ -864,7 +837,6 @@ export default function Sidebar() {
           duration-300
           ease-out
           md:hidden
-
           ${
             mobileOpen
               ? "translate-x-0"
@@ -875,11 +847,10 @@ export default function Sidebar() {
         {sidebarContent}
       </aside>
 
-      {/* ===================================================
-          DESKTOP SIDEBAR
-      =================================================== */}
+      {/* DESKTOP SIDEBAR */}
 
       <aside
+        aria-label="Desktop sidebar"
         className={`
           relative
           hidden
@@ -894,12 +865,7 @@ export default function Sidebar() {
           duration-300
           ease-in-out
           md:flex
-
-          ${
-            collapsed
-              ? "w-[76px]"
-              : "w-[260px]"
-          }
+          ${collapsed ? "w-[76px]" : "w-[260px]"}
         `}
       >
         {sidebarContent}
