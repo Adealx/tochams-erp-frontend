@@ -43,6 +43,7 @@ export const permissions: Record<string, string[]> = {
     "procurement",
     "invoices",
     "payments",
+    "inventory",
     "accounting",
     "expenses",
     "transaction-tracker",
