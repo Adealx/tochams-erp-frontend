@@ -1,10 +1,12 @@
-﻿
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useSyncExternalStore,
+} from "react";
 
 import {
   LayoutDashboard,
@@ -30,6 +32,11 @@ import {
 
 import { useAuth } from "@/context/AuthContext";
 import { hasPermission } from "@/lib/permissions";
+import { useSidebar } from "@/components/layout/SidebarContext";
+
+/* =========================================================
+   NAVIGATION TYPES
+========================================================= */
 
 interface NavigationItem {
   label: string;
@@ -42,6 +49,74 @@ interface NavigationItem {
 interface NavigationGroup {
   title: string;
   items: NavigationItem[];
+}
+
+/* =========================================================
+   COLLAPSIBLE SIDEBAR PREFERENCE
+
+   useSyncExternalStore keeps the initial server and
+   hydration snapshots consistent.
+
+   The saved preference is restored from localStorage
+   after hydration without calling setState inside an effect.
+========================================================= */
+
+const SIDEBAR_STORAGE_KEY = "tochams-sidebar-collapsed";
+
+const sidebarCollapseListeners = new Set<() => void>();
+
+function getSidebarCollapsedSnapshot(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return (
+    window.localStorage.getItem(SIDEBAR_STORAGE_KEY) ===
+    "true"
+  );
+}
+
+function getSidebarCollapsedServerSnapshot(): boolean {
+  return false;
+}
+
+function subscribeToSidebarCollapsed(
+  callback: () => void
+): () => void {
+  sidebarCollapseListeners.add(callback);
+
+  const handleStorageChange = () => {
+    callback();
+  };
+
+  window.addEventListener("storage", handleStorageChange);
+
+  return () => {
+    sidebarCollapseListeners.delete(callback);
+
+    window.removeEventListener(
+      "storage",
+      handleStorageChange
+    );
+  };
+}
+
+function saveSidebarCollapsedState(
+  collapsed: boolean
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    SIDEBAR_STORAGE_KEY,
+    String(collapsed)
+  );
+
+  // Notify subscribers in this tab immediately.
+  sidebarCollapseListeners.forEach((listener) => {
+    listener();
+  });
 }
 
 /* =========================================================
@@ -185,63 +260,71 @@ const navigationGroups: NavigationGroup[] = [
   },
 ];
 
+/* =========================================================
+   SIDEBAR COMPONENT
+========================================================= */
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, loading } = useAuth();
 
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  /*
+   * Shared state is provided by SidebarContext.tsx.
+   * AppShell must wrap Sidebar and Topbar in SidebarProvider.
+   */
+
+  const {
+    mobileOpen,
+    toggleSidebar,
+    closeSidebar,
+  } = useSidebar();
 
   /* =======================================================
-     RESTORE DESKTOP SIDEBAR STATE
+     DESKTOP COLLAPSIBLE SIDEBAR STATE
+
+     The saved preference is restored automatically.
+     The desktop collapse preference is shared with the
+     mobile sidebar content, as in the existing component.
   ======================================================= */
 
-  useEffect(() => {
-    const savedState = window.localStorage.getItem(
-      "tochams-sidebar-collapsed"
-    );
-
-    if (savedState === "true") {
-      setCollapsed(true);
-    }
-  }, []);
-
-  /* =======================================================
-     PERSIST DESKTOP SIDEBAR STATE
-  ======================================================= */
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "tochams-sidebar-collapsed",
-      String(collapsed)
-    );
-  }, [collapsed]);
+  const collapsed = useSyncExternalStore(
+    subscribeToSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getSidebarCollapsedServerSnapshot
+  );
 
   /* =======================================================
      CLOSE MOBILE NAVIGATION WHEN ROUTE CHANGES
   ======================================================= */
 
   useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+    closeSidebar();
+  }, [pathname, closeSidebar]);
 
   /* =======================================================
      ESCAPE KEY
   ======================================================= */
 
   useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setMobileOpen(false);
+        closeSidebar();
       }
     };
 
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
     };
-  }, []);
+  }, [mobileOpen, closeSidebar]);
 
   /* =======================================================
      PREVENT BODY SCROLL WHEN MOBILE SIDEBAR IS OPEN
@@ -263,7 +346,7 @@ export default function Sidebar() {
      ACTIVE ROUTE
   ======================================================= */
 
-  function isActive(href: string) {
+  function isActive(href: string): boolean {
     if (href === "/dashboard") {
       return pathname === "/dashboard";
     }
@@ -277,8 +360,8 @@ export default function Sidebar() {
   /* =======================================================
      ROLE-BASED NAVIGATION
 
-     During authentication loading, show no operational links.
-     Unknown and pending roles receive no permissions by default.
+     Unknown and pending roles receive no permissions
+     unless explicitly granted by the permission map.
   ======================================================= */
 
   const visibleNavigationGroups: NavigationGroup[] =
@@ -288,17 +371,22 @@ export default function Sidebar() {
           .map((group) => ({
             ...group,
             items: group.items.filter((item) =>
-              hasPermission(user.role, item.permission)
+              hasPermission(
+                user.role,
+                item.permission
+              )
             ),
           }))
-          .filter((group) => group.items.length > 0);
+          .filter(
+            (group) => group.items.length > 0
+          );
 
   /* =======================================================
      DESKTOP COLLAPSE
   ======================================================= */
 
   function toggleCollapsed() {
-    setCollapsed((current) => !current);
+    saveSidebarCollapsedState(!collapsed);
   }
 
   /* =======================================================
@@ -336,7 +424,7 @@ export default function Sidebar() {
         <div className="space-y-6">
           {visibleNavigationGroups.map((group) => (
             <div key={group.title}>
-              {/* Section heading */}
+              {/* Section Heading */}
 
               <div
                 className={`
@@ -361,7 +449,7 @@ export default function Sidebar() {
                 {group.title}
               </div>
 
-              {/* Navigation items */}
+              {/* Navigation Items */}
 
               <div className="space-y-1">
                 {group.items.map((item) => {
@@ -373,10 +461,14 @@ export default function Sidebar() {
                       key={item.href}
                       href={item.href}
                       title={
-                        collapsed ? item.label : undefined
+                        collapsed
+                          ? item.label
+                          : undefined
                       }
-                      aria-current={active ? "page" : undefined}
-                      onClick={() => setMobileOpen(false)}
+                      aria-current={
+                        active ? "page" : undefined
+                      }
+                      onClick={closeSidebar}
                       className={`
                         group
                         relative
@@ -406,7 +498,7 @@ export default function Sidebar() {
                         }
                       `}
                     >
-                      {/* Active indicator */}
+                      {/* Active Indicator */}
 
                       {active && (
                         <span
@@ -447,7 +539,9 @@ export default function Sidebar() {
                       >
                         <Icon
                           size={17}
-                          strokeWidth={active ? 2.2 : 1.9}
+                          strokeWidth={
+                            active ? 2.2 : 1.9
+                          }
                         />
                       </span>
 
@@ -472,7 +566,7 @@ export default function Sidebar() {
                         {item.label}
                       </span>
 
-                      {/* Optional badge */}
+                      {/* Optional Badge */}
 
                       {!collapsed && item.badge && (
                         <span
@@ -490,7 +584,7 @@ export default function Sidebar() {
                         </span>
                       )}
 
-                      {/* Active arrow */}
+                      {/* Active Arrow */}
 
                       {!collapsed && active && (
                         <ChevronRight
@@ -528,7 +622,7 @@ export default function Sidebar() {
           ${collapsed ? "px-3 py-5" : "px-5 py-5"}
         `}
       >
-        {/* Decorative glow */}
+        {/* Decorative Glow */}
 
         <div
           className="
@@ -546,7 +640,10 @@ export default function Sidebar() {
 
         <Link
           href="/dashboard"
-          title={collapsed ? "TOCHAMS ERP" : undefined}
+          title={
+            collapsed ? "TOCHAMS ERP" : undefined
+          }
+          onClick={closeSidebar}
           className={`
             relative
             flex
@@ -584,7 +681,7 @@ export default function Sidebar() {
             />
           </div>
 
-          {/* Brand text */}
+          {/* Brand Text */}
 
           <div
             className={`
@@ -620,16 +717,21 @@ export default function Sidebar() {
           </div>
         </Link>
 
-        {/* Desktop collapse */}
+        {/* Desktop Collapse Button */}
 
         <button
           type="button"
           onClick={toggleCollapsed}
           aria-label={
-            collapsed ? "Expand sidebar" : "Collapse sidebar"
+            collapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar"
           }
+          aria-expanded={!collapsed}
           title={
-            collapsed ? "Expand sidebar" : "Collapse sidebar"
+            collapsed
+              ? "Expand sidebar"
+              : "Collapse sidebar"
           }
           className="
             absolute
@@ -660,17 +762,23 @@ export default function Sidebar() {
           "
         >
           {collapsed ? (
-            <ChevronRight size={14} strokeWidth={2.5} />
+            <ChevronRight
+              size={14}
+              strokeWidth={2.5}
+            />
           ) : (
-            <ChevronLeft size={14} strokeWidth={2.5} />
+            <ChevronLeft
+              size={14}
+              strokeWidth={2.5}
+            />
           )}
         </button>
 
-        {/* Mobile close */}
+        {/* Mobile Close Button */}
 
         <button
           type="button"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeSidebar}
           aria-label="Close navigation"
           className="
             absolute
@@ -769,9 +877,10 @@ export default function Sidebar() {
 
       <button
         type="button"
-        onClick={() => setMobileOpen(true)}
+        onClick={toggleSidebar}
         aria-label="Open navigation"
         aria-expanded={mobileOpen}
+        aria-controls="tochams-mobile-sidebar"
         className="
           fixed
           left-4
@@ -804,7 +913,7 @@ export default function Sidebar() {
         <button
           type="button"
           aria-label="Close navigation"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeSidebar}
           className="
             fixed
             inset-0
@@ -819,7 +928,9 @@ export default function Sidebar() {
       {/* MOBILE SIDEBAR */}
 
       <aside
+        id="tochams-mobile-sidebar"
         aria-label="Mobile sidebar"
+        aria-hidden={!mobileOpen}
         className={`
           fixed
           inset-y-0
